@@ -265,7 +265,7 @@ export default function ExerciseSetupPage() {
                             {rep.callsign && ` (${rep.callsign})`}
                           </span>
                           {rep.ctcss_hz && <span className="text-xs text-gray-400">CTCSS {rep.ctcss_hz}</span>}
-                          {rep.is_linked ? <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">linked</span> : null}
+                          {rep.is_linked ? <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">oelink</span> : null}
                           {rep.is_custom ? <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">custom</span> : null}
                         </label>
                         {active && (
