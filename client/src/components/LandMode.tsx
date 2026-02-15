@@ -53,6 +53,7 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
   // Group repeaters by Bundesland
   const repeatersByBl: Record<string, any[]> = {};
   const simplexRepeaters: any[] = [];
+  const linkedRepeaters: any[] = [];
   for (const r of repeaters) {
     if (r.type === 'simplex') {
       simplexRepeaters.push(r);
@@ -60,6 +61,7 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
       const blCode = r.bundesland_code || '_other';
       if (!repeatersByBl[blCode]) repeatersByBl[blCode] = [];
       repeatersByBl[blCode].push(r);
+      if (r.is_linked) linkedRepeaters.push(r);
     }
   }
 
@@ -69,6 +71,16 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
     if (b === '_other') return -1;
     return a.localeCompare(b);
   });
+
+  const updateBlOp = async (blCode: string, callsignVal: string) => {
+    const blReps = repeatersByBl[blCode] || [];
+    for (const r of blReps) {
+      await apiFetch(`/api/v1/exercises/${exerciseId}/repeaters/${r.repeater_id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ operator_callsign: callsignVal || null }),
+      });
+    }
+  };
 
   const parseRapport = (raw: string) => {
     const match = raw.match(/^(\d)\/(\d)(.*)$/);
@@ -182,7 +194,21 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
           const label = BUNDESLAND_NAMES[blCode] || 'Sonstige';
           return (
             <div key={blCode}>
-              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-1 mb-0.5">{label}</div>
+              <div className="flex items-center gap-2 px-1 mb-0.5">
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</span>
+                <input
+                  type="text"
+                  placeholder="OP Rufzeichen"
+                  defaultValue={blReps[0]?.operator_callsign || ''}
+                  key={`bl-op-${blCode}`}
+                  onBlur={async (e) => {
+                    const val = e.target.value.toUpperCase();
+                    e.target.value = val;
+                    await updateBlOp(blCode, val);
+                  }}
+                  className="border border-gray-200 rounded px-1.5 py-0.5 text-xs font-mono uppercase w-24 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                />
+              </div>
               <div className="flex flex-wrap gap-1 mb-1">
                 {blReps.map(r => {
                   const repReportCount = reports.filter(rp => rp.repeater_id === r.repeater_id && !rp.is_op_marker && rp.readability).length;
@@ -241,35 +267,47 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
             </div>
           </div>
         )}
+
+        {/* OE-Link tabs */}
+        {linkedRepeaters.length > 0 && (
+          <div>
+            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-1 mb-0.5">OE-Link</div>
+            <div className="flex flex-wrap gap-1 mb-1">
+              {linkedRepeaters.map(r => {
+                const repReportCount = reports.filter(rp => rp.repeater_id === r.repeater_id && !rp.is_op_marker && rp.readability).length;
+                return (
+                  <button
+                    key={`oelink-${r.repeater_id}`}
+                    onClick={() => setActiveRepeaterId(r.repeater_id)}
+                    className={`px-3 py-1.5 rounded text-sm flex items-center gap-1 ${r.repeater_id === activeRepeaterId ? 'bg-blue-700 text-white font-medium' : 'bg-blue-50 text-blue-800 hover:bg-blue-100 border border-blue-200'}`}
+                  >
+                    {r.short_name}
+                    {r.operator_callsign && (
+                      <span className={`text-xs px-1 py-0.5 rounded ${r.repeater_id === activeRepeaterId ? 'bg-white/20' : 'bg-blue-100 text-blue-700'}`}>
+                        {r.operator_callsign}
+                      </span>
+                    )}
+                    {repReportCount > 0 && (
+                      <span className={`text-xs rounded-full px-1.5 ${r.repeater_id === activeRepeaterId ? 'bg-white/20' : 'bg-blue-200'}`}>
+                        {repReportCount}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
-      {/* Repeater info + OP callsign */}
+      {/* Repeater info */}
       {activeRepeater && (
-        <div className="flex items-center gap-4 text-xs text-gray-500">
-          <div className="flex gap-4">
-            {activeRepeater.frequency_mhz && <span>{activeRepeater.frequency_mhz} MHz</span>}
-            {activeRepeater.offset_mhz && <span>Offset: {activeRepeater.offset_mhz > 0 ? '+' : ''}{activeRepeater.offset_mhz} MHz</span>}
-            {activeRepeater.ctcss_hz && <span>CTCSS: {activeRepeater.ctcss_hz} Hz</span>}
-            {activeRepeater.burst_hz && <span>Burst: {activeRepeater.burst_hz} Hz</span>}
-            {activeRepeater.repeater_callsign && <span className="font-mono">{activeRepeater.repeater_callsign}</span>}
-          </div>
-          <div className="flex items-center gap-1 ml-auto">
-            <span className="text-gray-400">OP:</span>
-            <input
-              type="text"
-              placeholder="Rufzeichen"
-              defaultValue={activeRepeater.operator_callsign || ''}
-              key={activeRepeater.repeater_id}
-              onBlur={async (e) => {
-                const val = e.target.value.toUpperCase();
-                await apiFetch(`/api/v1/exercises/${exerciseId}/repeaters/${activeRepeater.repeater_id}`, {
-                  method: 'PATCH',
-                  body: JSON.stringify({ operator_callsign: val || null }),
-                });
-              }}
-              className="border border-gray-300 rounded px-2 py-0.5 text-xs font-mono uppercase w-24 focus:outline-none focus:ring-1 focus:ring-amber-500"
-            />
-          </div>
+        <div className="text-xs text-gray-500 flex gap-4">
+          {activeRepeater.frequency_mhz && <span>{activeRepeater.frequency_mhz} MHz</span>}
+          {activeRepeater.offset_mhz && <span>Offset: {activeRepeater.offset_mhz > 0 ? '+' : ''}{activeRepeater.offset_mhz} MHz</span>}
+          {activeRepeater.ctcss_hz && <span>CTCSS: {activeRepeater.ctcss_hz} Hz</span>}
+          {activeRepeater.burst_hz && <span>Burst: {activeRepeater.burst_hz} Hz</span>}
+          {activeRepeater.repeater_callsign && <span className="font-mono">{activeRepeater.repeater_callsign}</span>}
         </div>
       )}
 
