@@ -125,7 +125,6 @@ export function runMigrations(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_exercise_attendance_exercise ON exercise_attendance(exercise_id);
     CREATE INDEX IF NOT EXISTS idx_einstiegspunkte_repeater ON einstiegspunkte(repeater_id);
     CREATE INDEX IF NOT EXISTS idx_bezirke_bundesland ON bezirke(bundesland_code);
-    CREATE INDEX IF NOT EXISTS idx_repeaters_bundesland ON repeaters(bundesland_code);
   `);
 
   // Migrations for existing databases
@@ -141,4 +140,7 @@ export function runMigrations(db: Database.Database): void {
   if (!repCols.some((c: any) => c.name === 'is_custom')) {
     db.exec("ALTER TABLE repeaters ADD COLUMN is_custom INTEGER DEFAULT 0");
   }
+
+  // Create index after migration ensures column exists
+  db.exec("CREATE INDEX IF NOT EXISTS idx_repeaters_bundesland ON repeaters(bundesland_code)");
 }
