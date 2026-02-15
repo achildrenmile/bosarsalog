@@ -12,7 +12,7 @@ exercisesRouter.get('/', (_req, res) => {
     SELECT e.id, e.date, e.name, e.notes,
       (SELECT COUNT(DISTINCT operator_id) FROM exercise_attendance WHERE exercise_id = e.id AND is_present = 1) as participant_count,
       (SELECT COUNT(*) FROM signal_reports WHERE exercise_id = e.id AND is_op_marker = 0) as report_count
-    FROM exercises e ORDER BY e.date DESC
+    FROM exercises e ORDER BY e.date ASC
   `).all();
   res.json(exercises);
 });

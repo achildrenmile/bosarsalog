@@ -141,19 +141,31 @@ export default function DashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {exercises.map(ex => (
-                <tr key={ex.id} className="border-t hover:bg-amber-50">
-                  <td className="px-4 py-2 font-mono">{formatDate(ex.date)}</td>
-                  <td className="px-4 py-2 text-gray-700">{ex.name || '—'}</td>
-                  <td className="px-4 py-2 text-right">{ex.participant_count}</td>
-                  <td className="px-4 py-2 text-right">{ex.report_count}</td>
-                  <td className="px-4 py-2 text-right">
-                    <Link to={`/exercises/${ex.id}`} className="text-amber-700 hover:underline text-xs">
-                      Öffnen
-                    </Link>
-                  </td>
-                </tr>
-              ))}
+              {exercises.map(ex => {
+                const today = new Date().toISOString().split('T')[0];
+                const isNearest = ex.id === exercises.reduce((closest, e) => {
+                  const dCur = Math.abs(new Date(e.date).getTime() - new Date(today).getTime());
+                  const dBest = Math.abs(new Date(closest.date).getTime() - new Date(today).getTime());
+                  return dCur < dBest ? e : closest;
+                }, exercises[0]).id;
+
+                return (
+                  <tr key={ex.id} className={`border-t ${isNearest ? 'bg-amber-100 font-medium' : 'hover:bg-amber-50'}`}>
+                    <td className="px-4 py-2 font-mono">
+                      {formatDate(ex.date)}
+                      {isNearest && <span className="ml-2 text-xs bg-amber-600 text-white px-1.5 py-0.5 rounded">Aktuell</span>}
+                    </td>
+                    <td className="px-4 py-2 text-gray-700">{ex.name || '—'}</td>
+                    <td className="px-4 py-2 text-right">{ex.participant_count}</td>
+                    <td className="px-4 py-2 text-right">{ex.report_count}</td>
+                    <td className="px-4 py-2 text-right">
+                      <Link to={`/exercises/${ex.id}`} className="text-amber-700 hover:underline text-xs">
+                        Öffnen
+                      </Link>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         </div>
