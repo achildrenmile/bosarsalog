@@ -162,7 +162,6 @@ export default function ExercisePage() {
       ) : (
         <BundMode
           exerciseId={id!}
-          repeaters={exercise.repeaters || []}
           reports={reports}
           onReportCreated={handleReportCreated}
           onReportUpdated={handleReportUpdated}
