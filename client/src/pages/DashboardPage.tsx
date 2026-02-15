@@ -64,7 +64,13 @@ export default function DashboardPage() {
                   body: JSON.stringify({ date: dateStr }),
                 });
                 window.location.href = `/exercises/${ex.id}/setup`;
-              } catch {}
+              } catch {
+                // Exercise for this date likely exists, navigate to it
+                const existing = exercises.find(ex => ex.date === dateStr);
+                if (existing) {
+                  window.location.href = `/exercises/${existing.id}/setup`;
+                }
+              }
             }}
             className="bg-[#5b3a1a] hover:bg-[#7a5230] text-white px-4 py-2 rounded-lg text-sm font-medium"
           >
