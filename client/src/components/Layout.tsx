@@ -11,9 +11,12 @@ export default function Layout() {
   };
 
   return (
-    <div className="min-h-screen">
-      <nav className="bg-[#5b3a1a] text-white px-4 py-3 flex items-center justify-between shadow-md">
-        <div className="flex items-center gap-6">
+    <div className="min-h-screen flex flex-col">
+      <nav className="bg-[#5b3a1a] text-white px-4 py-2 flex items-center justify-between shadow-md">
+        <div className="flex items-center gap-4">
+          <a href="https://oeradio.at" target="_blank" rel="noopener noreferrer" className="flex-shrink-0">
+            <img src="https://oeradio.at/wp-content/uploads/2026/01/oeradiologo-300x200.png" alt="OERadio" className="h-10" />
+          </a>
           <Link to="/" className="text-lg font-bold tracking-wide hover:text-amber-200">
             BOS-ARSA Log
           </Link>
@@ -34,9 +37,16 @@ export default function Layout() {
           </button>
         </div>
       </nav>
-      <main className="p-4 max-w-[1600px] mx-auto">
+      <main className="p-4 max-w-[1600px] mx-auto flex-1 w-full">
         <Outlet />
       </main>
+      <footer className="bg-gray-100 border-t text-center py-3 text-xs text-gray-500 flex items-center justify-center gap-4">
+        <a href="https://oeradio.at" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700">oeradio.at</a>
+        <span>·</span>
+        <Link to="/impressum" className="hover:text-gray-700">Impressum</Link>
+        <span>·</span>
+        <Link to="/datenschutz" className="hover:text-gray-700">Datenschutz</Link>
+      </footer>
     </div>
   );
 }

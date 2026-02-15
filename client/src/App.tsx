@@ -7,6 +7,8 @@ import ExercisePage from './pages/ExercisePage';
 import ExerciseSetupPage from './pages/ExerciseSetupPage';
 import OperatorsPage from './pages/OperatorsPage';
 import ReportsPage from './pages/ReportsPage';
+import ImpressumPage from './pages/ImpressumPage';
+import DatenschutzPage from './pages/DatenschutzPage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { token } = useAuth();
@@ -32,6 +34,8 @@ export default function App() {
           <Route path="exercises/:id/setup" element={<ExerciseSetupPage />} />
           <Route path="exercises/:id/reports" element={<ReportsPage />} />
           <Route path="operators" element={<OperatorsPage />} />
+          <Route path="impressum" element={<ImpressumPage />} />
+          <Route path="datenschutz" element={<DatenschutzPage />} />
         </Route>
       </Routes>
     </AuthProvider>
