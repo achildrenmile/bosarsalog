@@ -113,17 +113,19 @@ export default function ExercisePage() {
           {exercise.name || 'Übung'} — {new Date(exercise.date + 'T00:00:00').toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric' })}
         </h1>
         <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1.5">
-            <label className="text-xs text-gray-500">OP:</label>
-            <input
-              type="text"
-              value={opCallsign}
-              onChange={e => setOpCallsign(e.target.value.toUpperCase())}
-              onBlur={e => updateOpCallsign(e.target.value.toUpperCase())}
-              placeholder="Rufzeichen"
-              className="border border-gray-300 rounded px-2 py-1 text-sm font-mono uppercase w-28 focus:outline-none focus:ring-2 focus:ring-amber-500"
-            />
-          </div>
+          {mode === 'land' && (
+            <div className="flex items-center gap-1.5">
+              <label className="text-xs text-gray-500">OP:</label>
+              <input
+                type="text"
+                value={opCallsign}
+                onChange={e => setOpCallsign(e.target.value.toUpperCase())}
+                onBlur={e => updateOpCallsign(e.target.value.toUpperCase())}
+                placeholder="Rufzeichen"
+                className="border border-gray-300 rounded px-2 py-1 text-sm font-mono uppercase w-28 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              />
+            </div>
+          )}
           <Link to={`/exercises/${id}/setup`} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm">
             Einrichten
           </Link>

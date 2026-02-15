@@ -22,6 +22,7 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
   const [bezirke, setBezirke] = useState<any[]>([]);
   const [linkedRepeaters, setLinkedRepeaters] = useState<any[]>([]);
   const [blRepSelection, setBlRepSelection] = useState<Record<string, number>>({});
+  const [blOpCallsigns, setBlOpCallsigns] = useState<Record<string, string>>({});
   const [collapsedBl, setCollapsedBl] = useState<Set<string>>(new Set());
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '', notes: '' });
@@ -31,20 +32,45 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
       apiFetch('/api/v1/reference/bundeslaender'),
       apiFetch('/api/v1/reference/bezirke'),
       apiFetch('/api/v1/repeaters'),
-    ]).then(([bl, bz, allReps]) => {
+      apiFetch(`/api/v1/exercises/${exerciseId}/repeaters`),
+    ]).then(([bl, bz, allReps, exReps]) => {
       setBundeslaender(bl);
       setBezirke(bz);
       const linked = allReps.filter((r: any) => r.is_linked);
       setLinkedRepeaters(linked);
       // Initialize per-BL defaults: first linked in that BL, else first overall
       const defaults: Record<string, number> = {};
+      const ops: Record<string, string> = {};
       for (const b of bl) {
         const inBl = linked.find((r: any) => r.bundesland_code === b.code);
-        defaults[b.code] = inBl ? inBl.id : (linked[0]?.id ?? 0);
+        const repId = inBl ? inBl.id : (linked[0]?.id ?? 0);
+        defaults[b.code] = repId;
+        // Load existing OP callsign from exercise_repeaters
+        const exRep = exReps.find((er: any) => er.repeater_id === repId);
+        ops[b.code] = exRep?.operator_callsign || '';
       }
       setBlRepSelection(defaults);
+      setBlOpCallsigns(ops);
     }).catch(() => {});
-  }, []);
+  }, [exerciseId]);
+
+  const saveOpCallsign = async (blCode: string, val: string) => {
+    const repId = blRepSelection[blCode];
+    if (!repId) return;
+    try {
+      // Ensure exercise_repeater exists, then update
+      await apiFetch(`/api/v1/exercises/${exerciseId}/repeaters`, {
+        method: 'POST',
+        body: JSON.stringify({ repeater_id: repId, operator_callsign: val || null }),
+      });
+    } catch {
+      // Already exists, just patch
+      await apiFetch(`/api/v1/exercises/${exerciseId}/repeaters/${repId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ operator_callsign: val || null }),
+      });
+    }
+  };
 
   const toggleBl = (code: string) => {
     setCollapsedBl(prev => {
@@ -138,13 +164,26 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
 
         return (
           <div key={bl.code} className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div
-              onClick={() => toggleBl(bl.code)}
-              className="bg-gray-50 px-3 py-2 flex items-center gap-2 cursor-pointer hover:bg-gray-100 border-b"
-            >
-              <span className="text-xs text-gray-400">{isCollapsed ? '▶' : '▼'}</span>
-              <span className="font-medium text-sm">{bl.name}</span>
-              <span className="bg-[#0d6efd] text-white text-xs px-1.5 py-0.5 rounded-full">{reportCount}</span>
+            <div className="bg-gray-50 px-3 py-2 flex items-center justify-between border-b">
+              <div
+                onClick={() => toggleBl(bl.code)}
+                className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 rounded px-1 -mx-1"
+              >
+                <span className="text-xs text-gray-400">{isCollapsed ? '▶' : '▼'}</span>
+                <span className="font-medium text-sm">{bl.name}</span>
+                <span className="bg-[#0d6efd] text-white text-xs px-1.5 py-0.5 rounded-full">{reportCount}</span>
+              </div>
+              <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+                <label className="text-xs text-gray-500">OP:</label>
+                <input
+                  type="text"
+                  value={blOpCallsigns[bl.code] || ''}
+                  onChange={e => setBlOpCallsigns(prev => ({ ...prev, [bl.code]: e.target.value.toUpperCase() }))}
+                  onBlur={e => saveOpCallsign(bl.code, e.target.value.toUpperCase())}
+                  placeholder="Rufzeichen"
+                  className="border border-gray-300 rounded px-1.5 py-0.5 text-xs font-mono uppercase w-24 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                />
+              </div>
             </div>
 
             {!isCollapsed && (
