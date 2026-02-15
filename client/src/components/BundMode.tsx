@@ -21,24 +21,30 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
   const [bundeslaender, setBundeslaender] = useState<any[]>([]);
   const [bezirke, setBezirke] = useState<any[]>([]);
   const [linkedRepeaters, setLinkedRepeaters] = useState<any[]>([]);
+  const [blRepSelection, setBlRepSelection] = useState<Record<string, number>>({});
   const [collapsedBl, setCollapsedBl] = useState<Set<string>>(new Set());
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '', notes: '' });
 
   useEffect(() => {
-    apiFetch('/api/v1/reference/bundeslaender').then(setBundeslaender).catch(() => {});
-    apiFetch('/api/v1/reference/bezirke').then(setBezirke).catch(() => {});
-    apiFetch('/api/v1/repeaters').then((all: any[]) => {
-      setLinkedRepeaters(all.filter(r => r.is_linked));
+    Promise.all([
+      apiFetch('/api/v1/reference/bundeslaender'),
+      apiFetch('/api/v1/reference/bezirke'),
+      apiFetch('/api/v1/repeaters'),
+    ]).then(([bl, bz, allReps]) => {
+      setBundeslaender(bl);
+      setBezirke(bz);
+      const linked = allReps.filter((r: any) => r.is_linked);
+      setLinkedRepeaters(linked);
+      // Initialize per-BL defaults: first linked in that BL, else first overall
+      const defaults: Record<string, number> = {};
+      for (const b of bl) {
+        const inBl = linked.find((r: any) => r.bundesland_code === b.code);
+        defaults[b.code] = inBl ? inBl.id : (linked[0]?.id ?? 0);
+      }
+      setBlRepSelection(defaults);
     }).catch(() => {});
   }, []);
-
-  // Map each BL to its OE-Link repeater: first linked in that BL, else first overall
-  const blRepeaterMap: Record<string, number> = {};
-  for (const bl of bundeslaender) {
-    const inBl = linkedRepeaters.find(r => r.bundesland_code === bl.code);
-    blRepeaterMap[bl.code] = inBl ? inBl.id : (linkedRepeaters[0]?.id ?? 0);
-  }
 
   const toggleBl = (code: string) => {
     setCollapsedBl(prev => {
@@ -60,7 +66,7 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
 
   const handleBezirkSubmit = async (bezirkCode: string, bundeslandCode: string, form: EntryForm) => {
     if (!form.operator) return;
-    const repeaterId = blRepeaterMap[bundeslandCode];
+    const repeaterId = blRepSelection[bundeslandCode];
     if (!repeaterId) return;
 
     const parsed = parseRapport(form.rapport);
@@ -121,32 +127,44 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
     } catch {}
   };
 
-  const linkedRepIds = new Set(linkedRepeaters.map(r => r.id));
+  const selectedRepIds = new Set(Object.values(blRepSelection));
 
   return (
     <div className="space-y-2">
       {bundeslaender.filter(bl => !bl.is_international).map(bl => {
         const blBezirke = bezirke.filter(b => b.bundesland_code === bl.code);
-        const blReports = reports.filter(r => r.bundesland_code === bl.code && linkedRepIds.has(r.repeater_id));
+        const selectedRepId = blRepSelection[bl.code];
+        const blReports = reports.filter(r => r.bundesland_code === bl.code && r.repeater_id === selectedRepId);
         const isCollapsed = collapsedBl.has(bl.code);
         const reportCount = blReports.filter(r => !r.is_op_marker && r.readability).length;
-        const blRep = linkedRepeaters.find(r => r.id === blRepeaterMap[bl.code]);
 
         return (
           <div key={bl.code} className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div
-              onClick={() => toggleBl(bl.code)}
-              className="bg-gray-50 px-3 py-2 flex items-center justify-between cursor-pointer hover:bg-gray-100 border-b"
-            >
-              <div className="flex items-center gap-2">
+            <div className="bg-gray-50 px-3 py-2 flex items-center justify-between border-b">
+              <div
+                onClick={() => toggleBl(bl.code)}
+                className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 rounded px-1 -mx-1"
+              >
                 <span className="text-xs text-gray-400">{isCollapsed ? '▶' : '▼'}</span>
                 <span className="font-medium text-sm">{bl.name}</span>
                 <span className="bg-[#0d6efd] text-white text-xs px-1.5 py-0.5 rounded-full">{reportCount}</span>
               </div>
-              {blRep && (
-                <span className="text-xs text-blue-600 font-medium">
-                  {blRep.site_name || blRep.short_name} ({blRep.callsign || blRep.short_name})
-                </span>
+              {linkedRepeaters.length > 0 && (
+                <select
+                  value={selectedRepId || ''}
+                  onChange={e => {
+                    e.stopPropagation();
+                    setBlRepSelection(prev => ({ ...prev, [bl.code]: parseInt(e.target.value) }));
+                  }}
+                  onClick={e => e.stopPropagation()}
+                  className="text-xs border border-gray-300 rounded px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                >
+                  {linkedRepeaters.map(r => (
+                    <option key={r.id} value={r.id}>
+                      {r.site_name || r.short_name} ({r.callsign || r.short_name})
+                    </option>
+                  ))}
+                </select>
               )}
             </div>
 
