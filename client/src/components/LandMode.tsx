@@ -72,16 +72,6 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
     return a.localeCompare(b);
   });
 
-  const updateBlOp = async (blCode: string, callsignVal: string) => {
-    const blReps = repeatersByBl[blCode] || [];
-    for (const r of blReps) {
-      await apiFetch(`/api/v1/exercises/${exerciseId}/repeaters/${r.repeater_id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ operator_callsign: callsignVal || null }),
-      });
-    }
-  };
-
   const parseRapport = (raw: string) => {
     const match = raw.match(/^(\d)\/(\d)(.*)$/);
     if (!match) return { readability: null, strength: null, db_over_s9: null };
@@ -194,20 +184,8 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
           const label = BUNDESLAND_NAMES[blCode] || 'Sonstige';
           return (
             <div key={blCode}>
-              <div className="flex items-center gap-2 px-1 mb-0.5">
+              <div className="px-1 mb-0.5">
                 <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</span>
-                <input
-                  type="text"
-                  placeholder="OP Rufzeichen"
-                  defaultValue={blReps[0]?.operator_callsign || ''}
-                  key={`bl-op-${blCode}`}
-                  onBlur={async (e) => {
-                    const val = e.target.value.toUpperCase();
-                    e.target.value = val;
-                    await updateBlOp(blCode, val);
-                  }}
-                  className="border border-gray-200 rounded px-1.5 py-0.5 text-xs font-mono uppercase w-24 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                />
               </div>
               <div className="flex flex-wrap gap-1 mb-1">
                 {blReps.map(r => {
