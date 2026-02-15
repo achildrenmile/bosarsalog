@@ -25,23 +25,39 @@ export default function BundMode({ exerciseId, repeaters, reports, onReportCreat
   const [einstiegspunkte, setEinstiegspunkte] = useState<any[]>([]);
   const [collapsedBl, setCollapsedBl] = useState<Set<string>>(new Set());
   const [blEpSelection, setBlEpSelection] = useState<Record<string, number | null>>({});
+  const [blRepSelection, setBlRepSelection] = useState<Record<string, number>>({});
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '', einstiegspunktId: null, notes: '' });
 
-  // Linked repeater for Einstiegspunkt dropdown
-  const linkedRepeater = repeaters.find(r => r.is_linked);
+  // All linked (OE-Link) repeaters in this exercise
+  const linkedRepeaters = repeaters.filter(r => r.is_linked);
 
   useEffect(() => {
     apiFetch('/api/v1/reference/bundeslaender').then(setBundeslaender).catch(() => {});
     apiFetch('/api/v1/reference/bezirke').then(setBezirke).catch(() => {});
   }, []);
 
+  // Initialize per-BL repeater selection: pick a linked repeater in that BL, else first
   useEffect(() => {
-    if (linkedRepeater) {
-      apiFetch(`/api/v1/repeaters/${linkedRepeater.repeater_id}/einstiegspunkte`)
-        .then(setEinstiegspunkte).catch(() => {});
-    }
-  }, [linkedRepeater]);
+    if (linkedRepeaters.length === 0 || bundeslaender.length === 0) return;
+    setBlRepSelection(prev => {
+      const next = { ...prev };
+      for (const bl of bundeslaender) {
+        if (next[bl.code]) continue;
+        const inBl = linkedRepeaters.find(r => r.bundesland_code === bl.code);
+        next[bl.code] = inBl ? inBl.repeater_id : linkedRepeaters[0].repeater_id;
+      }
+      return next;
+    });
+  }, [linkedRepeaters.length, bundeslaender.length]);
+
+  // Load Einstiegspunkte for all linked repeaters
+  useEffect(() => {
+    if (linkedRepeaters.length === 0) return;
+    Promise.all(
+      linkedRepeaters.map(r => apiFetch(`/api/v1/repeaters/${r.repeater_id}/einstiegspunkte`).catch(() => []))
+    ).then(results => setEinstiegspunkte(results.flat()));
+  }, [linkedRepeaters.length]);
 
   const toggleBl = (code: string) => {
     setCollapsedBl(prev => {
@@ -63,7 +79,8 @@ export default function BundMode({ exerciseId, repeaters, reports, onReportCreat
 
   const handleBezirkSubmit = async (bezirkCode: string, bundeslandCode: string, form: EntryForm) => {
     if (!form.operator) return;
-    if (!linkedRepeater) return;
+    const repeaterId = blRepSelection[bundeslandCode];
+    if (!repeaterId) return;
 
     const parsed = parseRapport(form.rapport);
     const epId = form.einstiegspunktId || blEpSelection[bundeslandCode] || null;
@@ -73,7 +90,7 @@ export default function BundMode({ exerciseId, repeaters, reports, onReportCreat
         method: 'POST',
         body: JSON.stringify({
           operator_id: form.operator.id,
-          repeater_id: linkedRepeater.repeater_id,
+          repeater_id: repeaterId,
           ...parsed,
           einstiegspunkt_id: epId,
           notes: form.notes || null,
@@ -82,7 +99,7 @@ export default function BundMode({ exerciseId, repeaters, reports, onReportCreat
       onReportCreated(report);
     } catch (err: any) {
       if (err.message?.includes('existiert')) {
-        const existing = reports.find(r => r.operator_id === form.operator.id && r.repeater_id === linkedRepeater.repeater_id);
+        const existing = reports.find(r => r.operator_id === form.operator.id && r.repeater_id === repeaterId);
         if (existing) {
           const updated = await apiFetch(`/api/v1/exercises/${exerciseId}/reports/${existing.id}`, {
             method: 'PATCH',
@@ -135,7 +152,8 @@ export default function BundMode({ exerciseId, repeaters, reports, onReportCreat
     <div className="space-y-2">
       {bundeslaender.filter(bl => !bl.is_international).map(bl => {
         const blBezirke = bezirke.filter(b => b.bundesland_code === bl.code);
-        const blReports = reports.filter(r => r.bundesland_code === bl.code && linkedRepeater && r.repeater_id === linkedRepeater.repeater_id);
+        const selectedRepId = blRepSelection[bl.code];
+        const blReports = reports.filter(r => r.bundesland_code === bl.code && selectedRepId && r.repeater_id === selectedRepId);
         const isCollapsed = collapsedBl.has(bl.code);
         const reportCount = blReports.filter(r => !r.is_op_marker && r.readability).length;
 
@@ -151,22 +169,31 @@ export default function BundMode({ exerciseId, repeaters, reports, onReportCreat
                 <span className="font-medium text-sm">{bl.name}</span>
                 <span className="bg-[#0d6efd] text-white text-xs px-1.5 py-0.5 rounded-full">{reportCount}</span>
               </div>
-              {linkedRepeater && einstiegspunkte.length > 0 && (
-                <select
-                  value={blEpSelection[bl.code] || ''}
-                  onChange={e => {
-                    e.stopPropagation();
-                    handleEpChange(bl.code, e.target.value ? parseInt(e.target.value) : null);
-                  }}
-                  onClick={e => e.stopPropagation()}
-                  className="text-xs border border-gray-300 rounded px-1.5 py-0.5"
-                >
-                  <option value="">Einstiegspunkt</option>
-                  {einstiegspunkte.map(ep => (
-                    <option key={ep.id} value={ep.id}>{ep.abbreviation} ({ep.site_name})</option>
-                  ))}
-                </select>
-              )}
+              <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                {linkedRepeaters.length > 0 && (
+                  <select
+                    value={selectedRepId || ''}
+                    onChange={e => setBlRepSelection(prev => ({ ...prev, [bl.code]: parseInt(e.target.value) }))}
+                    className="text-xs border border-blue-300 bg-blue-50 rounded px-1.5 py-0.5 font-medium"
+                  >
+                    {linkedRepeaters.map(r => (
+                      <option key={r.repeater_id} value={r.repeater_id}>{r.short_name}</option>
+                    ))}
+                  </select>
+                )}
+                {einstiegspunkte.length > 0 && (
+                  <select
+                    value={blEpSelection[bl.code] || ''}
+                    onChange={e => handleEpChange(bl.code, e.target.value ? parseInt(e.target.value) : null)}
+                    className="text-xs border border-gray-300 rounded px-1.5 py-0.5"
+                  >
+                    <option value="">Einstiegspunkt</option>
+                    {einstiegspunkte.map(ep => (
+                      <option key={ep.id} value={ep.id}>{ep.abbreviation} ({ep.site_name})</option>
+                    ))}
+                  </select>
+                )}
+              </div>
             </div>
 
             {/* Bezirk rows */}
