@@ -1,5 +1,5 @@
 import { useState, useEffect, type FormEvent } from 'react';
-import { apiFetch } from '../services/api';
+import { apiFetch, getOrCreateOperator } from '../services/api';
 import CallsignInput from './CallsignInput';
 
 const BUNDESLAND_NAMES: Record<string, string> = {
@@ -84,7 +84,10 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!selectedOperator || !activeRepeaterId) return;
+    if (!activeRepeaterId) return;
+    const operator = await getOrCreateOperator(callsign, selectedOperator);
+    if (!operator) return;
+    setSelectedOperator(operator);
 
     const parsed = parseRapport(rapport);
 
@@ -102,7 +105,7 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
         const report = await apiFetch(`/api/v1/exercises/${exerciseId}/reports`, {
           method: 'POST',
           body: JSON.stringify({
-            operator_id: selectedOperator.id,
+            operator_id: operator.id,
             repeater_id: activeRepeaterId,
             ...parsed,
             notes: notes || null,
@@ -113,13 +116,13 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
         // Cross-repeater sync: create placeholder entries on other repeaters
         for (const rep of repeaters) {
           if (rep.repeater_id !== activeRepeaterId) {
-            const exists = reports.some(r => r.operator_id === selectedOperator.id && r.repeater_id === rep.repeater_id);
+            const exists = reports.some(r => r.operator_id === operator.id && r.repeater_id === rep.repeater_id);
             if (!exists) {
               try {
                 const placeholder = await apiFetch(`/api/v1/exercises/${exerciseId}/reports`, {
                   method: 'POST',
                   body: JSON.stringify({
-                    operator_id: selectedOperator.id,
+                    operator_id: operator.id,
                     repeater_id: rep.repeater_id,
                   }),
                 });
@@ -130,7 +133,7 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
         }
       } catch (err: any) {
         if (err.message?.includes('existiert')) {
-          const existing = reports.find(r => r.operator_id === selectedOperator.id && r.repeater_id === activeRepeaterId);
+          const existing = reports.find(r => r.operator_id === operator.id && r.repeater_id === activeRepeaterId);
           if (existing) {
             const updated = await apiFetch(`/api/v1/exercises/${exerciseId}/reports/${existing.id}`, {
               method: 'PATCH',

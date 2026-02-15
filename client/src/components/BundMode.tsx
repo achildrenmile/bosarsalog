@@ -1,5 +1,5 @@
 import { useState, useEffect, type FormEvent } from 'react';
-import { apiFetch } from '../services/api';
+import { apiFetch, getOrCreateOperator } from '../services/api';
 import CallsignInput from './CallsignInput';
 
 interface Props {
@@ -64,10 +64,10 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
     };
   };
 
-  const handleBezirkSubmit = async (bezirkCode: string, bundeslandCode: string, form: EntryForm) => {
-    if (!form.operator) return;
-    const repeaterId = blRepSelection[bundeslandCode];
+  const handleBezirkSubmit = async (bezirkCode: string, repeaterId: number, form: EntryForm) => {
     if (!repeaterId) return;
+    const operator = await getOrCreateOperator(form.callsign, form.operator);
+    if (!operator) return;
 
     const parsed = parseRapport(form.rapport);
 
@@ -75,7 +75,7 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
       const report = await apiFetch(`/api/v1/exercises/${exerciseId}/reports`, {
         method: 'POST',
         body: JSON.stringify({
-          operator_id: form.operator.id,
+          operator_id: operator.id,
           repeater_id: repeaterId,
           ...parsed,
           notes: form.notes || null,
@@ -84,7 +84,7 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
       onReportCreated(report);
     } catch (err: any) {
       if (err.message?.includes('existiert')) {
-        const existing = reports.find(r => r.operator_id === form.operator.id && r.repeater_id === repeaterId);
+        const existing = reports.find(r => r.operator_id === operator.id && r.repeater_id === repeaterId);
         if (existing) {
           const updated = await apiFetch(`/api/v1/exercises/${exerciseId}/reports/${existing.id}`, {
             method: 'PATCH',
@@ -127,45 +127,24 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
     } catch {}
   };
 
-  const selectedRepIds = new Set(Object.values(blRepSelection));
-
   return (
     <div className="space-y-2">
       {bundeslaender.filter(bl => !bl.is_international).map(bl => {
         const blBezirke = bezirke.filter(b => b.bundesland_code === bl.code);
-        const selectedRepId = blRepSelection[bl.code];
-        const blReports = reports.filter(r => r.bundesland_code === bl.code && r.repeater_id === selectedRepId);
+        const defaultRepId = blRepSelection[bl.code] || 0;
+        const blReports = reports.filter(r => r.bundesland_code === bl.code);
         const isCollapsed = collapsedBl.has(bl.code);
         const reportCount = blReports.filter(r => !r.is_op_marker && r.readability).length;
 
         return (
           <div key={bl.code} className="bg-white rounded-lg shadow-sm overflow-hidden">
-            <div className="bg-gray-50 px-3 py-2 flex items-center justify-between border-b">
-              <div
-                onClick={() => toggleBl(bl.code)}
-                className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 rounded px-1 -mx-1"
-              >
-                <span className="text-xs text-gray-400">{isCollapsed ? '▶' : '▼'}</span>
-                <span className="font-medium text-sm">{bl.name}</span>
-                <span className="bg-[#0d6efd] text-white text-xs px-1.5 py-0.5 rounded-full">{reportCount}</span>
-              </div>
-              {linkedRepeaters.length > 0 && (
-                <select
-                  value={selectedRepId || ''}
-                  onChange={e => {
-                    e.stopPropagation();
-                    setBlRepSelection(prev => ({ ...prev, [bl.code]: parseInt(e.target.value) }));
-                  }}
-                  onClick={e => e.stopPropagation()}
-                  className="text-xs border border-gray-300 rounded px-1.5 py-0.5 focus:outline-none focus:ring-1 focus:ring-amber-500"
-                >
-                  {linkedRepeaters.map(r => (
-                    <option key={r.id} value={r.id}>
-                      {r.site_name || r.short_name} ({r.callsign || r.short_name})
-                    </option>
-                  ))}
-                </select>
-              )}
+            <div
+              onClick={() => toggleBl(bl.code)}
+              className="bg-gray-50 px-3 py-2 flex items-center gap-2 cursor-pointer hover:bg-gray-100 border-b"
+            >
+              <span className="text-xs text-gray-400">{isCollapsed ? '▶' : '▼'}</span>
+              <span className="font-medium text-sm">{bl.name}</span>
+              <span className="bg-[#0d6efd] text-white text-xs px-1.5 py-0.5 rounded-full">{reportCount}</span>
             </div>
 
             {!isCollapsed && (
@@ -177,7 +156,9 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
                       key={bz.code}
                       bezirk={bz}
                       reports={bzReports}
-                      onSubmit={(form) => handleBezirkSubmit(bz.code, bl.code, form)}
+                      linkedRepeaters={linkedRepeaters}
+                      defaultRepeaterId={defaultRepId}
+                      onSubmit={(repeaterId, form) => handleBezirkSubmit(bz.code, repeaterId, form)}
                       onEdit={handleEdit}
                       onDelete={handleDelete}
                       editingId={editingId}
@@ -200,7 +181,9 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
 interface BezirkRowProps {
   bezirk: any;
   reports: any[];
-  onSubmit: (form: EntryForm) => void;
+  linkedRepeaters: any[];
+  defaultRepeaterId: number;
+  onSubmit: (repeaterId: number, form: EntryForm) => void;
   onEdit: (report: any) => void;
   onDelete: (id: number) => void;
   editingId: number | null;
@@ -210,13 +193,18 @@ interface BezirkRowProps {
   onEditCancel: () => void;
 }
 
-function BezirkRow({ bezirk, reports, onSubmit, onEdit, onDelete, editingId, editForm, onEditChange, onEditSave, onEditCancel }: BezirkRowProps) {
+function BezirkRow({ bezirk, reports, linkedRepeaters, defaultRepeaterId, onSubmit, onEdit, onDelete, editingId, editForm, onEditChange, onEditSave, onEditCancel }: BezirkRowProps) {
   const [form, setForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '', notes: '' });
+  const [repeaterId, setRepeaterId] = useState(defaultRepeaterId);
+
+  useEffect(() => {
+    if (defaultRepeaterId && !repeaterId) setRepeaterId(defaultRepeaterId);
+  }, [defaultRepeaterId]);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if (!form.operator) return;
-    onSubmit(form);
+    if ((!form.operator && !form.callsign) || !repeaterId) return;
+    onSubmit(repeaterId, form);
     setForm({ callsign: '', operator: null, rapport: '', notes: '' });
   };
 
@@ -261,6 +249,19 @@ function BezirkRow({ bezirk, reports, onSubmit, onEdit, onDelete, editingId, edi
       </div>
 
       <form onSubmit={handleSubmit} className="flex items-center gap-1">
+        {linkedRepeaters.length > 0 && (
+          <select
+            value={repeaterId || ''}
+            onChange={e => setRepeaterId(parseInt(e.target.value))}
+            className="border border-gray-300 rounded px-1 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-amber-500"
+          >
+            {linkedRepeaters.map(r => (
+              <option key={r.id} value={r.id}>
+                {r.site_name || r.short_name}
+              </option>
+            ))}
+          </select>
+        )}
         <CallsignInput
           value={form.callsign}
           onChange={v => setForm(f => ({ ...f, callsign: v }))}
