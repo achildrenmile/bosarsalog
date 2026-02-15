@@ -3,8 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 export default function LoginPage() {
-  const [callsign, setCallsign] = useState('');
-  const [pin, setPin] = useState('');
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const { login } = useAuth();
@@ -15,7 +15,7 @@ export default function LoginPage() {
     setError('');
     setLoading(true);
     try {
-      await login(callsign, pin);
+      await login(username, password);
       navigate('/');
     } catch (err: any) {
       setError(err.message);
@@ -31,23 +31,23 @@ export default function LoginPage() {
         <p className="text-sm text-gray-500 text-center mb-6">Krisenkommunikationsübung</p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Rufzeichen</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Benutzername</label>
             <input
               type="text"
-              value={callsign}
-              onChange={e => setCallsign(e.target.value.toUpperCase())}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 font-mono uppercase focus:outline-none focus:ring-2 focus:ring-amber-500"
-              placeholder="OE8YML"
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              placeholder="admin"
               required
               autoFocus
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">PIN</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Passwort</label>
             <input
               type="password"
-              value={pin}
-              onChange={e => setPin(e.target.value)}
+              value={password}
+              onChange={e => setPassword(e.target.value)}
               className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
               required
             />

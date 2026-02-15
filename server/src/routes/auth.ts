@@ -7,27 +7,27 @@ import { JWT_SECRET } from '../middleware/auth.js';
 export const authRouter = Router();
 
 authRouter.post('/login', (req, res) => {
-  const { callsign, pin } = req.body;
-  if (!callsign || !pin) {
-    res.status(400).json({ error: 'Rufzeichen und PIN erforderlich' });
+  const { username, password } = req.body;
+  if (!username || !password) {
+    res.status(400).json({ error: 'Benutzername und Passwort erforderlich' });
     return;
   }
 
   const db = getDb();
-  const admin = db.prepare('SELECT * FROM admins WHERE callsign = ?').get(callsign.toUpperCase()) as any;
-  if (!admin || !bcrypt.compareSync(pin, admin.pin_hash)) {
-    res.status(401).json({ error: 'Rufzeichen oder PIN ungültig' });
+  const admin = db.prepare('SELECT * FROM admins WHERE username = ?').get(username) as any;
+  if (!admin || !bcrypt.compareSync(password, admin.password_hash)) {
+    res.status(401).json({ error: 'Benutzername oder Passwort ungültig' });
     return;
   }
 
   const token = jwt.sign(
-    { id: admin.id, callsign: admin.callsign, role: admin.role },
+    { id: admin.id, username: admin.username, role: admin.role },
     JWT_SECRET,
     { expiresIn: '24h' }
   );
 
   res.json({
     token,
-    admin: { id: admin.id, callsign: admin.callsign, name: admin.name, role: admin.role },
+    admin: { id: admin.id, username: admin.username, role: admin.role },
   });
 });

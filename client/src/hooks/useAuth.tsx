@@ -2,15 +2,14 @@ import { createContext, useContext, useState, useCallback, type ReactNode } from
 
 interface Admin {
   id: number;
-  callsign: string;
-  name: string;
+  username: string;
   role: string;
 }
 
 interface AuthContextType {
   token: string | null;
   admin: Admin | null;
-  login: (callsign: string, pin: string) => Promise<void>;
+  login: (username: string, password: string) => Promise<void>;
   logout: () => void;
 }
 
@@ -23,11 +22,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return stored ? JSON.parse(stored) : null;
   });
 
-  const login = useCallback(async (callsign: string, pin: string) => {
+  const login = useCallback(async (username: string, password: string) => {
     const res = await fetch('/api/v1/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ callsign: callsign.toUpperCase(), pin }),
+      body: JSON.stringify({ username, password }),
     });
     if (!res.ok) {
       const err = await res.json();

@@ -6,7 +6,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'dev-secret-change-me';
 export interface AuthRequest extends Request {
   admin?: {
     id: number;
-    callsign: string;
+    username: string;
     role: string;
   };
 }
@@ -22,7 +22,7 @@ export function authMiddleware(req: Request, res: Response, next: NextFunction):
     const payload = jwt.verify(token, JWT_SECRET) as any;
     (req as AuthRequest).admin = {
       id: payload.id,
-      callsign: payload.callsign,
+      username: payload.username,
       role: payload.role,
     };
     next();

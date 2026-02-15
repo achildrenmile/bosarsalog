@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { apiFetch } from '../services/api';
+import { useAuth } from '../hooks/useAuth';
 
 const BUNDESLAENDER = [
   { code: '01', name: 'Wien', label: 'OE1' },
@@ -17,6 +18,8 @@ const BUNDESLAENDER = [
 export default function ExerciseSetupPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { admin } = useAuth();
+  const isAdmin = admin?.role === 'admin';
   const [exercise, setExercise] = useState<any>(null);
   const [allRepeaters, setAllRepeaters] = useState<any[]>([]);
   const [activeRepeaters, setActiveRepeaters] = useState<any[]>([]);
@@ -168,28 +171,32 @@ export default function ExerciseSetupPage() {
           <Link to={`/exercises/${id}`} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded text-sm">
             Zurück
           </Link>
-          <button onClick={activateExercise} className="bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded text-sm font-medium">
-            Übung starten
-          </button>
+          {isAdmin && (
+            <button onClick={activateExercise} className="bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded text-sm font-medium">
+              Übung starten
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Exercise name */}
-      <div className="bg-white rounded-xl shadow p-4">
-        <h2 className="text-lg font-semibold text-[#5b3a1a] mb-3">Name der Übung</h2>
-        <input
-          type="text"
-          defaultValue={exercise.name || ''}
-          placeholder="z.B. Sonntagsrunde KW 07"
-          onBlur={async (e) => {
-            await apiFetch(`/api/v1/exercises/${id}`, {
-              method: 'PATCH',
-              body: JSON.stringify({ name: e.target.value || null }),
-            });
-          }}
-          className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full max-w-md focus:outline-none focus:ring-2 focus:ring-amber-500"
-        />
-      </div>
+      {/* Exercise name (admin only) */}
+      {isAdmin && (
+        <div className="bg-white rounded-xl shadow p-4">
+          <h2 className="text-lg font-semibold text-[#5b3a1a] mb-3">Name der Übung</h2>
+          <input
+            type="text"
+            defaultValue={exercise.name || ''}
+            placeholder="z.B. Sonntagsrunde KW 07"
+            onBlur={async (e) => {
+              await apiFetch(`/api/v1/exercises/${id}`, {
+                method: 'PATCH',
+                body: JSON.stringify({ name: e.target.value || null }),
+              });
+            }}
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full max-w-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+          />
+        </div>
+      )}
 
       {/* Bundesländer selection */}
       <div className="bg-white rounded-xl shadow p-4">
@@ -205,12 +212,13 @@ export default function ExerciseSetupPage() {
             return (
               <button
                 key={bl.code}
-                onClick={() => toggleBundesland(bl.code)}
+                onClick={() => isAdmin && toggleBundesland(bl.code)}
+                disabled={!isAdmin}
                 className={`flex flex-col items-center py-2 px-1 rounded-lg border-2 transition-colors text-sm ${
                   isActive
                     ? 'border-amber-500 bg-amber-50 text-[#5b3a1a]'
                     : 'border-gray-200 bg-gray-50 text-gray-500 hover:border-gray-300'
-                }`}
+                } ${!isAdmin ? 'cursor-default' : ''}`}
               >
                 <span className="font-bold">{bl.label}</span>
                 <span className="text-xs truncate w-full text-center">{bl.name}</span>

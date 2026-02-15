@@ -1,6 +1,6 @@
 import { Router } from 'express';
 import { getDb } from '../db/database.js';
-import { AuthRequest } from '../middleware/auth.js';
+import { AuthRequest, requireRole } from '../middleware/auth.js';
 
 export const exercisesRouter = Router();
 
@@ -16,8 +16,8 @@ exercisesRouter.get('/', (_req, res) => {
   res.json(exercises);
 });
 
-// Create exercise
-exercisesRouter.post('/', (req, res) => {
+// Create exercise (admin only)
+exercisesRouter.post('/', requireRole('admin'), (req, res) => {
   const { date, name } = req.body;
   if (!date) {
     res.status(400).json({ error: 'Datum erforderlich' });
@@ -80,8 +80,8 @@ exercisesRouter.get('/:id', (req, res) => {
   res.json({ ...exercise, repeaters, reports, attendance });
 });
 
-// Update exercise status/notes
-exercisesRouter.patch('/:id', (req, res) => {
+// Update exercise status/notes (admin only)
+exercisesRouter.patch('/:id', requireRole('admin'), (req, res) => {
   const db = getDb();
   const { status, notes, name } = req.body;
   const updates: string[] = [];
@@ -155,7 +155,7 @@ exercisesRouter.patch('/:id/repeaters/:rid', (req, res) => {
   res.json({ success: true });
 });
 
-exercisesRouter.delete('/:id/repeaters/:rid', (req, res) => {
+exercisesRouter.delete('/:id/repeaters/:rid', requireRole('admin'), (req, res) => {
   const db = getDb();
   db.prepare('DELETE FROM exercise_repeaters WHERE exercise_id = ? AND repeater_id = ?')
     .run(req.params.id, req.params.rid);
@@ -193,11 +193,11 @@ exercisesRouter.post('/:id/reports', (req, res) => {
     const result = db.prepare(`
       INSERT INTO signal_reports (exercise_id, operator_id, repeater_id, readability, strength, db_over_s9, einstiegspunkt_id, is_op_marker, notes, entered_by)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(req.params.id, operator_id, repeater_id, readability || null, strength || null, db_over_s9 || null, einstiegspunkt_id || null, is_op_marker ? 1 : 0, notes || null, admin.callsign);
+    `).run(req.params.id, operator_id, repeater_id, readability || null, strength || null, db_over_s9 || null, einstiegspunkt_id || null, is_op_marker ? 1 : 0, notes || null, admin.username);
 
     // Auto-add attendance
     db.prepare('INSERT OR IGNORE INTO exercise_attendance (exercise_id, operator_id, entered_by) VALUES (?, ?, ?)')
-      .run(req.params.id, operator_id, admin.callsign);
+      .run(req.params.id, operator_id, admin.username);
 
     const report = db.prepare(`
       SELECT sr.*, o.callsign, o.name as operator_name, o.bezirk_code, o.bundesland_code,
@@ -272,7 +272,7 @@ exercisesRouter.post('/:id/attendance', (req, res) => {
   const { operator_id, callsign_suffix } = req.body;
   try {
     db.prepare('INSERT INTO exercise_attendance (exercise_id, operator_id, callsign_suffix, entered_by) VALUES (?, ?, ?, ?)')
-      .run(req.params.id, operator_id, callsign_suffix || null, admin.callsign);
+      .run(req.params.id, operator_id, callsign_suffix || null, admin.username);
     res.status(201).json({ success: true });
   } catch (e: any) {
     if (e.message?.includes('UNIQUE') || e.message?.includes('PRIMARY')) {

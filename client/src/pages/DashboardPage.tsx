@@ -46,29 +46,31 @@ export default function DashboardPage() {
       <div className="flex items-center justify-between mb-6">
         <div>
           <h1 className="text-2xl font-bold text-[#5b3a1a]">Gesamtübersicht</h1>
-          <p className="text-sm text-gray-500">Willkommen, {admin?.callsign}</p>
+          <p className="text-sm text-gray-500">Willkommen, {admin?.username}</p>
         </div>
-        <Link
-          to="#"
-          onClick={async (e) => {
-            e.preventDefault();
-            const today = new Date();
-            const day = today.getDay();
-            const nextSunday = new Date(today);
-            nextSunday.setDate(today.getDate() + (7 - day) % 7);
-            const dateStr = nextSunday.toISOString().split('T')[0];
-            try {
-              const ex = await apiFetch('/api/v1/exercises', {
-                method: 'POST',
-                body: JSON.stringify({ date: dateStr }),
-              });
-              window.location.href = `/exercises/${ex.id}/setup`;
-            } catch {}
-          }}
-          className="bg-[#5b3a1a] hover:bg-[#7a5230] text-white px-4 py-2 rounded-lg text-sm font-medium"
-        >
-          + Neue Übung
-        </Link>
+        {admin?.role === 'admin' && (
+          <Link
+            to="#"
+            onClick={async (e) => {
+              e.preventDefault();
+              const today = new Date();
+              const day = today.getDay();
+              const nextSunday = new Date(today);
+              nextSunday.setDate(today.getDate() + (7 - day) % 7);
+              const dateStr = nextSunday.toISOString().split('T')[0];
+              try {
+                const ex = await apiFetch('/api/v1/exercises', {
+                  method: 'POST',
+                  body: JSON.stringify({ date: dateStr }),
+                });
+                window.location.href = `/exercises/${ex.id}/setup`;
+              } catch {}
+            }}
+            className="bg-[#5b3a1a] hover:bg-[#7a5230] text-white px-4 py-2 rounded-lg text-sm font-medium"
+          >
+            + Neue Übung
+          </Link>
+        )}
       </div>
 
       {loading ? (

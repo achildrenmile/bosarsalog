@@ -25,7 +25,7 @@ export default function Layout() {
           </Link>
         </div>
         <div className="flex items-center gap-4 text-sm">
-          <span className="text-amber-200 font-mono">{admin?.callsign}</span>
+          <span className="text-amber-200">{admin?.username}</span>
           <button
             onClick={handleLogout}
             className="bg-amber-700 hover:bg-amber-800 px-3 py-1 rounded text-xs"

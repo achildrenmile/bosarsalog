@@ -17,11 +17,11 @@ export function setupSocket(io: Server): void {
 
   io.on('connection', (socket: Socket) => {
     const admin = (socket as any).admin;
-    console.log(`Socket connected: ${admin.callsign}`);
+    console.log(`Socket connected: ${admin.username}`);
 
     socket.on('join_exercise', ({ exercise_id }) => {
       socket.join(`exercise:${exercise_id}`);
-      console.log(`${admin.callsign} joined exercise ${exercise_id}`);
+      console.log(`${admin.username} joined exercise ${exercise_id}`);
     });
 
     socket.on('leave_exercise', ({ exercise_id }) => {
@@ -31,33 +31,33 @@ export function setupSocket(io: Server): void {
     socket.on('report_created', (data) => {
       socket.to(`exercise:${data.exercise_id}`).emit('report_created', {
         ...data,
-        entered_by: admin.callsign,
+        entered_by: admin.username,
       });
     });
 
     socket.on('report_updated', (data) => {
       socket.to(`exercise:${data.exercise_id}`).emit('report_updated', {
         ...data,
-        entered_by: admin.callsign,
+        entered_by: admin.username,
       });
     });
 
     socket.on('report_deleted', (data) => {
       socket.to(`exercise:${data.exercise_id}`).emit('report_deleted', {
         ...data,
-        entered_by: admin.callsign,
+        entered_by: admin.username,
       });
     });
 
     socket.on('attendance_updated', (data) => {
       socket.to(`exercise:${data.exercise_id}`).emit('attendance_updated', {
         ...data,
-        entered_by: admin.callsign,
+        entered_by: admin.username,
       });
     });
 
     socket.on('disconnect', () => {
-      console.log(`Socket disconnected: ${admin.callsign}`);
+      console.log(`Socket disconnected: ${admin.username}`);
     });
   });
 }

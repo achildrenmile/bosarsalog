@@ -298,10 +298,12 @@ if (magRepId) {
   console.log(`  ✓ ${einstiegspunkte.length} Einstiegspunkte`);
 }
 
-// ─── Default Admin ───
-const pinHash = bcrypt.hashSync('changeme', 10);
-db.prepare('INSERT INTO admins (callsign, name, pin_hash, role) VALUES (?, ?, ?, ?)').run('OE8YML', 'Admin', pinHash, 'admin');
-console.log('  ✓ Default admin OE8YML');
+// ─── Users ───
+const adminHash = bcrypt.hashSync('BosArsa2024!', 10);
+const operatorHash = bcrypt.hashSync('Funk73!ops', 10);
+db.prepare('INSERT INTO admins (username, password_hash, role) VALUES (?, ?, ?)').run('admin', adminHash, 'admin');
+db.prepare('INSERT INTO admins (username, password_hash, role) VALUES (?, ?, ?)').run('operator', operatorHash, 'operator');
+console.log('  ✓ Users: admin, operator');
 
 console.log('Seed complete!');
 db.close();

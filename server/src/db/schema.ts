@@ -110,10 +110,9 @@ export function runMigrations(db: Database.Database): void {
 
     CREATE TABLE IF NOT EXISTS admins (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      callsign TEXT UNIQUE NOT NULL,
-      name TEXT,
-      pin_hash TEXT NOT NULL,
-      role TEXT DEFAULT 'data_entry'
+      username TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      role TEXT DEFAULT 'operator'
     );
 
     CREATE INDEX IF NOT EXISTS idx_operators_callsign ON operators(callsign);
@@ -126,6 +125,18 @@ export function runMigrations(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_einstiegspunkte_repeater ON einstiegspunkte(repeater_id);
     CREATE INDEX IF NOT EXISTS idx_bezirke_bundesland ON bezirke(bundesland_code);
   `);
+
+  // Migration: admins table from callsign/pin_hash to username/password_hash
+  const adminCols = db.prepare("PRAGMA table_info(admins)").all() as any[];
+  if (adminCols.some((c: any) => c.name === 'callsign')) {
+    db.exec("DROP TABLE admins");
+    db.exec(`CREATE TABLE admins (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      username TEXT UNIQUE NOT NULL,
+      password_hash TEXT NOT NULL,
+      role TEXT DEFAULT 'operator'
+    )`);
+  }
 
   // Migrations for existing databases
   const cols = db.prepare("PRAGMA table_info(exercises)").all() as any[];
