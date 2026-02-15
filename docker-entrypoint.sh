@@ -1,11 +1,6 @@
 #!/bin/sh
 set -e
 
-# Seed database on first run if it doesn't exist or is empty
-if [ ! -f "$DATABASE_PATH" ] || [ ! -s "$DATABASE_PATH" ]; then
-    echo "First run — seeding database..."
-    node dist/server/db/seed.js
-fi
-
-# Start the server
+# Start the server (schema migrations run automatically on startup)
+# To seed an empty database, run: docker exec bosarsalog node dist/server/db/seed.js
 exec node dist/server/index.js

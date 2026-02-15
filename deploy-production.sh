@@ -51,11 +51,8 @@ ssh "$DEPLOY_HOST" "
     fi
 "
 
-# Step 2: Copy .env.production to remote
+# Step 2: Copy .env for docker compose
 echo -e "${GREEN}Step 2: Copying environment config...${NC}"
-scp .env.production "$DEPLOY_HOST:$REMOTE_DIR/.env"
-
-# Create .env file for docker compose
 ssh "$DEPLOY_HOST" "cat > '$REMOTE_DIR/.env' << 'ENVEOF'
 JWT_SECRET=$JWT_SECRET
 ENVEOF"
@@ -67,38 +64,15 @@ ssh "$DEPLOY_HOST" "
     docker build $REBUILD_FLAG -t '$IMAGE_NAME' .
 "
 
-# Step 4: Restart container via docker compose
+# Step 4: Restart container (volume is preserved — data persists)
 echo -e "${GREEN}Step 4: Restarting container...${NC}"
 ssh "$DEPLOY_HOST" "
     cd '$REMOTE_DIR'
-    docker compose down 2>/dev/null || true
-    docker compose up -d
+    docker compose up -d --force-recreate --build
 "
 
-# Step 5: Run seed if first deployment (database doesn't exist yet)
-echo -e "${GREEN}Step 5: Checking database...${NC}"
-ssh "$DEPLOY_HOST" "
-    # Wait for container to start
-    sleep 3
-    # Check if database has data
-    VOLUME_PATH=\$(docker volume inspect bosarsalog_bosarsalog-data --format '{{.Mountpoint}}' 2>/dev/null || echo '')
-    if [ -n \"\$VOLUME_PATH\" ] && [ ! -f \"\$VOLUME_PATH/bosarsalog.db\" ]; then
-        echo 'First deployment — seeding database...'
-        docker exec $CONTAINER_NAME node -e \"
-            import('./dist/server/db/database.js').then(m => {
-                const db = m.initDb();
-                import('./dist/server/db/schema.js').then(s => {
-                    s.runMigrations(db);
-                    console.log('Schema created');
-                    db.close();
-                });
-            });
-        \" 2>/dev/null || true
-    fi
-"
-
-# Step 6: Verify deployment
-echo -e "${GREEN}Step 6: Verifying deployment...${NC}"
+# Step 5: Verify deployment
+echo -e "${GREEN}Step 5: Verifying deployment...${NC}"
 sleep 3
 
 # Check container status
@@ -117,13 +91,10 @@ fi
 if curl -sf -o /dev/null "$SITE_URL" 2>/dev/null; then
     echo -e "${GREEN}✓ Site is accessible at $SITE_URL${NC}"
 else
-    echo -e "${YELLOW}⚠ Public URL not yet accessible — configure Cloudflare tunnel for bosarsalog.oeradio.at${NC}"
+    echo -e "${YELLOW}⚠ Public URL not yet accessible — configure Cloudflare tunnel${NC}"
 fi
 
 echo ""
 echo -e "${GREEN}=== Deployment complete ===${NC}"
 echo ""
-echo "Next steps if Cloudflare not configured:"
-echo "  1. Go to Cloudflare Zero Trust dashboard"
-echo "  2. Add public hostname bosarsalog.oeradio.at to the host-node-01 tunnel"
-echo "  3. Point to http://bosarsalog:3000 (container name via cloudflared-tunnel network)"
+echo "To seed a fresh database:  docker exec $CONTAINER_NAME node dist/server/db/seed.js"
