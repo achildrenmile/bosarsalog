@@ -14,7 +14,6 @@ interface EntryForm {
   callsign: string;
   operator: any;
   rapport: string;
-  einstiegspunktId: number | null;
   notes: string;
 }
 
@@ -22,23 +21,15 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
   const [bundeslaender, setBundeslaender] = useState<any[]>([]);
   const [bezirke, setBezirke] = useState<any[]>([]);
   const [linkedRepeaters, setLinkedRepeaters] = useState<any[]>([]);
-  const [einstiegspunkte, setEinstiegspunkte] = useState<any[]>([]);
   const [collapsedBl, setCollapsedBl] = useState<Set<string>>(new Set());
-  const [blEpSelection, setBlEpSelection] = useState<Record<string, number | null>>({});
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editForm, setEditForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '', einstiegspunktId: null, notes: '' });
+  const [editForm, setEditForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '', notes: '' });
 
   useEffect(() => {
     apiFetch('/api/v1/reference/bundeslaender').then(setBundeslaender).catch(() => {});
     apiFetch('/api/v1/reference/bezirke').then(setBezirke).catch(() => {});
-    // Fetch ALL linked repeaters from DB — no exercise config needed
     apiFetch('/api/v1/repeaters').then((all: any[]) => {
-      const linked = all.filter(r => r.is_linked);
-      setLinkedRepeaters(linked);
-      // Load Einstiegspunkte for all linked repeaters
-      Promise.all(
-        linked.map(r => apiFetch(`/api/v1/repeaters/${r.id}/einstiegspunkte`).catch(() => []))
-      ).then(results => setEinstiegspunkte(results.flat()));
+      setLinkedRepeaters(all.filter(r => r.is_linked));
     }).catch(() => {});
   }, []);
 
@@ -73,7 +64,6 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
     if (!repeaterId) return;
 
     const parsed = parseRapport(form.rapport);
-    const epId = form.einstiegspunktId || blEpSelection[bundeslandCode] || null;
 
     try {
       const report = await apiFetch(`/api/v1/exercises/${exerciseId}/reports`, {
@@ -82,7 +72,6 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
           operator_id: form.operator.id,
           repeater_id: repeaterId,
           ...parsed,
-          einstiegspunkt_id: epId,
           notes: form.notes || null,
         }),
       });
@@ -93,16 +82,12 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
         if (existing) {
           const updated = await apiFetch(`/api/v1/exercises/${exerciseId}/reports/${existing.id}`, {
             method: 'PATCH',
-            body: JSON.stringify({ ...parsed, einstiegspunkt_id: epId, notes: form.notes || null }),
+            body: JSON.stringify({ ...parsed, notes: form.notes || null }),
           });
           onReportUpdated(updated);
         }
       }
     }
-  };
-
-  const handleEpChange = (bundeslandCode: string, epId: number | null) => {
-    setBlEpSelection(prev => ({ ...prev, [bundeslandCode]: epId }));
   };
 
   const handleEdit = (report: any) => {
@@ -111,7 +96,6 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
       callsign: report.callsign,
       operator: { id: report.operator_id, callsign: report.callsign },
       rapport: report.readability && report.strength ? `${report.readability}/${report.strength}${report.db_over_s9 || ''}` : '',
-      einstiegspunktId: report.einstiegspunkt_id || null,
       notes: report.notes || '',
     });
   };
@@ -122,7 +106,7 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
     try {
       const updated = await apiFetch(`/api/v1/exercises/${exerciseId}/reports/${editingId}`, {
         method: 'PATCH',
-        body: JSON.stringify({ ...parsed, einstiegspunkt_id: editForm.einstiegspunktId, notes: editForm.notes || null }),
+        body: JSON.stringify({ ...parsed, notes: editForm.notes || null }),
       });
       onReportUpdated(updated);
       setEditingId(null);
@@ -137,7 +121,6 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
     } catch {}
   };
 
-  // All linked repeater IDs for filtering reports
   const linkedRepIds = new Set(linkedRepeaters.map(r => r.id));
 
   return (
@@ -151,7 +134,6 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
 
         return (
           <div key={bl.code} className="bg-white rounded-lg shadow-sm overflow-hidden">
-            {/* Bundesland header */}
             <div
               onClick={() => toggleBl(bl.code)}
               className="bg-gray-50 px-3 py-2 flex items-center justify-between cursor-pointer hover:bg-gray-100 border-b"
@@ -160,29 +142,14 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
                 <span className="text-xs text-gray-400">{isCollapsed ? '▶' : '▼'}</span>
                 <span className="font-medium text-sm">{bl.name}</span>
                 <span className="bg-[#0d6efd] text-white text-xs px-1.5 py-0.5 rounded-full">{reportCount}</span>
-                {blRep && (
-                  <span className="text-xs text-blue-600">{blRep.short_name}</span>
-                )}
               </div>
-              {einstiegspunkte.length > 0 && (
-                <select
-                  value={blEpSelection[bl.code] || ''}
-                  onChange={e => {
-                    e.stopPropagation();
-                    handleEpChange(bl.code, e.target.value ? parseInt(e.target.value) : null);
-                  }}
-                  onClick={e => e.stopPropagation()}
-                  className="text-xs border border-gray-300 rounded px-1.5 py-0.5"
-                >
-                  <option value="">Einstiegspunkt</option>
-                  {einstiegspunkte.map(ep => (
-                    <option key={ep.id} value={ep.id}>{ep.abbreviation} ({ep.site_name})</option>
-                  ))}
-                </select>
+              {blRep && (
+                <span className="text-xs text-blue-600 font-medium">
+                  {blRep.site_name || blRep.short_name} ({blRep.callsign || blRep.short_name})
+                </span>
               )}
             </div>
 
-            {/* Bezirk rows */}
             {!isCollapsed && (
               <div className="divide-y divide-gray-100">
                 {blBezirke.map(bz => {
@@ -192,8 +159,6 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
                       key={bz.code}
                       bezirk={bz}
                       reports={bzReports}
-                      einstiegspunkte={einstiegspunkte}
-                      defaultEpId={blEpSelection[bl.code] || null}
                       onSubmit={(form) => handleBezirkSubmit(bz.code, bl.code, form)}
                       onEdit={handleEdit}
                       onDelete={handleDelete}
@@ -217,8 +182,6 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
 interface BezirkRowProps {
   bezirk: any;
   reports: any[];
-  einstiegspunkte: any[];
-  defaultEpId: number | null;
   onSubmit: (form: EntryForm) => void;
   onEdit: (report: any) => void;
   onDelete: (id: number) => void;
@@ -229,14 +192,14 @@ interface BezirkRowProps {
   onEditCancel: () => void;
 }
 
-function BezirkRow({ bezirk, reports, einstiegspunkte, defaultEpId, onSubmit, onEdit, onDelete, editingId, editForm, onEditChange, onEditSave, onEditCancel }: BezirkRowProps) {
-  const [form, setForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '', einstiegspunktId: null, notes: '' });
+function BezirkRow({ bezirk, reports, onSubmit, onEdit, onDelete, editingId, editForm, onEditChange, onEditSave, onEditCancel }: BezirkRowProps) {
+  const [form, setForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '', notes: '' });
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!form.operator) return;
-    onSubmit({ ...form, einstiegspunktId: form.einstiegspunktId || defaultEpId });
-    setForm({ callsign: '', operator: null, rapport: '', einstiegspunktId: null, notes: '' });
+    onSubmit(form);
+    setForm({ callsign: '', operator: null, rapport: '', notes: '' });
   };
 
   return (
@@ -248,7 +211,6 @@ function BezirkRow({ bezirk, reports, einstiegspunkte, defaultEpId, onSubmit, on
         <span className="text-xs text-gray-500">{bezirk.name}</span>
       </div>
 
-      {/* Existing reports */}
       <div className="flex flex-wrap gap-1 mb-1">
         {reports.map(r => (
           <div key={r.id} className="group">
@@ -267,7 +229,6 @@ function BezirkRow({ bezirk, reports, einstiegspunkte, defaultEpId, onSubmit, on
                 {r.readability && r.strength && (
                   <span className="text-gray-500">{r.readability}/{r.strength}{r.db_over_s9 || ''}</span>
                 )}
-                {r.einstiegspunkt_abbr && <span className="text-blue-600">{r.einstiegspunkt_abbr}</span>}
                 {r.notes && <span className="text-amber-600">({r.notes})</span>}
                 <button
                   onClick={e => { e.stopPropagation(); onDelete(r.id); }}
@@ -281,7 +242,6 @@ function BezirkRow({ bezirk, reports, einstiegspunkte, defaultEpId, onSubmit, on
         ))}
       </div>
 
-      {/* Inline entry form */}
       <form onSubmit={handleSubmit} className="flex items-center gap-1">
         <CallsignInput
           value={form.callsign}
@@ -302,18 +262,6 @@ function BezirkRow({ bezirk, reports, einstiegspunkte, defaultEpId, onSubmit, on
             }
           }}
         />
-        {einstiegspunkte.length > 0 && (
-          <select
-            value={form.einstiegspunktId || defaultEpId || ''}
-            onChange={e => setForm(f => ({ ...f, einstiegspunktId: e.target.value ? parseInt(e.target.value) : null }))}
-            className="text-xs border border-gray-300 rounded px-1 py-0.5"
-          >
-            <option value="">EP</option>
-            {einstiegspunkte.map(ep => (
-              <option key={ep.id} value={ep.id}>{ep.abbreviation}</option>
-            ))}
-          </select>
-        )}
         <input
           type="text"
           value={form.notes}
