@@ -1,0 +1,21 @@
+{
+  "name": "bosarsalog",
+  "version": "1.0.0",
+  "private": true,
+  "description": "BOS-ARSA Log — Krisenkommunikationsübung Live-Erfassung",
+  "scripts": {
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "cd server && npm run dev",
+    "dev:client": "cd client && npm run dev",
+    "build": "npm run build:client && npm run build:server",
+    "build:client": "cd client && npm run build",
+    "build:server": "cd server && npm run build",
+    "start": "node dist/server/index.js",
+    "db:seed": "cd server && npx tsx src/db/seed.ts",
+    "db:reset": "cd server && npx tsx src/db/reset.ts"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "typescript": "^5.7.3"
+  }
+}
