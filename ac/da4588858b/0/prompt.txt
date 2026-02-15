@@ -1,0 +1,665 @@
+Implement the following plan:
+
+# Login-Umbau: Benutzername + Passwort statt Rufzeichen + PIN
+
+## Context
+Aktuell wird beim Login ein Rufzeichen + PIN eingegeben. Das soll ersetzt werden durch zwei feste Benutzer: **admin** (voller Zugriff) und **operator** (kann während laufender Übung Umsetzer hinzufügen und Daten erfassen). Da die Login-Identität kein Rufzeichen mehr ist, muss der Operator-Callsign pro Umsetzer/Bundesabfrage manuell eingebbar sein — das ist bereits implementiert über das "OP Rufzeichen"-Feld pro Repeater.
+
+## Änderungen
+
+### 1. Schema: admins-Tabelle anpassen
+**Datei:** `server/src/db/schema.ts`
+- `callsign` → `username TEXT UNIQUE NOT NULL`
+- `pin_hash` → `password_hash TEXT NOT NULL`
+- Migration: DROP + CREATE (nur Seed-Daten, kein Datenverlust)
+
+### 2. Seed: Zwei Benutzer
+**Datei:** `server/src/db/seed.ts`
+- `admin` / `BosArsa2024!` / role=admin
+- `operator` / `Funk73!ops` / role=operator
+
+### 3. Auth-Route: username + password
+**Datei:** `server/src/routes/auth.ts`
+- Body-Felder: `username`, `password` statt `callsign`, `pin`
+- JWT-Payload: `{id, username, role}`
+
+### 4. Auth-Middleware: Interface anpassen
+**Datei:** `server/src/middleware/auth.ts`
+- `AuthRequest.admin.callsign` → `.username`
+
+### 5. Rollenprüfung auf Routen
+**Datei:** `server/src/routes/exercises.ts`
+- `requireRole('admin')`: POST `/` (Übung erstellen), PATCH `/:id` (Name/Status ändern), DELETE `/:id/repeaters/:rid`
+- Beide Rollen: GET, POST repeaters, POST reports, POST attendance
+- `admin.callsign` → `admin.username` für `entered_by`
+
+### 6. Socket.IO anpassen
+**Datei:** `server/src/services/socket.ts`
+- `admin.callsign` → `admin.username`
+
+### 7. Login-Seite
+**Datei:** `client/src/pages/LoginPage.tsx`
+- "Rufzeichen" → "Benutzername", "PIN" → "Passwort"
+- Kein uppercase, kein font-mono
+
+### 8. useAuth Hook
+**Datei:** `client/src/hooks/useAuth.tsx`
+- Interface: `callsign` → `username`
+- `login(username, password)`
+
+### 9. Layout + Dashboard
+**Dateien:** `client/src/components/Layout.tsx`, `client/src/pages/DashboardPage.tsx`
+- `admin?.callsign` → `admin?.username`
+- "Neue Übung" Button nur für admin
+
+### 10. ExerciseSetupPage: Operator-Einschränkungen
+**Datei:** `client/src/pages/ExerciseSetupPage.tsx`
+- Nur admin: Übungsname ändern, "Übung starten", Bundesland an/aus togglen
+- Operator: Umsetzer aktivieren/deaktivieren, OP-Rufzeichen eintragen, Custom Repeater hinzufügen
+
+## Verifizierung
+1. `npm run build` kompiliert
+2. Login als admin → alles sichtbar, kann Übung erstellen/starten
+3. Login als operator → Dashboard, Übung öffnen, Umsetzer aktivieren, OP-Rufzeichen eintragen
+4. Operator kann NICHT: Übung erstellen, Übung starten
+5. Deploy + reseed auf host-node-01
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+
+---
+
+commit and deploy to achildrenmile@host-node-01
+
+---
+
+latest version not deployed
+
+---
+
+das rufzeichen wird dann bei der eingabe eingegeben. nicht bei der einrichtung
+
+---
+
+in land (umsetzer) soll auch der operator pro bundesland eingegeben werden können und die oelink umsetzer zur auswahl stehen als zusatz
+
+---
+
+die ExerciseSetupPage soll auch das OP-Rufzeichen nicht mehr haben. überprüfe auch die sicherheit und fixe und rolle aus
+
+---
+
+kann keine neuen übungen anlegen lockdown-install.js:1 SES Removing unpermitted intrinsics
+/api/v1/exercises:1  Failed to load resource: the server responded with a status of 409 ()
+/api/v1/exercises:1  Failed to load resource: the server responded with a status of 409 ()
+/api/v1/exercises:1  Failed to load resource: the server responded with a status of 409 ()
+/api/v1/exercises:1  Failed to load resource: the server responded with a status of 409 ()
+/api/v1/exercises:1  Failed to load resource: the server responded with a status of 409 ()
+/api/v1/exercises:1  Failed to load resource: the server responded with a status of 409 ()
+
+---
+
+es soll mehrere übungstypen geben. bislang gibt es nur die krisenkommunikationsübung. es soll auch möglich sein übungen an allen tagen zu machen. das soll nur der admin können. genauso, wie die übung abschließen, soll auch nur der admin können.
+
+---
+
+lösche alle daten
+
+---
+
+[Request interrupted by user]
+
+---
+
+lösche die daten. nicht die user
+
+---
+
+remove den status. übung ist immer offen. kein start, abschließen nötig
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me chronologically analyze the entire conversation:
+
+1. **Initial Request**: User provided a detailed plan to replace callsign+PIN auth with username+password login system across the full stack (10 steps).
+
+2. **Implementation Phase 1 - Login Overhaul**:
+   - Modified 11 files across server and client
+   - Schema: `admins` table changed from `callsign/pin_hash` to `username/password_hash`
+   - Seed: Two users - `admin`/`BosArsa2024!` and `operator`/`Funk73!ops`
+   - Auth route: `username`/`password` instead of `callsign`/`pin`
+   - Auth middleware: interface changed
+   - Exercise routes: `admin.callsign` → `admin.username`, added `requireRole('admin')` on POST, PATCH, DELETE
+   - Socket: `admin.callsign` → `admin.username`
+   - Client: LoginPage, useAuth, Layout, DashboardPage, ExerciseSetupPage all updated
+   - Build succeeded, committed, deployed to host-node-01
+
+3. **User feedback: "latest version not deployed"**:
+   - Investigated - code was actually deployed correctly, the `Socket connected: undefined` was from stale JWT tokens
+   - Verified by checking container contents for `username` and `Benutzername`
+
+4. **User feedback: "das rufzeichen wird dann bei der eingabe eingegeben. nicht bei der einrichtung"**:
+   - Moved OP callsign field from ExerciseSetupPage to LandMode (live data entry view)
+   - Removed `updateOp` function and OP input fields from ExerciseSetupPage
+   - Added OP callsign input next to repeater info in LandMode
+
+5. **User feedback: "in land (umsetzer) soll auch der operator pro bundesland eingegeben werden können und die oelink umsetzer zur auswahl stehen als zusatz"**:
+   - Changed OP callsign from per-repeater to per-Bundesland in LandMode header
+   - Added `updateBlOp` function that updates all repeaters in a BL
+   - Added "OE-Link" section showing all linked repeaters as additional blue tabs
+   - Removed per-repeater OP callsign field
+
+6. **User feedback: "die ExerciseSetupPage soll auch das OP-Rufzeichen nicht mehr haben. überprüfe auch die sicherheit und fixe und rolle aus"**:
+   - Confirmed ExerciseSetupPage was already clean (no OP fields)
+   - Security audit:
+     - ExercisePage: Added admin-only check for Starten/Abschließen buttons
+     - ExerciseSetupPage: operator can activate but not deactivate repeaters (checkbox disabled when active for non-admin)
+     - toggleRepeater: added `if (!isAdmin) return;` guard for deactivation
+
+7. **User feedback: "kann keine neuen übungen anlegen" with 409 errors**:
+   - The "Neue Übung" button always tried next Sunday - existing exercise caused 409
+   - Fixed: on 409, navigate to existing exercise for that date
+
+8. **User feedback: multiple exercise types, any day, admin-only create/complete**:
+   - Removed UNIQUE constraint on exercises.date (migration to recreate table)
+   - DashboardPage: replaced auto-Sunday link with creation form (date picker + type/name dropdown)
+   - Predefined types: Krisenkommunikationsübung, Notfunkübung, Feldtag, Relaisfunktest
+   - Custom name option
+   - Name required for new exercises
+
+9. **User feedback: "lösche alle daten" then "lösche die daten. nicht die user"**:
+   - Deleted exercises, reports, attendance, exercise_repeaters
+   - Kept admins table intact
+
+10. **User feedback: "remove den status. übung ist immer offen. kein start, abschließen nötig"**:
+    - ExercisePage: removed handleStatusChange, status badge, Starten/Abschließen buttons, removed useAuth import
+    - ExerciseSetupPage: removed activateExercise function and "Übung starten" button, removed useNavigate
+    - DashboardPage: removed status column from table, removed statusColor/statusLabel functions, removed status from interface
+    - Server exercises.ts: removed `status` from PATCH route allowed fields
+    - **This was in progress when the user also sent: "use guids and not int for the exercises"**
+
+11. **User message during work: "use guids and not int for the exercises"**:
+    - This was sent while I was still working on removing status
+    - The status removal changes were partially applied but NOT yet built/committed/deployed
+
+Let me check the current state of incomplete work:
+- Status removal: All edits made to ExercisePage, ExerciseSetupPage, DashboardPage, and server exercises.ts
+- BUT: not yet built, committed, or deployed
+- GUID migration: not started at all
+
+Summary:
+1. Primary Request and Intent:
+   The user requested a series of incremental changes to the BOS-ARSA Log application:
+   - Replace callsign+PIN authentication with username+password login (admin/operator roles)
+   - Move OP callsign entry from setup to live data entry (LandMode)
+   - Make OP callsign per-Bundesland instead of per-repeater
+   - Add OE-Link repeater group as additional tabs in LandMode
+   - Security audit and role enforcement across the app
+   - Support multiple exercise types with exercises on any day
+   - Remove exercise status concept entirely (no start/complete workflow)
+   - Use GUIDs instead of integer IDs for exercises
+
+2. Key Technical Concepts:
+   - React 18 + TypeScript + Vite frontend, Express + TypeScript backend
+   - SQLite via better-sqlite3 with migration pattern using PRAGMA table_info
+   - JWT authentication with role-based access control (admin/operator)
+   - Socket.IO for real-time sync
+   - NixOS environment: `nix-shell -p nodejs --run "..."` for npm/node
+   - Docker deployment to `achildrenmile@host-node-01` at `~/apps/bosarsalog`
+   - Deployment flow: `git push && ssh host "cd apps/bosarsalog && git pull && docker compose up -d --build"`
+   - Reseed: `docker compose exec bosarsalog node dist/server/db/seed.js`
+
+3. Files and Code Sections:
+
+   - **`server/src/db/schema.ts`** — Database schema and migrations
+     - Changed `admins` table: `callsign`/`pin_hash` → `username`/`password_hash`, default role `operator`
+     - Added migration to detect old `callsign` column and DROP+CREATE admins table
+     - Removed UNIQUE constraint on `exercises.date` with table recreation migration
+     - Changed exercises table: `date TEXT UNIQUE NOT NULL` → `date TEXT NOT NULL`
+     ```typescript
+     // Migration: remove UNIQUE constraint on exercises.date
+     const exIndexes = db.prepare("PRAGMA index_list(exercises)").all() as any[];
+     const hasUniqueDateIdx = exIndexes.some((idx: any) => {
+       if (!idx.unique) return false;
+       const cols = db.prepare(`PRAGMA index_info("${idx.name}")`).all() as any[];
+       return cols.length === 1 && cols[0].name === 'date';
+     });
+     if (hasUniqueDateIdx) {
+       db.exec(`
+         CREATE TABLE exercises_new (
+           id INTEGER PRIMARY KEY AUTOINCREMENT,
+           name TEXT,
+           date TEXT NOT NULL,
+           status TEXT DEFAULT 'planned',
+           notes TEXT,
+           created_at TEXT DEFAULT (datetime('now'))
+         );
+         INSERT INTO exercises_new SELECT * FROM exercises;
+         DROP TABLE exercises;
+         ALTER TABLE exercises_new RENAME TO exercises;
+       `);
+     }
+     ```
+
+   - **`server/src/db/seed.ts`** — Seed data
+     - Replaced single admin with two users:
+     ```typescript
+     const adminHash = bcrypt.hashSync('BosArsa2024!', 10);
+     const operatorHash = bcrypt.hashSync('Funk73!ops', 10);
+     db.prepare('INSERT INTO admins (username, password_hash, role) VALUES (?, ?, ?)').run('admin', adminHash, 'admin');
+     db.prepare('INSERT INTO admins (username, password_hash, role) VALUES (?, ?, ?)').run('operator', operatorHash, 'operator');
+     ```
+
+   - **`server/src/routes/auth.ts`** — Login route
+     - Changed to accept `username`/`password`, lookup by username, compare password_hash
+     - JWT payload: `{ id, username, role }`
+
+   - **`server/src/middleware/auth.ts`** — Auth middleware
+     - `AuthRequest.admin` interface: `callsign` → `username`
+     - `requireRole()` function already existed, now exported and used
+
+   - **`server/src/routes/exercises.ts`** — Exercise CRUD with role enforcement
+     - `requireRole('admin')` on: POST `/` (create), PATCH `/:id` (update), DELETE `/:id/repeaters/:rid`
+     - `admin.callsign` → `admin.username` for `entered_by` fields
+     - POST `/` now requires both `date` and `name`
+     - PATCH `/:id`: **most recently edited to remove `status` from allowed fields**:
+     ```typescript
+     // Update exercise notes/name (admin only)
+     exercisesRouter.patch('/:id', requireRole('admin'), (req, res) => {
+       const db = getDb();
+       const { notes, name } = req.body;
+       const updates: string[] = [];
+       const params: any[] = [];
+       if (notes !== undefined) { updates.push('notes = ?'); params.push(notes); }
+       if (name !== undefined) { updates.push('name = ?'); params.push(name); }
+     ```
+
+   - **`server/src/services/socket.ts`** — WebSocket events
+     - All `admin.callsign` → `admin.username`
+
+   - **`client/src/hooks/useAuth.tsx`** — Auth context
+     - Admin interface: `callsign`/`name` → `username` only
+     - `login(username, password)` instead of `login(callsign, pin)`
+
+   - **`client/src/pages/LoginPage.tsx`** — Login form
+     - "Rufzeichen" → "Benutzername", "PIN" → "Passwort"
+     - Removed uppercase transform and font-mono
+
+   - **`client/src/components/Layout.tsx`** — Nav bar
+     - `admin?.callsign` → `admin?.username`, removed font-mono
+
+   - **`client/src/pages/DashboardPage.tsx`** — Dashboard
+     - Added `useNavigate`, creation form state variables
+     - Exercise type constants: `EXERCISE_TYPES = ['Krisenkommunikationsübung', 'Notfunkübung', 'Feldtag', 'Relaisfunktest']`
+     - Replaced auto-Sunday Link with toggle form: date picker + type dropdown + custom name
+     - "Neue Übung" only for admin role
+     - **Most recently: removed status column, statusColor/statusLabel functions, status from ExerciseSummary interface**
+
+   - **`client/src/pages/ExercisePage.tsx`** — Live exercise view
+     - **Most recently: removed handleStatusChange, status badge, Starten/Abschließen buttons, removed useAuth import and admin variable**
+     ```typescript
+     // Current state after status removal:
+     return (
+       <div className="space-y-4">
+         <div className="flex items-center justify-between flex-wrap gap-2">
+           <h1 className="text-xl font-bold text-[#5b3a1a]">
+             {exercise.name || 'Übung'} — {new Date(exercise.date + 'T00:00:00').toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+           </h1>
+           <div className="flex items-center gap-2">
+             <Link to={`/exercises/${id}/setup`} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm">
+               Einrichten
+             </Link>
+             <Link to={`/exercises/${id}/reports`} className="bg-amber-100 hover:bg-amber-200 text-amber-800 px-3 py-1 rounded text-sm">
+               Auswertung
+             </Link>
+           </div>
+         </div>
+     ```
+
+   - **`client/src/pages/ExerciseSetupPage.tsx`** — Exercise setup
+     - Removed `useNavigate`, `activateExercise`, "Übung starten" button
+     - OP callsign fields removed entirely (moved to LandMode earlier)
+     - Admin-only: exercise name, Bundesland toggles
+     - Operator: can activate repeaters (not deactivate), add custom repeaters
+     - Checkbox disabled for active repeaters when not admin
+
+   - **`client/src/components/LandMode.tsx`** — Live data entry view
+     - OP callsign now per-Bundesland in header:
+     ```typescript
+     const updateBlOp = async (blCode: string, callsignVal: string) => {
+       const blReps = repeatersByBl[blCode] || [];
+       for (const r of blReps) {
+         await apiFetch(`/api/v1/exercises/${exerciseId}/repeaters/${r.repeater_id}`, {
+           method: 'PATCH',
+           body: JSON.stringify({ operator_callsign: callsignVal || null }),
+         });
+       }
+     };
+     ```
+     - OE-Link section with blue-styled tabs for all `is_linked` repeaters
+     - Linked repeaters collected separately: `if (r.is_linked) linkedRepeaters.push(r);`
+
+4. Errors and fixes:
+   - **Deployment path wrong**: First tried `ssh host "cd bosarsalog && ..."` - failed because app is at `~/apps/bosarsalog`. Fixed by finding path with `find ~ -name 'docker-compose.yml'`.
+   - **"latest version not deployed"**: User reported old version. Investigated - code was deployed correctly, `Socket connected: undefined` was from stale JWT with old `callsign` field. Verified by checking container files.
+   - **User: "das rufzeichen wird dann bei der eingabe eingegeben. nicht bei der einrichtung"**: OP callsign was in setup page, user wanted it in the live data entry view. Moved to LandMode.
+   - **409 errors creating exercises**: "Neue Übung" always tried next Sunday date, existing exercise caused UNIQUE constraint violation. Fixed by navigating to existing exercise on catch, then later removed UNIQUE constraint entirely.
+   - **User couldn't create exercises at all**: After removing UNIQUE constraint and adding proper creation form with date picker, this was resolved.
+
+5. Problem Solving:
+   - Role-based access control implemented both server-side (requireRole middleware) and client-side (conditional rendering)
+   - SQLite UNIQUE constraint removal required table recreation via migration
+   - OP callsign moved from per-repeater in setup to per-Bundesland in live view
+   - Exercise creation changed from auto-Sunday to flexible date+type form
+
+6. All user messages:
+   - "Implement the following plan: # Login-Umbau: Benutzername + Passwort statt Rufzeichen + PIN" (detailed 10-step plan)
+   - "commit and deploy to achildrenmile@host-node-01"
+   - "latest version not deployed"
+   - "das rufzeichen wird dann bei der eingabe eingegeben. nicht bei der einrichtung"
+   - "in land (umsetzer) soll auch der operator pro bundesland eingegeben werden können und die oelink umsetzer zur auswahl stehen als zusatz"
+   - "die ExerciseSetupPage soll auch das OP-Rufzeichen nicht mehr haben. überprüfe auch die sicherheit und fixe und rolle aus"
+   - "kann keine neuen übungen anlegen" (with 409 console errors)
+   - "es soll mehrere übungstypen geben. bislang gibt es nur die krisenkommunikationsübung. es soll auch möglich sein übungen an allen tagen zu machen. das soll nur der admin können. genauso, wie die übung abschließen, soll auch nur der admin können."
+   - "lösche alle daten" → "lösche die daten. nicht die user"
+   - "remove den status. übung ist immer offen. kein start, abschließen nötig"
+   - "use guids and not int for the exercises" (sent while status removal was in progress)
+
+7. Pending Tasks:
+   - **Status removal**: All code edits are done but NOT yet built, committed, or deployed
+   - **GUID migration for exercises**: User explicitly requested using GUIDs instead of integer IDs for exercises — not yet started
+
+8. Current Work:
+   I was removing the exercise status concept (planned/active/completed) when the user sent an additional request to use GUIDs for exercise IDs. The status removal edits are complete across all files:
+   - `server/src/routes/exercises.ts`: removed `status` from PATCH allowed fields
+   - `client/src/pages/ExercisePage.tsx`: removed status badge, Starten/Abschließen buttons, handleStatusChange, useAuth import
+   - `client/src/pages/ExerciseSetupPage.tsx`: removed "Übung starten" button, activateExercise, useNavigate
+   - `client/src/pages/DashboardPage.tsx`: removed status column from table, statusColor/statusLabel functions, status from interface
+   
+   These changes have NOT been built, committed, or deployed yet.
+
+9. Optional Next Step:
+   Two tasks need completion:
+   1. Build, commit, and deploy the status removal changes (edits are done)
+   2. Implement GUID-based exercise IDs per user request: "use guids and not int for the exercises"
+   
+   The GUID migration requires changes to: schema (exercises.id → TEXT with UUID), seed, all routes using exercise IDs, all foreign keys (exercise_repeaters, exercise_attendance, signal_reports), and client-side URL params/parsing. This is a significant cross-cutting change.
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+Please continue the conversation from where we left it off without asking the user any further questions. Continue with the last task that you were asked to work on.
+
+---
+
+auf jeden schirm sollte die möglichkeit sein (an einer position) sein operator callsign einzugeben. => bei laufender übung. admin braucht das nur, wenn admin eine übung macht! die setup pages sollen das nicht haben
+
+---
+
+bei bundesland abfrage soll ein dropdown mit allen OELink Relais. wobei pro bundesland die dropdownlist mit einem, in dem bundesland befindlichen relais initialisiert sein soll. wenn ein bundesland kein relais hat, dann einfach das erste aus der liste nehmen
+
+---
+
+sehe nichts
+
+---
+
+für bund bundesland soll es keine konfiguration geben. hier sollen einfach alle oelink umsetzer genommen werden. da braucht der admin nichts machen
+
+---
+
+relaisnamen ausschreiben... keinen ep! remove Ep!
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me chronologically analyze the conversation:
+
+1. **Context from previous session**: The conversation continues from a previous session where many features were implemented:
+   - Login overhaul (callsign+PIN → username+password)
+   - Landesweite restructuring (Bundesland-based repeater organization)
+   - Various UI improvements
+   - Status removal was in progress, GUID migration was requested
+
+2. **First task - Status removal + GUID migration**:
+   - Status removal edits were already done but not built/committed
+   - GUID migration needed to be implemented
+   - I explored all exercise ID references across the codebase
+   - Changed schema: `exercises.id` from `INTEGER PRIMARY KEY AUTOINCREMENT` to `TEXT PRIMARY KEY`
+   - Changed all foreign keys in `exercise_repeaters`, `exercise_attendance`, `signal_reports` from `INTEGER` to `TEXT`
+   - Added migration in schema.ts to detect INTEGER id and recreate all exercise-related tables
+   - Updated `POST /exercises` to use `crypto.randomUUID()`
+   - Removed all `parseInt(id)` calls in ExercisePage.tsx
+   - Changed `exerciseId` prop type from `number` to `string` in LandMode and BundMode
+   - Changed `id` type from `number` to `string` in DashboardPage interface
+   - Removed `status` from overview query in index.ts
+   - Build succeeded, committed, deployed
+
+3. **User: "auf jeden schirm sollte die möglichkeit sein (an einer position) sein operator callsign einzugeben. => bei laufender übung. admin braucht das nur, wenn admin eine übung macht! die setup pages sollen das nicht haben"**
+   - Added single OP callsign input to ExercisePage header (next to Einrichten/Auswertung links)
+   - `updateOpCallsign` function updates all active repeaters when callsign changes
+   - Initializes from first repeater's `operator_callsign` on data load
+   - Removed per-Bundesland OP callsign inputs from LandMode (removed `updateBlOp` function and the per-BL input fields)
+   - Build succeeded, committed, deployed
+
+4. **User: "bei bundesland abfrage soll ein dropdown mit allen OELink Relais. wobei pro bundesland die dropdownlist mit einem, in dem bundesland befindlichen relais initialisiert sein soll. wenn ein bundesland kein relais hat, dann einfach das erste aus der liste nehmen"**
+   - First implementation: Changed BundMode to use all linked repeaters with per-BL dropdown
+   - Added `blRepSelection` state, initialized per-BL defaults
+   - Loaded EPs for all linked repeaters
+   - Added dropdown with linked repeaters in BL header
+
+5. **User: "sehe nichts"**
+   - Investigated: the exercise had no linked repeaters activated (only Gerlitze 2m, Goldeck 2m, and a simplex)
+   - Problem: `linkedRepeaters.length === 0` so dropdown never showed and initialization never ran
+   - Fix: Changed dropdown to show ALL non-simplex repeaters (not just linked), grouped as "OE-Link" and "Weitere"
+   - Changed initialization to cascade: linked in BL → any in BL → first linked → first overall
+   - Deployed
+
+6. **User: "für bund bundesland soll es keine konfiguration geben. hier sollen einfach alle oelink umsetzer genommen werden. da braucht der admin nichts machen"**
+   - Complete rewrite of BundMode: fetches ALL linked repeaters directly from `/api/v1/repeaters` (not from exercise config)
+   - Auto-maps each BL to its linked repeater based on `bundesland_code`
+   - Removed `repeaters` prop from BundMode (no longer needed from exercise)
+   - Updated ExercisePage to not pass `repeaters` to BundMode
+   - Deployed
+
+7. **User: "relaisnamen ausschreiben... keinen ep! remove Ep!"**
+   - Two requests: show full repeater names, remove all Einstiegspunkt (EP) functionality
+   - I rewrote BundMode completely:
+     - Removed all EP state: `einstiegspunkte`, `blEpSelection`
+     - Removed `einstiegspunktId` from EntryForm interface
+     - Removed EP dropdown from BL header
+     - Removed EP dropdown from BezirkRow form
+     - Removed EP from report display (`r.einstiegspunkt_abbr`)
+     - Removed EP from API calls (no more `einstiegspunkt_id` in POST/PATCH)
+     - Removed `einstiegspunkte` and `defaultEpId` from BezirkRowProps
+     - Changed BL header to show full repeater name: `{blRep.site_name || blRep.short_name} ({blRep.callsign || blRep.short_name})`
+   - File was written but NOT yet built, committed, or deployed
+
+The file was written but I was interrupted by the summary request before I could build, test, commit, and deploy.
+
+Summary:
+1. Primary Request and Intent:
+   The user is iteratively building a BOS-ARSA crisis communication exercise logging app. In this session, the requests were:
+   - Complete status removal from exercises (always open, no start/complete workflow)
+   - Migrate exercise IDs from INTEGER to TEXT UUIDs (GUIDs)
+   - Add a single OP callsign input on the exercise page (not setup pages)
+   - Add OE-Link repeater dropdown per Bundesland in BundMode
+   - Make BundMode fully automatic — fetch all OE-Link repeaters from DB, no admin configuration needed
+   - Show full repeater names (site_name + callsign) in BundMode header, and completely remove all Einstiegspunkt (EP) functionality from BundMode
+
+2. Key Technical Concepts:
+   - NixOS environment: `nix-shell -p nodejs --run "..."` for npm/node
+   - Monorepo: `/client` (React/Vite) + `/server` (Express/TypeScript)
+   - SQLite via better-sqlite3 with PRAGMA-based migrations in `server/src/db/schema.ts`
+   - UUID generation via `crypto.randomUUID()` for exercise IDs
+   - SQLite migration pattern: detect old schema, recreate tables (no ALTER for type changes)
+   - Docker deployment to `achildrenmile@host-node-01` at `~/apps/bosarsalog`
+   - Deployment flow: `git push && ssh host "cd ~/apps/bosarsalog && git pull && docker compose up -d --build"`
+   - German UI, English code convention
+   - Auth: JWT with admin/operator roles. Users: `admin`/`BosArsa2024!` and `operator`/`Funk73!ops`
+
+3. Files and Code Sections:
+
+   - **`server/src/db/schema.ts`** — Database schema and migrations
+     - Changed exercises table from `id INTEGER PRIMARY KEY AUTOINCREMENT` to `id TEXT PRIMARY KEY`
+     - Removed `status TEXT DEFAULT 'planned'` from exercises table
+     - Changed all foreign keys from `exercise_id INTEGER` to `exercise_id TEXT`
+     - Added migration to detect INTEGER id and recreate all exercise-related tables:
+     ```typescript
+     // Migration: convert exercises from INTEGER id to TEXT GUID
+     const exCols = db.prepare("PRAGMA table_info(exercises)").all() as any[];
+     const idCol = exCols.find((c: any) => c.name === 'id');
+     if (idCol && idCol.type === 'INTEGER') {
+       db.exec(`
+         CREATE TABLE exercises_new (
+           id TEXT PRIMARY KEY,
+           name TEXT,
+           date TEXT NOT NULL,
+           notes TEXT,
+           created_at TEXT DEFAULT (datetime('now'))
+         );
+         // ... recreates exercise_repeaters_new, exercise_attendance_new, signal_reports_new
+         // ... drops old tables, renames new tables
+       `);
+     }
+     ```
+
+   - **`server/src/routes/exercises.ts`** — Exercise CRUD routes
+     - Added `import { randomUUID } from 'crypto'`
+     - Changed list query: replaced `e.status` with `e.name` in SELECT
+     - Changed create endpoint to use UUID:
+     ```typescript
+     const id = randomUUID();
+     db.prepare('INSERT INTO exercises (id, date, name) VALUES (?, ?, ?)').run(id, date, name);
+     const exercise = db.prepare('SELECT * FROM exercises WHERE id = ?').get(id);
+     ```
+     - Removed `status` from PATCH allowed fields
+
+   - **`server/src/index.ts`** — Overview endpoint
+     - Changed `e.status` to `e.name` in the overview query
+
+   - **`client/src/pages/ExercisePage.tsx`** — Live exercise view
+     - Removed all `parseInt(id)` and `parseInt(id!)` calls, replaced with `id` and `id!`
+     - Removed `useAuth` import and `admin` variable (from status removal)
+     - Removed `handleStatusChange`, status badge, Starten/Abschließen buttons
+     - Added OP callsign state and update function:
+     ```typescript
+     const [opCallsign, setOpCallsign] = useState('');
+     
+     const updateOpCallsign = async (val: string) => {
+       const reps = exercise?.repeaters || [];
+       for (const r of reps) {
+         await apiFetch(`/api/v1/exercises/${id}/repeaters/${r.repeater_id}`, {
+           method: 'PATCH',
+           body: JSON.stringify({ operator_callsign: val || null }),
+         });
+       }
+       setExercise((prev: any) => prev ? {
+         ...prev,
+         repeaters: prev.repeaters?.map((r: any) => ({ ...r, operator_callsign: val || null })),
+       } : null);
+     };
+     ```
+     - Added OP callsign input in header next to Einrichten/Auswertung links
+     - Initializes opCallsign from first repeater's operator_callsign on load
+     - Removed `repeaters` prop from BundMode:
+     ```typescript
+     <BundMode
+       exerciseId={id!}
+       reports={reports}
+       onReportCreated={handleReportCreated}
+       onReportUpdated={handleReportUpdated}
+       onReportDeleted={handleReportDeleted}
+     />
+     ```
+
+   - **`client/src/pages/ExerciseSetupPage.tsx`** — Exercise setup
+     - Removed `useNavigate`, `activateExercise`, "Übung starten" button (status removal)
+
+   - **`client/src/pages/DashboardPage.tsx`** — Dashboard
+     - Changed `id: number` to `id: string` in ExerciseSummary interface
+     - Removed `status` field, statusColor/statusLabel functions, status column
+
+   - **`client/src/components/LandMode.tsx`** — Land mode view
+     - Changed `exerciseId: number` to `exerciseId: string` in Props
+     - Removed `updateBlOp` function (per-BL OP callsign updates)
+     - Removed per-BL OP callsign input fields from render
+
+   - **`client/src/components/BundMode.tsx`** — Bund mode view (MOST RECENTLY EDITED, NOT YET BUILT/DEPLOYED)
+     - Changed `exerciseId: number` to `exerciseId: string` in Props
+     - Removed `repeaters` prop entirely — now fetches all linked repeaters directly from `/api/v1/repeaters`
+     - Auto-maps each Bundesland to its OE-Link repeater based on `bundesland_code`
+     - **Most recent edit (not yet built)**: Complete removal of all Einstiegspunkt (EP) functionality:
+       - Removed `einstiegspunkte` state, `blEpSelection` state
+       - Removed `einstiegspunktId` from EntryForm interface
+       - Removed `handleEpChange` function
+       - Removed EP loading from useEffect
+       - Removed EP dropdown from BL header
+       - Removed EP dropdown from BezirkRow form
+       - Removed `einstiegspunkt_abbr` display from reports
+       - Removed `einstiegspunkt_id` from API POST/PATCH calls
+       - Removed `einstiegspunkte` and `defaultEpId` from BezirkRowProps
+       - Changed BL header to show full repeater name:
+       ```tsx
+       {blRep && (
+         <span className="text-xs text-blue-600 font-medium">
+           {blRep.site_name || blRep.short_name} ({blRep.callsign || blRep.short_name})
+         </span>
+       )}
+       ```
+     - Full current state of the file has been written via the Write tool but NOT built/committed/deployed
+
+4. Errors and fixes:
+   - **"sehe nichts" (can't see anything) in BundMode**: The exercise had no linked repeaters activated (only Gerlitze 2m, Goldeck 2m, simplex). BundMode's dropdown and initialization only worked when `linkedRepeaters.length > 0`. 
+     - First fix: Changed dropdown to show all non-simplex repeaters, not just linked. Changed initialization cascade.
+     - Second fix (per user request): Made BundMode completely independent of exercise config — fetches all linked repeaters from DB directly via `/api/v1/repeaters`.
+   - **Status still in queries**: The overview endpoint in `server/src/index.ts` still selected `e.status` — fixed by replacing with `e.name`.
+
+5. Problem Solving:
+   - GUID migration required recreating all exercise-related tables (exercises, exercise_repeaters, exercise_attendance, signal_reports) since SQLite can't ALTER column types
+   - OP callsign moved from per-Bundesland in LandMode to single input at ExercisePage level
+   - BundMode evolved through 3 iterations based on user feedback: from exercise-config-dependent with dropdown → auto-fetch all OE-Link from DB with no config needed
+
+6. All user messages:
+   - "auf jeden schirm sollte die möglichkeit sein (an einer position) sein operator callsign einzugeben. => bei laufender übung. admin braucht das nur, wenn admin eine übung macht! die setup pages sollen das nicht haben"
+   - "bei bundesland abfrage soll ein dropdown mit allen OELink Relais. wobei pro bundesland die dropdownlist mit einem, in dem bundesland befindlichen relais initialisiert sein soll. wenn ein bundesland kein relais hat, dann einfach das erste aus der liste nehmen"
+   - "sehe nichts"
+   - "achildrenmile@host-node-01" (sent while checking logs)
+   - "für bund bundesland soll es keine konfiguration geben. hier sollen einfach alle oelink umsetzer genommen werden. da braucht der admin nichts machen"
+   - "relaisnamen ausschreiben... keinen ep! remove Ep!"
+
+7. Pending Tasks:
+   - Build, commit, and deploy the latest BundMode changes (EP removal + full repeater names) — file has been written but not built/committed/deployed
+
+8. Current Work:
+   Immediately before this summary, I was implementing the user's request: "relaisnamen ausschreiben... keinen ep! remove Ep!" — I rewrote `client/src/components/BundMode.tsx` to:
+   1. Remove ALL Einstiegspunkt (EP) functionality (state, dropdowns, API params, display)
+   2. Show full repeater names in BL header: `{blRep.site_name || blRep.short_name} ({blRep.callsign || blRep.short_name})`
+   
+   The file was written via the Write tool but has **NOT yet been built, committed, or deployed**.
+
+9. Optional Next Step:
+   Build, commit, and deploy the BundMode changes. The file `client/src/components/BundMode.tsx` has been written with EP removal and full repeater names. Need to run:
+   ```
+   nix-shell -p nodejs --run "npm run build"
+   git add client/src/components/BundMode.tsx && git commit && git push
+   ssh achildrenmile@host-node-01 "cd ~/apps/bosarsalog && git pull && docker compose up -d --build"
+   ```
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+Please continue the conversation from where we left it off without asking the user any further questions. Continue with the last task that you were asked to work on.
+
+---
+
+YOU REMOVED THE dropdownlist! the dropdownlist is needed, but the show one repeater is not needed. also i cannot add entries. + is not working
+
+---
+
+der repeater soll im bund pro zeile auswählbar sein!
+
+---
+
+op rufzeichen pro lane (wien | OP: Rufzeichen)... jedes Bundesland hat einen anderen Operator
