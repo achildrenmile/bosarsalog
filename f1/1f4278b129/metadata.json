@@ -1,0 +1,61 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "f11f4278b129",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    ".dockerignore",
+    ".env.production",
+    ".env.production.example",
+    ".gitignore",
+    "CLAUDE.md",
+    "Dockerfile",
+    "README.md",
+    "client/index.html",
+    "client/package.json",
+    "client/src/App.tsx",
+    "client/src/components/BundMode.tsx",
+    "client/src/components/CallsignInput.tsx",
+    "client/src/components/LandMode.tsx",
+    "client/src/components/RunningTotals.tsx",
+    "client/src/index.css",
+    "client/src/main.tsx",
+    "client/src/pages/DashboardPage.tsx",
+    "client/src/pages/ExercisePage.tsx",
+    "client/src/pages/ExerciseSetupPage.tsx",
+    "client/src/pages/OperatorsPage.tsx",
+    "client/src/pages/ReportsPage.tsx",
+    "client/src/services/socket.ts",
+    "client/tsconfig.app.json",
+    "client/tsconfig.json",
+    "client/tsconfig.node.json",
+    "client/vite.config.ts",
+    "deploy-production.sh",
+    "docker-compose.yml",
+    "docker-entrypoint.sh",
+    "package.json",
+    "server/package.json",
+    "server/src/db/database.ts",
+    "server/src/db/schema.ts",
+    "server/src/routes/exercises.ts",
+    "server/tsconfig.json",
+    "tsconfig.base.json"
+  ],
+  "sessions": [
+    {
+      "metadata": "/f1/1f4278b129/0/metadata.json",
+      "transcript": "/f1/1f4278b129/0/full.jsonl",
+      "context": "/f1/1f4278b129/0/context.md",
+      "content_hash": "/f1/1f4278b129/0/content_hash.txt",
+      "prompt": "/f1/1f4278b129/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 10,
+    "cache_creation_tokens": 44041,
+    "cache_read_tokens": 486694,
+    "output_tokens": 3171,
+    "api_call_count": 6
+  }
+}
