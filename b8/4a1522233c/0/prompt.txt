@@ -1,0 +1,114 @@
+Implement the following plan:
+
+# Landesweite Restructuring — Implementation Plan
+
+## Context
+The user wants exercises to support "Landesweite" (state-wide) queries organized by Bundesland (OE1-OE9). Currently repeaters are a flat list with no Bundesland association. The exercise setup needs restructuring so admins can select participating Bundesländer, see all repeaters per Bundesland, assign operators per repeater, and add custom repeaters/frequencies during setup. The repeater list must be expanded to a comprehensive Austrian list sourced from OEVSV data.
+
+## Step 1: Schema Changes
+**File:** `server/src/db/schema.ts`
+
+- Add `bundesland_code TEXT REFERENCES bundeslaender(code)` to `repeaters` table
+- Add index `idx_repeaters_bundesland ON repeaters(bundesland_code)`
+- Add migration for existing databases: check PRAGMA table_info and ALTER TABLE if column missing
+- Add `is_custom INTEGER DEFAULT 0` to `repeaters` (for user-added repeaters during exercise setup)
+
+## Step 2: Add API Endpoint for Creating Repeaters
+**File:** `server/src/routes/repeaters.ts`
+
+- Add `POST /api/v1/repeaters` — create a custom repeater (short_name, frequency_mhz, bundesland_code, type, etc.)
+- Add `GET /api/v1/repeaters?bundesland_code=08` — filter repeaters by Bundesland
+- Add `GET /api/v1/repeaters?type=simplex` — filter simplex frequencies
+
+## Step 3: Expand Seed Data with Comprehensive Austrian Repeaters
+**File:** `server/src/db/seed.ts`
+
+- Fetch/compile comprehensive repeater list from OEVSV (repeater.oevsv.at)
+- Organize all repeaters by Bundesland code (01-09)
+- Each repeater gets: short_name, site_name, band, callsign, frequency_mhz, offset_mhz, ctcss_hz, type, bundesland_code
+- Add default simplex frequencies: 145.500, 145.525, 145.550 MHz (type='simplex', no bundesland_code)
+- Keep existing Einstiegspunkte for Magdalensberg linked repeater
+
+## Step 4: Update ExerciseSetupPage
+**File:** `client/src/pages/ExerciseSetupPage.tsx`
+
+Restructure the page to be Bundesland-oriented:
+
+1. **Exercise name** section (keep existing)
+2. **Bundesländer selection** — Grid of OE1-OE9 toggles to select participating Bundesländer
+3. **Per-Bundesland repeater section** — For each active Bundesland:
+   - Collapsible card with Bundesland name as header
+   - Checkbox list of all repeaters in that Bundesland
+   - Operator callsign input per activated repeater
+   - "Add repeater/frequency" button at bottom of each section
+4. **Simplex frequencies section** — Always visible, shows default 145.500/525/550 plus any custom ones
+5. **Add custom frequency** — Form to add new simplex freq or repeater to any Bundesland
+6. **"Übung starten"** button
+
+New API interactions:
+- `GET /api/v1/repeaters?bundesland_code=XX` to load repeaters per Bundesland
+- Bulk activate all repeaters for a Bundesland when toggled on
+- `POST /api/v1/repeaters` to add custom repeaters during setup
+
+## Step 5: Update LandMode Component
+**File:** `client/src/components/LandMode.tsx`
+
+- Group repeater tabs by Bundesland (OE1-OE9 groups)
+- Show Bundesland label above each group of repeater tabs
+- Show operator callsign badge on tab if assigned
+
+## Step 6: Update Exercise List Query
+**File:** `server/src/routes/exercises.ts`
+
+- In `GET /:id`, join repeaters with bundeslaender to include bundesland info
+- In repeaters listing, include bundesland_code and bundesland_name
+
+## Step 7: Migration Safety
+**File:** `server/src/db/schema.ts`
+
+Add migration for `bundesland_code` and `is_custom` columns on repeaters table:
+```
+const repCols = db.prepare("PRAGMA table_info(repeaters)").all();
+if (!repCols.some(c => c.name === 'bundesland_code')) {
+  db.exec("ALTER TABLE repeaters ADD COLUMN bundesland_code TEXT REFERENCES bundeslaender(code)");
+}
+if (!repCols.some(c => c.name === 'is_custom')) {
+  db.exec("ALTER TABLE repeaters ADD COLUMN is_custom INTEGER DEFAULT 0");
+}
+```
+
+## Files to Modify
+1. `server/src/db/schema.ts` — Add bundesland_code + is_custom to repeaters, migrations
+2. `server/src/db/seed.ts` — Comprehensive Austrian repeater list + simplex defaults
+3. `server/src/routes/repeaters.ts` — GET filter + POST create endpoint
+4. `client/src/pages/ExerciseSetupPage.tsx` — Full restructure for Bundesland-oriented setup
+5. `client/src/components/LandMode.tsx` — Group tabs by Bundesland
+6. `server/src/routes/exercises.ts` — Include bundesland info in repeater queries
+
+## Verification
+1. Run `npm run build` in both client and server to verify TypeScript compiles
+2. Reseed database: `node dist/server/db/seed.js`
+3. Open ExerciseSetupPage — verify Bundesländer selection, repeater list per BL, operator assignment
+4. Create exercise with 2-3 Bundesländer active — verify repeaters show correctly
+5. Test "add custom repeater" during setup
+6. Open LandMode — verify tabs grouped by Bundesland
+7. Deploy to production and reseed
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+
+---
+
+commit and rollout
+
+---
+
+alle oe link repeater sollen linked markierung haben. die linked markierung auf oelink ändern
+
+---
+
+es soll im login kein rufzeichen eingegeben werden. stattdessen gibt es admin, mit einem sicheren passwort und operator. operator kann zur übung jederzeit umsetzer hinzufügen. der admin kann alles einrichten
+
+---
+
+[Request interrupted by user for tool use]

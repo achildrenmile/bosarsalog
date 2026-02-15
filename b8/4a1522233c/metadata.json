@@ -1,0 +1,33 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "b84a1522233c",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "Dockerfile",
+    "client/src/components/LandMode.tsx",
+    "client/src/pages/ExerciseSetupPage.tsx",
+    "docker-compose.yml",
+    "server/src/db/schema.ts",
+    "server/src/db/seed.ts",
+    "server/src/routes/exercises.ts",
+    "server/src/routes/repeaters.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/b8/4a1522233c/0/metadata.json",
+      "transcript": "/b8/4a1522233c/0/full.jsonl",
+      "context": "/b8/4a1522233c/0/context.md",
+      "content_hash": "/b8/4a1522233c/0/content_hash.txt",
+      "prompt": "/b8/4a1522233c/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 13,
+    "cache_creation_tokens": 17927,
+    "cache_read_tokens": 1195328,
+    "output_tokens": 2267,
+    "api_call_count": 9
+  }
+}
