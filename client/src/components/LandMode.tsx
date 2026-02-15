@@ -243,14 +243,33 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
         )}
       </div>
 
-      {/* Repeater info */}
+      {/* Repeater info + OP callsign */}
       {activeRepeater && (
-        <div className="text-xs text-gray-500 flex gap-4">
-          {activeRepeater.frequency_mhz && <span>{activeRepeater.frequency_mhz} MHz</span>}
-          {activeRepeater.offset_mhz && <span>Offset: {activeRepeater.offset_mhz > 0 ? '+' : ''}{activeRepeater.offset_mhz} MHz</span>}
-          {activeRepeater.ctcss_hz && <span>CTCSS: {activeRepeater.ctcss_hz} Hz</span>}
-          {activeRepeater.burst_hz && <span>Burst: {activeRepeater.burst_hz} Hz</span>}
-          {activeRepeater.repeater_callsign && <span className="font-mono">{activeRepeater.repeater_callsign}</span>}
+        <div className="flex items-center gap-4 text-xs text-gray-500">
+          <div className="flex gap-4">
+            {activeRepeater.frequency_mhz && <span>{activeRepeater.frequency_mhz} MHz</span>}
+            {activeRepeater.offset_mhz && <span>Offset: {activeRepeater.offset_mhz > 0 ? '+' : ''}{activeRepeater.offset_mhz} MHz</span>}
+            {activeRepeater.ctcss_hz && <span>CTCSS: {activeRepeater.ctcss_hz} Hz</span>}
+            {activeRepeater.burst_hz && <span>Burst: {activeRepeater.burst_hz} Hz</span>}
+            {activeRepeater.repeater_callsign && <span className="font-mono">{activeRepeater.repeater_callsign}</span>}
+          </div>
+          <div className="flex items-center gap-1 ml-auto">
+            <span className="text-gray-400">OP:</span>
+            <input
+              type="text"
+              placeholder="Rufzeichen"
+              defaultValue={activeRepeater.operator_callsign || ''}
+              key={activeRepeater.repeater_id}
+              onBlur={async (e) => {
+                const val = e.target.value.toUpperCase();
+                await apiFetch(`/api/v1/exercises/${exerciseId}/repeaters/${activeRepeater.repeater_id}`, {
+                  method: 'PATCH',
+                  body: JSON.stringify({ operator_callsign: val || null }),
+                });
+              }}
+              className="border border-gray-300 rounded px-2 py-0.5 text-xs font-mono uppercase w-24 focus:outline-none focus:ring-1 focus:ring-amber-500"
+            />
+          </div>
         </div>
       )}
 

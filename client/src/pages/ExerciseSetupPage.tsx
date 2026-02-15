@@ -101,13 +101,6 @@ export default function ExerciseSetupPage() {
     }
   };
 
-  const updateOp = async (repeaterId: number, callsign: string) => {
-    await apiFetch(`/api/v1/exercises/${id}/repeaters/${repeaterId}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ operator_callsign: callsign || null }),
-    });
-  };
-
   const activateExercise = async () => {
     await apiFetch(`/api/v1/exercises/${id}`, {
       method: 'PATCH',
@@ -276,15 +269,6 @@ export default function ExerciseSetupPage() {
                           {rep.is_linked ? <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">oelink</span> : null}
                           {rep.is_custom ? <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">custom</span> : null}
                         </label>
-                        {active && (
-                          <input
-                            type="text"
-                            placeholder="OP Rufzeichen"
-                            defaultValue={active.operator_callsign || ''}
-                            onBlur={e => updateOp(rep.id, e.target.value.toUpperCase())}
-                            className="border border-gray-300 rounded px-2 py-1 text-sm font-mono uppercase w-28"
-                          />
-                        )}
                       </div>
                     );
                   })}
@@ -338,15 +322,6 @@ export default function ExerciseSetupPage() {
                     </span>
                     {rep.is_custom ? <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">custom</span> : null}
                   </label>
-                  {active && (
-                    <input
-                      type="text"
-                      placeholder="OP Rufzeichen"
-                      defaultValue={active.operator_callsign || ''}
-                      onBlur={e => updateOp(rep.id, e.target.value.toUpperCase())}
-                      className="border border-gray-300 rounded px-2 py-1 text-sm font-mono uppercase w-28"
-                    />
-                  )}
                 </div>
               );
             })}
