@@ -15,7 +15,7 @@ export default function Layout() {
       <nav className="bg-[#5b3a1a] text-white px-4 py-2 flex items-center justify-between shadow-md">
         <div className="flex items-center gap-4">
           <a href="https://oeradio.at" target="_blank" rel="noopener noreferrer" className="flex-shrink-0">
-            <img src="https://oeradio.at/wp-content/uploads/2026/01/oeradiologo-300x200.png" alt="OERadio" className="h-10" />
+            <img src="/oeradiokl.png" alt="OERadio" className="h-10" />
           </a>
           <Link to="/" className="text-lg font-bold tracking-wide hover:text-amber-200">
             BOS-ARSA Log
