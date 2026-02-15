@@ -31,8 +31,10 @@ WORKDIR /app
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/server/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
+COPY docker-entrypoint.sh ./
+RUN chmod +x docker-entrypoint.sh
 VOLUME /data
 ENV DATABASE_PATH=/data/bosarsalog.db
 ENV NODE_ENV=production
 EXPOSE 3000
-CMD ["node", "dist/server/index.js"]
+ENTRYPOINT ["./docker-entrypoint.sh"]
