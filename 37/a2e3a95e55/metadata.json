@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "37a2e3a95e55",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "client/src/components/LandMode.tsx"
+  ],
+  "sessions": [
+    {
+      "metadata": "/37/a2e3a95e55/0/metadata.json",
+      "transcript": "/37/a2e3a95e55/0/full.jsonl",
+      "context": "/37/a2e3a95e55/0/context.md",
+      "content_hash": "/37/a2e3a95e55/0/content_hash.txt",
+      "prompt": "/37/a2e3a95e55/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 13,
+    "cache_creation_tokens": 14915,
+    "cache_read_tokens": 1181286,
+    "output_tokens": 2531,
+    "api_call_count": 11
+  }
+}
