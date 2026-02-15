@@ -89,6 +89,7 @@ export default function ExerciseSetupPage() {
   const toggleRepeater = async (repeaterId: number) => {
     const isActive = activeRepeaters.some(r => r.repeater_id === repeaterId);
     if (isActive) {
+      if (!isAdmin) return; // only admin can deactivate
       await apiFetch(`/api/v1/exercises/${id}/repeaters/${repeaterId}`, { method: 'DELETE' });
       setActiveRepeaters(prev => prev.filter(r => r.repeater_id !== repeaterId));
     } else {
@@ -253,10 +254,11 @@ export default function ExerciseSetupPage() {
                     const active = activeRepeaters.find(r => r.repeater_id === rep.id);
                     return (
                       <div key={rep.id} className="flex items-center gap-3 py-2 border-b border-gray-100">
-                        <label className="flex items-center gap-2 cursor-pointer flex-1">
+                        <label className={`flex items-center gap-2 flex-1 ${!active || isAdmin ? 'cursor-pointer' : 'cursor-default'}`}>
                           <input
                             type="checkbox"
                             checked={!!active}
+                            disabled={!!active && !isAdmin}
                             onChange={() => toggleRepeater(rep.id)}
                             className="w-4 h-4 accent-amber-600"
                           />
@@ -309,10 +311,11 @@ export default function ExerciseSetupPage() {
               const active = activeRepeaters.find(r => r.repeater_id === rep.id);
               return (
                 <div key={rep.id} className="flex items-center gap-3 py-2 border-b border-gray-100">
-                  <label className="flex items-center gap-2 cursor-pointer flex-1">
+                  <label className={`flex items-center gap-2 flex-1 ${!active || isAdmin ? 'cursor-pointer' : 'cursor-default'}`}>
                     <input
                       type="checkbox"
                       checked={!!active}
+                      disabled={!!active && !isAdmin}
                       onChange={() => toggleRepeater(rep.id)}
                       className="w-4 h-4 accent-amber-600"
                     />

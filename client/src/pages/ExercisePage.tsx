@@ -113,12 +113,12 @@ export default function ExercisePage() {
           <span className={`px-2 py-0.5 rounded-full text-xs text-white ${statusColor}`}>{statusLabel}</span>
         </div>
         <div className="flex items-center gap-2">
-          {exercise.status === 'planned' && (
+          {admin?.role === 'admin' && exercise.status === 'planned' && (
             <button onClick={() => handleStatusChange('active')} className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm">
               Starten
             </button>
           )}
-          {exercise.status === 'active' && (
+          {admin?.role === 'admin' && exercise.status === 'active' && (
             <button onClick={() => handleStatusChange('completed')} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">
               Abschließen
             </button>
