@@ -29,29 +29,34 @@ export default function BundMode({ exerciseId, repeaters, reports, onReportCreat
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '', einstiegspunktId: null, notes: '' });
 
-  // All linked (OE-Link) repeaters in this exercise
+  // All active repeaters, linked (OE-Link) ones first
   const linkedRepeaters = repeaters.filter(r => r.is_linked);
+  const nonSimplex = repeaters.filter(r => r.type !== 'simplex');
 
   useEffect(() => {
     apiFetch('/api/v1/reference/bundeslaender').then(setBundeslaender).catch(() => {});
     apiFetch('/api/v1/reference/bezirke').then(setBezirke).catch(() => {});
   }, []);
 
-  // Initialize per-BL repeater selection: pick a linked repeater in that BL, else first
+  // Initialize per-BL repeater selection: prefer linked in that BL, then any in that BL, then first linked, then first overall
   useEffect(() => {
-    if (linkedRepeaters.length === 0 || bundeslaender.length === 0) return;
+    if (repeaters.length === 0 || bundeslaender.length === 0) return;
     setBlRepSelection(prev => {
       const next = { ...prev };
       for (const bl of bundeslaender) {
         if (next[bl.code]) continue;
-        const inBl = linkedRepeaters.find(r => r.bundesland_code === bl.code);
-        next[bl.code] = inBl ? inBl.repeater_id : linkedRepeaters[0].repeater_id;
+        const linkedInBl = linkedRepeaters.find(r => r.bundesland_code === bl.code);
+        if (linkedInBl) { next[bl.code] = linkedInBl.repeater_id; continue; }
+        const anyInBl = nonSimplex.find(r => r.bundesland_code === bl.code);
+        if (anyInBl) { next[bl.code] = anyInBl.repeater_id; continue; }
+        if (linkedRepeaters.length > 0) { next[bl.code] = linkedRepeaters[0].repeater_id; continue; }
+        if (nonSimplex.length > 0) { next[bl.code] = nonSimplex[0].repeater_id; }
       }
       return next;
     });
-  }, [linkedRepeaters.length, bundeslaender.length]);
+  }, [repeaters.length, bundeslaender.length]);
 
-  // Load Einstiegspunkte for all linked repeaters
+  // Load Einstiegspunkte for linked repeaters
   useEffect(() => {
     if (linkedRepeaters.length === 0) return;
     Promise.all(
@@ -170,15 +175,26 @@ export default function BundMode({ exerciseId, repeaters, reports, onReportCreat
                 <span className="bg-[#0d6efd] text-white text-xs px-1.5 py-0.5 rounded-full">{reportCount}</span>
               </div>
               <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
-                {linkedRepeaters.length > 0 && (
+                {nonSimplex.length > 0 && (
                   <select
                     value={selectedRepId || ''}
                     onChange={e => setBlRepSelection(prev => ({ ...prev, [bl.code]: parseInt(e.target.value) }))}
                     className="text-xs border border-blue-300 bg-blue-50 rounded px-1.5 py-0.5 font-medium"
                   >
-                    {linkedRepeaters.map(r => (
-                      <option key={r.repeater_id} value={r.repeater_id}>{r.short_name}</option>
-                    ))}
+                    {linkedRepeaters.length > 0 && (
+                      <optgroup label="OE-Link">
+                        {linkedRepeaters.map(r => (
+                          <option key={r.repeater_id} value={r.repeater_id}>{r.short_name}</option>
+                        ))}
+                      </optgroup>
+                    )}
+                    {nonSimplex.filter(r => !r.is_linked).length > 0 && (
+                      <optgroup label={linkedRepeaters.length > 0 ? 'Weitere' : 'Umsetzer'}>
+                        {nonSimplex.filter(r => !r.is_linked).map(r => (
+                          <option key={r.repeater_id} value={r.repeater_id}>{r.short_name}</option>
+                        ))}
+                      </optgroup>
+                    )}
                   </select>
                 )}
                 {einstiegspunkte.length > 0 && (
