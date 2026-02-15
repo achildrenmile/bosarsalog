@@ -69,7 +69,7 @@ export function runMigrations(db: Database.Database): void {
     CREATE TABLE IF NOT EXISTS exercises (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT,
-      date TEXT UNIQUE NOT NULL,
+      date TEXT NOT NULL,
       status TEXT DEFAULT 'planned',
       notes TEXT,
       created_at TEXT DEFAULT (datetime('now'))
@@ -136,6 +136,29 @@ export function runMigrations(db: Database.Database): void {
       password_hash TEXT NOT NULL,
       role TEXT DEFAULT 'operator'
     )`);
+  }
+
+  // Migration: remove UNIQUE constraint on exercises.date
+  const exIndexes = db.prepare("PRAGMA index_list(exercises)").all() as any[];
+  const hasUniqueDateIdx = exIndexes.some((idx: any) => {
+    if (!idx.unique) return false;
+    const cols = db.prepare(`PRAGMA index_info("${idx.name}")`).all() as any[];
+    return cols.length === 1 && cols[0].name === 'date';
+  });
+  if (hasUniqueDateIdx) {
+    db.exec(`
+      CREATE TABLE exercises_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        name TEXT,
+        date TEXT NOT NULL,
+        status TEXT DEFAULT 'planned',
+        notes TEXT,
+        created_at TEXT DEFAULT (datetime('now'))
+      );
+      INSERT INTO exercises_new SELECT * FROM exercises;
+      DROP TABLE exercises;
+      ALTER TABLE exercises_new RENAME TO exercises;
+    `);
   }
 
   // Migrations for existing databases

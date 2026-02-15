@@ -1,7 +1,14 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { apiFetch } from '../services/api';
+
+const EXERCISE_TYPES = [
+  'Krisenkommunikationsübung',
+  'Notfunkübung',
+  'Feldtag',
+  'Relaisfunktest',
+];
 
 interface ExerciseSummary {
   id: number;
@@ -14,8 +21,13 @@ interface ExerciseSummary {
 
 export default function DashboardPage() {
   const { admin } = useAuth();
+  const navigate = useNavigate();
   const [exercises, setExercises] = useState<ExerciseSummary[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showCreate, setShowCreate] = useState(false);
+  const [newDate, setNewDate] = useState(() => new Date().toISOString().split('T')[0]);
+  const [newName, setNewName] = useState(EXERCISE_TYPES[0]);
+  const [creating, setCreating] = useState(false);
 
   useEffect(() => {
     apiFetch('/api/v1/exercises')
@@ -49,35 +61,81 @@ export default function DashboardPage() {
           <p className="text-sm text-gray-500">Willkommen, {admin?.username}</p>
         </div>
         {admin?.role === 'admin' && (
-          <Link
-            to="#"
-            onClick={async (e) => {
-              e.preventDefault();
-              const today = new Date();
-              const day = today.getDay();
-              const nextSunday = new Date(today);
-              nextSunday.setDate(today.getDate() + (7 - day) % 7);
-              const dateStr = nextSunday.toISOString().split('T')[0];
-              try {
-                const ex = await apiFetch('/api/v1/exercises', {
-                  method: 'POST',
-                  body: JSON.stringify({ date: dateStr }),
-                });
-                window.location.href = `/exercises/${ex.id}/setup`;
-              } catch {
-                // Exercise for this date likely exists, navigate to it
-                const existing = exercises.find(ex => ex.date === dateStr);
-                if (existing) {
-                  window.location.href = `/exercises/${existing.id}/setup`;
-                }
-              }
-            }}
+          <button
+            onClick={() => setShowCreate(v => !v)}
             className="bg-[#5b3a1a] hover:bg-[#7a5230] text-white px-4 py-2 rounded-lg text-sm font-medium"
           >
             + Neue Übung
-          </Link>
+          </button>
         )}
       </div>
+
+      {showCreate && (
+        <div className="bg-white rounded-xl shadow p-4 mb-6">
+          <h2 className="text-sm font-semibold text-[#5b3a1a] mb-3">Neue Übung anlegen</h2>
+          <div className="flex items-end gap-3 flex-wrap">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Datum</label>
+              <input
+                type="date"
+                value={newDate}
+                onChange={e => setNewDate(e.target.value)}
+                className="border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+              />
+            </div>
+            <div className="flex-1 min-w-[200px]">
+              <label className="block text-xs text-gray-500 mb-1">Typ / Name</label>
+              <div className="flex gap-2">
+                <select
+                  value={EXERCISE_TYPES.includes(newName) ? newName : ''}
+                  onChange={e => setNewName(e.target.value)}
+                  className="border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                >
+                  {EXERCISE_TYPES.map(t => (
+                    <option key={t} value={t}>{t}</option>
+                  ))}
+                  <option value="">Eigener Name...</option>
+                </select>
+                {!EXERCISE_TYPES.includes(newName) && (
+                  <input
+                    type="text"
+                    value={newName}
+                    onChange={e => setNewName(e.target.value)}
+                    placeholder="Name der Übung"
+                    className="border border-gray-300 rounded px-2 py-1.5 text-sm flex-1 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    autoFocus
+                  />
+                )}
+              </div>
+            </div>
+            <button
+              disabled={creating || !newDate || !newName}
+              onClick={async () => {
+                setCreating(true);
+                try {
+                  const ex = await apiFetch('/api/v1/exercises', {
+                    method: 'POST',
+                    body: JSON.stringify({ date: newDate, name: newName }),
+                  });
+                  navigate(`/exercises/${ex.id}/setup`);
+                } catch {
+                } finally {
+                  setCreating(false);
+                }
+              }}
+              className="bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded text-sm font-medium disabled:opacity-50"
+            >
+              {creating ? 'Erstellen...' : 'Erstellen'}
+            </button>
+            <button
+              onClick={() => setShowCreate(false)}
+              className="text-gray-500 text-sm hover:text-gray-700"
+            >
+              Abbrechen
+            </button>
+          </div>
+        </div>
+      )}
 
       {loading ? (
         <p className="text-gray-500">Laden...</p>

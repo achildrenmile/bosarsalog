@@ -19,22 +19,14 @@ exercisesRouter.get('/', (_req, res) => {
 // Create exercise (admin only)
 exercisesRouter.post('/', requireRole('admin'), (req, res) => {
   const { date, name } = req.body;
-  if (!date) {
-    res.status(400).json({ error: 'Datum erforderlich' });
+  if (!date || !name) {
+    res.status(400).json({ error: 'Datum und Name erforderlich' });
     return;
   }
   const db = getDb();
-  try {
-    const result = db.prepare('INSERT INTO exercises (date, name) VALUES (?, ?)').run(date, name || null);
-    const exercise = db.prepare('SELECT * FROM exercises WHERE id = ?').get(result.lastInsertRowid);
-    res.status(201).json(exercise);
-  } catch (e: any) {
-    if (e.message?.includes('UNIQUE')) {
-      res.status(409).json({ error: 'Übung für dieses Datum existiert bereits' });
-    } else {
-      throw e;
-    }
-  }
+  const result = db.prepare('INSERT INTO exercises (date, name) VALUES (?, ?)').run(date, name);
+  const exercise = db.prepare('SELECT * FROM exercises WHERE id = ?').get(result.lastInsertRowid);
+  res.status(201).json(exercise);
 });
 
 // Get full exercise with reports
