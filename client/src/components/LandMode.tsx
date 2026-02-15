@@ -313,54 +313,70 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
         )}
       </form>
 
-      {/* Reports table */}
-      {repeaterReports.length > 0 && (
-        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="bg-gray-50 border-b text-left text-xs text-gray-500 uppercase">
-                <th className="px-3 py-2 w-16">#</th>
-                <th className="px-3 py-2">Rufzeichen</th>
-                <th className="px-3 py-2 w-24">Rapport</th>
-                <th className="px-3 py-2">Sonstiges</th>
-                <th className="px-3 py-2 w-10"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-100">
-              {repeaterReports.filter(r => !r.is_op_marker).map((r, idx) => (
-                <tr
-                  key={r.id}
-                  onClick={() => handleEdit(r)}
-                  className="hover:bg-amber-50 cursor-pointer"
-                >
-                  <td className="px-3 py-1.5 text-xs text-gray-400">{idx + 1}</td>
-                  <td className="px-3 py-1.5">
-                    <span className="font-mono font-medium">{r.callsign}</span>
-                    {r.bezirk_code && (
-                      <span className="ml-2 text-xs bg-gray-200 rounded px-1 py-0.5">{r.bezirk_code}</span>
-                    )}
-                  </td>
-                  <td className="px-3 py-1.5 font-mono">
-                    {r.readability && r.strength
-                      ? `${r.readability}/${r.strength}${r.db_over_s9 || ''}`
-                      : <span className="text-gray-300">—</span>
-                    }
-                  </td>
-                  <td className="px-3 py-1.5 text-gray-600">{r.notes || ''}</td>
-                  <td className="px-3 py-1.5">
-                    <button
-                      onClick={e => { e.stopPropagation(); handleDelete(r.id); }}
-                      className="text-red-400 hover:text-red-600 text-xs"
-                    >
-                      x
-                    </button>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+      {/* Reports per Umsetzer */}
+      <div className="space-y-2">
+        {repeaters.map(rep => {
+          const repReports = reports.filter(r => r.repeater_id === rep.repeater_id && !r.is_op_marker);
+          const reportCount = repReports.filter(r => r.readability).length;
+          const isActive = rep.repeater_id === activeRepeaterId;
+
+          return (
+            <div key={rep.repeater_id} className="bg-white rounded-lg shadow-sm overflow-hidden">
+              <div
+                onClick={() => setActiveRepeaterId(rep.repeater_id)}
+                className={`px-3 py-1.5 flex items-center gap-2 border-b cursor-pointer ${isActive ? 'bg-[#5b3a1a] text-white' : 'bg-gray-50 hover:bg-gray-100'}`}
+              >
+                <span className={`font-medium text-sm ${isActive ? '' : 'text-gray-800'}`}>{rep.short_name}</span>
+                {rep.operator_callsign && (
+                  <span className={`text-xs px-1 py-0.5 rounded ${isActive ? 'bg-white/20' : 'bg-amber-100 text-amber-800'}`}>
+                    {rep.operator_callsign}
+                  </span>
+                )}
+                <span className={`text-xs px-1.5 py-0.5 rounded-full ${isActive ? 'bg-white/20' : 'bg-[#0d6efd] text-white'}`}>{reportCount}</span>
+                {rep.frequency_mhz && (
+                  <span className={`text-xs ${isActive ? 'text-white/70' : 'text-gray-400'}`}>{rep.frequency_mhz} MHz</span>
+                )}
+              </div>
+              {repReports.length > 0 && (
+                <table className="w-full text-sm">
+                  <tbody className="divide-y divide-gray-100">
+                    {repReports.map((r, idx) => (
+                      <tr
+                        key={r.id}
+                        onClick={() => { setActiveRepeaterId(rep.repeater_id); handleEdit(r); }}
+                        className="hover:bg-amber-50 cursor-pointer"
+                      >
+                        <td className="px-3 py-1 text-xs text-gray-400 w-8">{idx + 1}</td>
+                        <td className="px-3 py-1">
+                          <span className="font-mono font-medium text-xs">{r.callsign}</span>
+                          {r.bezirk_code && (
+                            <span className="ml-1 text-xs bg-gray-200 rounded px-1">{r.bezirk_code}</span>
+                          )}
+                        </td>
+                        <td className="px-3 py-1 font-mono text-xs w-24">
+                          {r.readability && r.strength
+                            ? `${r.readability}/${r.strength}${r.db_over_s9 || ''}`
+                            : <span className="text-gray-300">—</span>
+                          }
+                        </td>
+                        <td className="px-3 py-1 text-xs text-gray-600">{r.notes || ''}</td>
+                        <td className="px-3 py-1 w-8">
+                          <button
+                            onClick={e => { e.stopPropagation(); handleDelete(r.id); }}
+                            className="text-red-400 hover:text-red-600 text-xs"
+                          >
+                            x
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+          );
+        })}
+      </div>
     </div>
   );
 }
