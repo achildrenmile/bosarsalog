@@ -17,6 +17,9 @@ export default function Layout() {
           <a href="https://oeradio.at" target="_blank" rel="noopener noreferrer" className="flex-shrink-0">
             <img src="/oeradiokl.png" alt="OERadio" className="h-10" />
           </a>
+          <a href="https://bosarsa.wordpress.com/" target="_blank" rel="noopener noreferrer" className="flex-shrink-0">
+            <img src="/bosarsa.jpeg" alt="BOS-ARSA" className="h-10 rounded" />
+          </a>
           <Link to="/" className="text-lg font-bold tracking-wide hover:text-amber-200">
             BOS-ARSA Log
           </Link>
