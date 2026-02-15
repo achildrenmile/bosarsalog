@@ -24,6 +24,10 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
   const [blRepSelection, setBlRepSelection] = useState<Record<string, number>>({});
   const [blOpCallsigns, setBlOpCallsigns] = useState<Record<string, string>>({});
   const [collapsedBl, setCollapsedBl] = useState<Set<string>>(new Set());
+  const [addRepBl, setAddRepBl] = useState<string | null>(null);
+  const [newRepName, setNewRepName] = useState('');
+  const [newRepFreq, setNewRepFreq] = useState('');
+  const [newRepCallsign, setNewRepCallsign] = useState('');
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '', notes: '' });
 
@@ -70,6 +74,31 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
         body: JSON.stringify({ operator_callsign: val || null }),
       });
     }
+  };
+
+  const addRepeater = async (blCode: string) => {
+    if (!newRepName && !newRepFreq) return;
+    const name = newRepName || `Direkte ${newRepFreq}`;
+    const freq = newRepFreq ? parseFloat(newRepFreq) : null;
+    try {
+      const rep = await apiFetch('/api/v1/repeaters', {
+        method: 'POST',
+        body: JSON.stringify({
+          short_name: name,
+          site_name: name,
+          frequency_mhz: freq,
+          callsign: newRepCallsign || null,
+          band: freq ? (freq > 400 ? '70cm' : freq > 200 ? '23cm' : '2m') : null,
+          type: 'repeater',
+          bundesland_code: blCode,
+        }),
+      });
+      setLinkedRepeaters(prev => [...prev, rep]);
+      setNewRepName('');
+      setNewRepFreq('');
+      setNewRepCallsign('');
+      setAddRepBl(null);
+    } catch {}
   };
 
   const toggleBl = (code: string) => {
@@ -187,27 +216,76 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
             </div>
 
             {!isCollapsed && (
-              <div className="divide-y divide-gray-100">
-                {blBezirke.map(bz => {
-                  const bzReports = blReports.filter(r => r.bezirk_code === bz.code);
-                  return (
-                    <BezirkRow
-                      key={bz.code}
-                      bezirk={bz}
-                      reports={bzReports}
-                      linkedRepeaters={linkedRepeaters}
-                      defaultRepeaterId={defaultRepId}
-                      onSubmit={(repeaterId, form) => handleBezirkSubmit(bz.code, repeaterId, form)}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                      editingId={editingId}
-                      editForm={editForm}
-                      onEditChange={setEditForm}
-                      onEditSave={handleUpdate}
-                      onEditCancel={() => setEditingId(null)}
-                    />
-                  );
-                })}
+              <div>
+                <div className="divide-y divide-gray-100">
+                  {blBezirke.map(bz => {
+                    const bzReports = blReports.filter(r => r.bezirk_code === bz.code);
+                    return (
+                      <BezirkRow
+                        key={bz.code}
+                        bezirk={bz}
+                        reports={bzReports}
+                        linkedRepeaters={linkedRepeaters}
+                        defaultRepeaterId={defaultRepId}
+                        onSubmit={(repeaterId, form) => handleBezirkSubmit(bz.code, repeaterId, form)}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        editingId={editingId}
+                        editForm={editForm}
+                        onEditChange={setEditForm}
+                        onEditSave={handleUpdate}
+                        onEditCancel={() => setEditingId(null)}
+                      />
+                    );
+                  })}
+                </div>
+                <div className="px-3 py-1.5 border-t border-gray-100">
+                  {addRepBl === bl.code ? (
+                    <div className="flex items-center gap-1 flex-wrap">
+                      <input
+                        type="text"
+                        value={newRepName}
+                        onChange={e => setNewRepName(e.target.value)}
+                        placeholder="Name"
+                        className="border border-gray-300 rounded px-1.5 py-0.5 text-xs w-28 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                        autoFocus
+                      />
+                      <input
+                        type="text"
+                        value={newRepFreq}
+                        onChange={e => setNewRepFreq(e.target.value)}
+                        placeholder="MHz"
+                        className="border border-gray-300 rounded px-1.5 py-0.5 text-xs font-mono w-20 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                      />
+                      <input
+                        type="text"
+                        value={newRepCallsign}
+                        onChange={e => setNewRepCallsign(e.target.value.toUpperCase())}
+                        placeholder="Rufz."
+                        className="border border-gray-300 rounded px-1.5 py-0.5 text-xs font-mono uppercase w-20 focus:outline-none focus:ring-1 focus:ring-amber-500"
+                      />
+                      <button
+                        onClick={() => addRepeater(bl.code)}
+                        className="bg-green-600 hover:bg-green-700 text-white px-2 py-0.5 rounded text-xs"
+                      >
+                        OK
+                      </button>
+                      <button
+                        onClick={() => { setAddRepBl(null); setNewRepName(''); setNewRepFreq(''); setNewRepCallsign(''); }}
+                        className="text-gray-400 hover:text-gray-600 text-xs"
+                      >
+                        Abbrechen
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={() => setAddRepBl(bl.code)}
+                      className="text-xs text-gray-400 hover:text-gray-600"
+                    >
+                      + Umsetzer hinzufügen
+                    </button>
+                  )}
+                </div>
               </div>
             )}
           </div>
