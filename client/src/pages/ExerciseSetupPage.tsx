@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { apiFetch } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 
@@ -17,7 +17,6 @@ const BUNDESLAENDER = [
 
 export default function ExerciseSetupPage() {
   const { id } = useParams<{ id: string }>();
-  const navigate = useNavigate();
   const { admin } = useAuth();
   const isAdmin = admin?.role === 'admin';
   const [exercise, setExercise] = useState<any>(null);
@@ -102,14 +101,6 @@ export default function ExerciseSetupPage() {
     }
   };
 
-  const activateExercise = async () => {
-    await apiFetch(`/api/v1/exercises/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ status: 'active' }),
-    });
-    navigate(`/exercises/${id}`);
-  };
-
   const addCustomRepeater = async (bundeslandCode: string | null) => {
     if (!newRepName && !newRepFreq) return;
     const type = bundeslandCode === null ? 'simplex' : 'repeater';
@@ -165,11 +156,6 @@ export default function ExerciseSetupPage() {
           <Link to={`/exercises/${id}`} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded text-sm">
             Zurück
           </Link>
-          {isAdmin && (
-            <button onClick={activateExercise} className="bg-green-600 hover:bg-green-700 text-white px-4 py-1.5 rounded text-sm font-medium">
-              Übung starten
-            </button>
-          )}
         </div>
       </div>
 

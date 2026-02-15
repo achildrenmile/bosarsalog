@@ -67,23 +67,22 @@ export function runMigrations(db: Database.Database): void {
     );
 
     CREATE TABLE IF NOT EXISTS exercises (
-      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      id TEXT PRIMARY KEY,
       name TEXT,
       date TEXT NOT NULL,
-      status TEXT DEFAULT 'planned',
       notes TEXT,
       created_at TEXT DEFAULT (datetime('now'))
     );
 
     CREATE TABLE IF NOT EXISTS exercise_repeaters (
-      exercise_id INTEGER REFERENCES exercises(id) ON DELETE CASCADE,
+      exercise_id TEXT REFERENCES exercises(id) ON DELETE CASCADE,
       repeater_id INTEGER REFERENCES repeaters(id),
       operator_callsign TEXT,
       PRIMARY KEY (exercise_id, repeater_id)
     );
 
     CREATE TABLE IF NOT EXISTS exercise_attendance (
-      exercise_id INTEGER REFERENCES exercises(id) ON DELETE CASCADE,
+      exercise_id TEXT REFERENCES exercises(id) ON DELETE CASCADE,
       operator_id INTEGER REFERENCES operators(id),
       callsign_suffix TEXT,
       is_present INTEGER DEFAULT 1,
@@ -93,7 +92,7 @@ export function runMigrations(db: Database.Database): void {
 
     CREATE TABLE IF NOT EXISTS signal_reports (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
-      exercise_id INTEGER REFERENCES exercises(id) ON DELETE CASCADE,
+      exercise_id TEXT REFERENCES exercises(id) ON DELETE CASCADE,
       operator_id INTEGER REFERENCES operators(id),
       repeater_id INTEGER REFERENCES repeaters(id),
       readability INTEGER,
@@ -138,26 +137,59 @@ export function runMigrations(db: Database.Database): void {
     )`);
   }
 
-  // Migration: remove UNIQUE constraint on exercises.date
-  const exIndexes = db.prepare("PRAGMA index_list(exercises)").all() as any[];
-  const hasUniqueDateIdx = exIndexes.some((idx: any) => {
-    if (!idx.unique) return false;
-    const cols = db.prepare(`PRAGMA index_info("${idx.name}")`).all() as any[];
-    return cols.length === 1 && cols[0].name === 'date';
-  });
-  if (hasUniqueDateIdx) {
+  // Migration: convert exercises from INTEGER id to TEXT GUID
+  const exCols = db.prepare("PRAGMA table_info(exercises)").all() as any[];
+  const idCol = exCols.find((c: any) => c.name === 'id');
+  if (idCol && idCol.type === 'INTEGER') {
+    // Recreate all exercise-related tables with TEXT exercise_id
     db.exec(`
       CREATE TABLE exercises_new (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id TEXT PRIMARY KEY,
         name TEXT,
         date TEXT NOT NULL,
-        status TEXT DEFAULT 'planned',
         notes TEXT,
         created_at TEXT DEFAULT (datetime('now'))
       );
-      INSERT INTO exercises_new SELECT * FROM exercises;
-      DROP TABLE exercises;
+      CREATE TABLE exercise_repeaters_new (
+        exercise_id TEXT REFERENCES exercises_new(id) ON DELETE CASCADE,
+        repeater_id INTEGER REFERENCES repeaters(id),
+        operator_callsign TEXT,
+        PRIMARY KEY (exercise_id, repeater_id)
+      );
+      CREATE TABLE exercise_attendance_new (
+        exercise_id TEXT REFERENCES exercises_new(id) ON DELETE CASCADE,
+        operator_id INTEGER REFERENCES operators(id),
+        callsign_suffix TEXT,
+        is_present INTEGER DEFAULT 1,
+        entered_by TEXT,
+        PRIMARY KEY (exercise_id, operator_id)
+      );
+      CREATE TABLE signal_reports_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        exercise_id TEXT REFERENCES exercises_new(id) ON DELETE CASCADE,
+        operator_id INTEGER REFERENCES operators(id),
+        repeater_id INTEGER REFERENCES repeaters(id),
+        readability INTEGER,
+        strength INTEGER,
+        db_over_s9 TEXT,
+        einstiegspunkt_id INTEGER REFERENCES einstiegspunkte(id),
+        is_op_marker INTEGER DEFAULT 0,
+        notes TEXT,
+        entered_by TEXT,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now')),
+        UNIQUE (exercise_id, operator_id, repeater_id)
+      );
+
+      DROP TABLE IF EXISTS signal_reports;
+      DROP TABLE IF EXISTS exercise_attendance;
+      DROP TABLE IF EXISTS exercise_repeaters;
+      DROP TABLE IF EXISTS exercises;
+
       ALTER TABLE exercises_new RENAME TO exercises;
+      ALTER TABLE exercise_repeaters_new RENAME TO exercise_repeaters;
+      ALTER TABLE exercise_attendance_new RENAME TO exercise_attendance;
+      ALTER TABLE signal_reports_new RENAME TO signal_reports;
     `);
   }
 

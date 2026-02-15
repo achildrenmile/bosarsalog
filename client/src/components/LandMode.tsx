@@ -16,7 +16,7 @@ const BUNDESLAND_NAMES: Record<string, string> = {
 };
 
 interface Props {
-  exerciseId: number;
+  exerciseId: string;
   repeaters: any[];
   reports: any[];
   onReportCreated: (report: any) => void;

@@ -11,10 +11,9 @@ const EXERCISE_TYPES = [
 ];
 
 interface ExerciseSummary {
-  id: number;
+  id: string;
   name: string | null;
   date: string;
-  status: string;
   participant_count: number;
   report_count: number;
 }
@@ -39,18 +38,6 @@ export default function DashboardPage() {
   const formatDate = (d: string) => {
     const date = new Date(d + 'T00:00:00');
     return date.toLocaleDateString('de-AT', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
-  };
-
-  const statusColor = (s: string) => {
-    if (s === 'active') return 'bg-green-500';
-    if (s === 'completed') return 'bg-blue-500';
-    return 'bg-gray-400';
-  };
-
-  const statusLabel = (s: string) => {
-    if (s === 'active') return 'Aktiv';
-    if (s === 'completed') return 'Abgeschlossen';
-    return 'Geplant';
   };
 
   return (
@@ -148,7 +135,6 @@ export default function DashboardPage() {
               <tr>
                 <th className="px-4 py-2 text-left">Datum</th>
                 <th className="px-4 py-2 text-left">Name</th>
-                <th className="px-4 py-2 text-left">Status</th>
                 <th className="px-4 py-2 text-right">Teilnehmer</th>
                 <th className="px-4 py-2 text-right">Rapporte</th>
                 <th className="px-4 py-2"></th>
@@ -159,11 +145,6 @@ export default function DashboardPage() {
                 <tr key={ex.id} className="border-t hover:bg-amber-50">
                   <td className="px-4 py-2 font-mono">{formatDate(ex.date)}</td>
                   <td className="px-4 py-2 text-gray-700">{ex.name || '—'}</td>
-                  <td className="px-4 py-2">
-                    <span className={`inline-block px-2 py-0.5 rounded-full text-xs text-white ${statusColor(ex.status)}`}>
-                      {statusLabel(ex.status)}
-                    </span>
-                  </td>
                   <td className="px-4 py-2 text-right">{ex.participant_count}</td>
                   <td className="px-4 py-2 text-right">{ex.report_count}</td>
                   <td className="px-4 py-2 text-right">

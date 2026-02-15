@@ -47,7 +47,7 @@ app.use('/api/v1/export', authMiddleware, exportRouter);
 // Overview endpoint
 app.get('/api/v1/overview', authMiddleware, (_req, res) => {
   const exercises = db.prepare(`
-    SELECT e.id, e.date, e.status,
+    SELECT e.id, e.date, e.name,
       (SELECT COUNT(DISTINCT operator_id) FROM exercise_attendance WHERE exercise_id = e.id AND is_present = 1) as participant_count,
       (SELECT COUNT(*) FROM signal_reports WHERE exercise_id = e.id AND is_op_marker = 0) as report_count
     FROM exercises e ORDER BY e.date DESC

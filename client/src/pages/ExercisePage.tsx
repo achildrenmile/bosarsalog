@@ -2,7 +2,6 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { apiFetch } from '../services/api';
 import { getSocket } from '../services/socket';
-import { useAuth } from '../hooks/useAuth';
 import LandMode from '../components/LandMode';
 import BundMode from '../components/BundMode';
 import RunningTotals from '../components/RunningTotals';
@@ -15,7 +14,6 @@ interface Stats {
 
 export default function ExercisePage() {
   const { id } = useParams<{ id: string }>();
-  const { admin } = useAuth();
   const [exercise, setExercise] = useState<any>(null);
   const [mode, setMode] = useState<'land' | 'bund'>('land');
   const [stats, setStats] = useState<Stats>({ totalParticipants: 0, totalReports: 0, perRepeater: [] });
@@ -47,7 +45,7 @@ export default function ExercisePage() {
   useEffect(() => {
     if (!id) return;
     const socket = socketRef.current;
-    socket.emit('join_exercise', { exercise_id: parseInt(id) });
+    socket.emit('join_exercise', { exercise_id: id });
 
     socket.on('report_created', (data: any) => {
       setReports(prev => [data, ...prev]);
@@ -63,7 +61,7 @@ export default function ExercisePage() {
     });
 
     return () => {
-      socket.emit('leave_exercise', { exercise_id: parseInt(id) });
+      socket.emit('leave_exercise', { exercise_id: id });
       socket.off('report_created');
       socket.off('report_updated');
       socket.off('report_deleted');
@@ -72,57 +70,32 @@ export default function ExercisePage() {
 
   const handleReportCreated = useCallback((report: any) => {
     setReports(prev => [report, ...prev]);
-    socketRef.current.emit('report_created', { ...report, exercise_id: parseInt(id!) });
+    socketRef.current.emit('report_created', { ...report, exercise_id: id! });
     refreshStats();
   }, [id, refreshStats]);
 
   const handleReportUpdated = useCallback((report: any) => {
     setReports(prev => prev.map(r => r.id === report.id ? report : r));
-    socketRef.current.emit('report_updated', { ...report, exercise_id: parseInt(id!) });
+    socketRef.current.emit('report_updated', { ...report, exercise_id: id! });
     refreshStats();
   }, [id, refreshStats]);
 
   const handleReportDeleted = useCallback((reportId: number) => {
     setReports(prev => prev.filter(r => r.id !== reportId));
-    socketRef.current.emit('report_deleted', { report_id: reportId, exercise_id: parseInt(id!) });
+    socketRef.current.emit('report_deleted', { report_id: reportId, exercise_id: id! });
     refreshStats();
   }, [id, refreshStats]);
-
-  const handleStatusChange = async (newStatus: string) => {
-    if (!id) return;
-    await apiFetch(`/api/v1/exercises/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ status: newStatus }),
-    });
-    setExercise((prev: any) => prev ? { ...prev, status: newStatus } : null);
-  };
 
   if (loading) return <p className="text-gray-500 p-4">Laden...</p>;
   if (!exercise) return <p className="text-red-500 p-4">Übung nicht gefunden</p>;
 
-  const statusColor = exercise.status === 'active' ? 'bg-green-500' : exercise.status === 'completed' ? 'bg-blue-500' : 'bg-gray-400';
-  const statusLabel = exercise.status === 'active' ? 'Aktiv' : exercise.status === 'completed' ? 'Abgeschlossen' : 'Geplant';
-
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center gap-4">
-          <h1 className="text-xl font-bold text-[#5b3a1a]">
-            {exercise.name || 'Übung'} — {new Date(exercise.date + 'T00:00:00').toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric' })}
-          </h1>
-          <span className={`px-2 py-0.5 rounded-full text-xs text-white ${statusColor}`}>{statusLabel}</span>
-        </div>
+        <h1 className="text-xl font-bold text-[#5b3a1a]">
+          {exercise.name || 'Übung'} — {new Date(exercise.date + 'T00:00:00').toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+        </h1>
         <div className="flex items-center gap-2">
-          {admin?.role === 'admin' && exercise.status === 'planned' && (
-            <button onClick={() => handleStatusChange('active')} className="bg-green-600 hover:bg-green-700 text-white px-3 py-1 rounded text-sm">
-              Starten
-            </button>
-          )}
-          {admin?.role === 'admin' && exercise.status === 'active' && (
-            <button onClick={() => handleStatusChange('completed')} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">
-              Abschließen
-            </button>
-          )}
           <Link to={`/exercises/${id}/setup`} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm">
             Einrichten
           </Link>
@@ -151,7 +124,7 @@ export default function ExercisePage() {
 
       {mode === 'land' ? (
         <LandMode
-          exerciseId={parseInt(id!)}
+          exerciseId={id!}
           repeaters={exercise.repeaters || []}
           reports={reports}
           onReportCreated={handleReportCreated}
@@ -160,7 +133,7 @@ export default function ExercisePage() {
         />
       ) : (
         <BundMode
-          exerciseId={parseInt(id!)}
+          exerciseId={id!}
           repeaters={exercise.repeaters || []}
           reports={reports}
           onReportCreated={handleReportCreated}

@@ -1,4 +1,5 @@
 import { Router } from 'express';
+import { randomUUID } from 'crypto';
 import { getDb } from '../db/database.js';
 import { AuthRequest, requireRole } from '../middleware/auth.js';
 
@@ -8,7 +9,7 @@ export const exercisesRouter = Router();
 exercisesRouter.get('/', (_req, res) => {
   const db = getDb();
   const exercises = db.prepare(`
-    SELECT e.id, e.date, e.status, e.notes,
+    SELECT e.id, e.date, e.name, e.notes,
       (SELECT COUNT(DISTINCT operator_id) FROM exercise_attendance WHERE exercise_id = e.id AND is_present = 1) as participant_count,
       (SELECT COUNT(*) FROM signal_reports WHERE exercise_id = e.id AND is_op_marker = 0) as report_count
     FROM exercises e ORDER BY e.date DESC
@@ -24,8 +25,9 @@ exercisesRouter.post('/', requireRole('admin'), (req, res) => {
     return;
   }
   const db = getDb();
-  const result = db.prepare('INSERT INTO exercises (date, name) VALUES (?, ?)').run(date, name);
-  const exercise = db.prepare('SELECT * FROM exercises WHERE id = ?').get(result.lastInsertRowid);
+  const id = randomUUID();
+  db.prepare('INSERT INTO exercises (id, date, name) VALUES (?, ?, ?)').run(id, date, name);
+  const exercise = db.prepare('SELECT * FROM exercises WHERE id = ?').get(id);
   res.status(201).json(exercise);
 });
 
@@ -72,13 +74,12 @@ exercisesRouter.get('/:id', (req, res) => {
   res.json({ ...exercise, repeaters, reports, attendance });
 });
 
-// Update exercise status/notes (admin only)
+// Update exercise notes/name (admin only)
 exercisesRouter.patch('/:id', requireRole('admin'), (req, res) => {
   const db = getDb();
-  const { status, notes, name } = req.body;
+  const { notes, name } = req.body;
   const updates: string[] = [];
   const params: any[] = [];
-  if (status !== undefined) { updates.push('status = ?'); params.push(status); }
   if (notes !== undefined) { updates.push('notes = ?'); params.push(notes); }
   if (name !== undefined) { updates.push('name = ?'); params.push(name); }
   if (updates.length === 0) {
