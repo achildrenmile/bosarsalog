@@ -1,0 +1,508 @@
+# BOS-ARSA Log — BOS-ARSA Krisenkommunikationsübung Tool
+
+## Claude Code Implementation Prompt
+
+---
+
+### Project Name & Naming
+
+**App name:** BOS-ARSA Log
+**Subdomain:** bosarsalog.oeradio.at
+**Repo:** `bosarsalog`
+**Tagline:** Krisenkommunikationsübung — Live-Erfassung, Multi-User, Auswertung
+
+This tool is part of the oeradio.at ecosystem (BandBlick, StrahlBlick, AkkuBlick, RelaisBlick, QBlitz, FunkPilot, etc.).
+
+---
+
+### What You're Building
+
+A real-time, multi-user web application for the BOS-ARSA weekly ham radio crisis communication exercises. Every Sunday, a team of admin operators queries multiple repeaters and direct frequencies across Austria to collect signal reports from ~100 amateur radio operators. Currently this runs on a shared Excel workbook (~15 MB, 246 columns, 1,066 rows) plus two standalone HTML prototypes — all disconnected. BOS-ARSA Log replaces all three with a single unified tool.
+
+---
+
+### Tech Stack
+
+- **Frontend:** React + TypeScript + Vite + Tailwind CSS
+- **Backend:** Node.js + Express + TypeScript
+- **Database:** SQLite (via better-sqlite3) — the data volume is small (~1,000 operators, ~200 reports/week), SQLite is perfect and keeps deployment simple
+- **Real-time:** Socket.IO for live sync between concurrent admins
+- **Auth:** Simple token-based auth with callsign + PIN (no heavy auth framework needed — this is a small admin team of ~5 people)
+- **Deployment:** Docker + Docker Compose, Cloudflare Tunnel to bosarsalog.oeradio.at
+- **Language:** German UI throughout. Code comments and variable names in English.
+
+---
+
+### CLAUDE.md
+
+Create this at the repo root:
+
+```markdown
+# BOS-ARSA Log — BOS-ARSA Krisenkommunikationsübung
+
+## What is this?
+A real-time multi-user web app for weekly ham radio crisis communication exercises.
+Admins log signal reports from amateur radio operators across Austria on multiple
+repeaters and frequencies. Replaces a shared Excel workbook + two HTML prototypes.
+
+## Tech Stack
+- Frontend: React 18, TypeScript, Vite, Tailwind CSS, Socket.IO client
+- Backend: Node.js, Express, TypeScript, Socket.IO server
+- Database: SQLite via better-sqlite3
+- Auth: Simple callsign + PIN token auth
+- Deployment: Docker, Cloudflare Tunnel
+
+## Architecture
+- Monorepo: /client (React SPA) + /server (Express API + WebSocket)
+- RESTful API for CRUD, WebSocket for real-time sync
+- SQLite DB file at /data/bosarsalog.db (Docker volume mounted)
+- Server serves the built client in production
+
+## Key Domain Concepts
+- Operator (Rufzeichen): ham radio callsign, e.g. OE8YML, S55UJE
+- Repeater/Frequency (Umsetzer): radio relay station with TX freq, offset, CTCSS
+- Linked Repeater: one logical repeater spanning multiple physical sites (Einstiegspunkte)
+- Einstiegspunkt: physical entry point in a linked repeater network
+- Signal Report (Rapport): RST format e.g. "5/9+30 HK" = R5/S9+30dB via Hermannskogel
+- Exercise (Übung): one Sunday session with configured repeaters and collected reports
+- Bezirk: Austrian political district, identified by 2-3 letter code
+- Bundesland: Austrian state (OE1=Wien through OE9=Vorarlberg)
+
+## Conventions
+- German UI text, English code
+- Callsigns always uppercase
+- RST format: R/S with optional +dB modifier and location suffix
+- All timestamps in Europe/Vienna timezone
+- API prefix: /api/v1/
+
+## Common Commands
+- `npm run dev` — start both client and server in dev mode
+- `npm run build` — build for production
+- `npm run db:seed` — seed database with reference data
+- `docker compose up -d` — production deployment
+```
+
+---
+
+### Database Schema
+
+Design the SQLite schema with these tables:
+
+#### `operators` — Master registry (~1,066 records)
+```
+id                INTEGER PRIMARY KEY
+callsign          TEXT UNIQUE NOT NULL      -- e.g. "OE8YML"
+name              TEXT                      -- first name or nickname
+qth               TEXT                      -- location (free text)
+bezirk_code       TEXT REFERENCES bezirke(code)
+bundesland_code   TEXT REFERENCES bundeslaender(code)
+is_bos_arsa       BOOLEAN DEFAULT FALSE
+is_arena          BOOLEAN DEFAULT FALSE
+is_portable       BOOLEAN DEFAULT FALSE
+is_exercise_support BOOLEAN DEFAULT FALSE
+gender            TEXT                      -- 'w' or null
+email             TEXT
+equipment         TEXT                      -- radio model
+antenna           TEXT
+has_emergency_power BOOLEAN DEFAULT FALSE
+has_lighthouse_readiness BOOLEAN DEFAULT FALSE
+latitude          REAL
+longitude         REAL
+created_at        DATETIME DEFAULT CURRENT_TIMESTAMP
+updated_at        DATETIME DEFAULT CURRENT_TIMESTAMP
+```
+
+#### `bundeslaender` — Reference table (9 Austrian + international)
+```
+code              TEXT PRIMARY KEY          -- e.g. "01", "08", "10"
+name              TEXT NOT NULL             -- e.g. "Kärnten", "SLOWENIEN"
+sort_order        INTEGER
+is_international  BOOLEAN DEFAULT FALSE
+```
+
+#### `bezirke` — District reference (~103 records)
+```
+code              TEXT PRIMARY KEY          -- e.g. "KC", "SP", "WC", "HK"
+name              TEXT NOT NULL             -- e.g. "Klagenfurt Stadt"
+bundesland_code   TEXT REFERENCES bundeslaender(code)
+is_capital        BOOLEAN DEFAULT FALSE
+```
+
+#### `repeaters` — Repeater/frequency master list
+```
+id                INTEGER PRIMARY KEY
+short_name        TEXT NOT NULL             -- e.g. "Gerlitze 2m", "Direkte 145.525"
+site_name         TEXT                      -- e.g. "Gerlitze"
+band              TEXT                      -- "2m", "70cm", "23cm"
+callsign          TEXT                      -- e.g. "OE8XNK"
+frequency_mhz     REAL                      -- TX frequency
+offset_mhz        REAL                      -- e.g. -0.6, -7.6
+ctcss_hz          REAL                      -- e.g. 88.5, 123.0
+burst_hz          REAL                      -- e.g. 1750
+type              TEXT DEFAULT 'repeater'   -- 'repeater' or 'simplex'
+is_linked         BOOLEAN DEFAULT FALSE     -- linked repeater system?
+sort_order        INTEGER
+```
+
+#### `einstiegspunkte` — Entry points for linked repeaters
+```
+id                INTEGER PRIMARY KEY
+repeater_id       INTEGER REFERENCES repeaters(id)
+site_name         TEXT NOT NULL             -- e.g. "Hermannskogel"
+callsign          TEXT                      -- e.g. "OE1XAT"
+abbreviation      TEXT                      -- e.g. "HK", "SCHÖ", "GB"
+bundesland_code   TEXT REFERENCES bundeslaender(code)
+sort_order        INTEGER
+```
+
+#### `exercises` — Weekly exercise sessions
+```
+id                INTEGER PRIMARY KEY
+date              DATE UNIQUE NOT NULL      -- always a Sunday
+status            TEXT DEFAULT 'planned'    -- planned, active, completed
+notes             TEXT
+created_at        DATETIME DEFAULT CURRENT_TIMESTAMP
+```
+
+#### `exercise_repeaters` — Which repeaters are active per exercise
+```
+exercise_id       INTEGER REFERENCES exercises(id)
+repeater_id       INTEGER REFERENCES repeaters(id)
+operator_callsign TEXT                      -- OP for this repeater this week
+PRIMARY KEY (exercise_id, repeater_id)
+```
+
+#### `exercise_attendance` — Who participated
+```
+exercise_id       INTEGER REFERENCES exercises(id)
+operator_id       INTEGER REFERENCES operators(id)
+callsign_suffix   TEXT                      -- "/p", "/m", "/8", "remote" etc.
+is_present        BOOLEAN DEFAULT TRUE
+entered_by        TEXT                      -- admin callsign who logged this
+PRIMARY KEY (exercise_id, operator_id)
+```
+
+#### `signal_reports` — The core data
+```
+id                INTEGER PRIMARY KEY
+exercise_id       INTEGER REFERENCES exercises(id)
+operator_id       INTEGER REFERENCES operators(id)
+repeater_id       INTEGER REFERENCES repeaters(id)
+readability       INTEGER                   -- 1-5
+strength          INTEGER                   -- 1-9
+db_over_s9        TEXT                      -- "+10", "+20", "++", "+", null
+einstiegspunkt_id INTEGER REFERENCES einstiegspunkte(id)
+is_op_marker      BOOLEAN DEFAULT FALSE     -- true = station operator, not a report
+notes             TEXT                      -- "Sonstiges" free text
+entered_by        TEXT                      -- admin callsign
+created_at        DATETIME DEFAULT CURRENT_TIMESTAMP
+updated_at        DATETIME DEFAULT CURRENT_TIMESTAMP
+UNIQUE (exercise_id, operator_id, repeater_id)
+```
+
+#### `admins` — Admin users
+```
+id                INTEGER PRIMARY KEY
+callsign          TEXT UNIQUE NOT NULL
+name              TEXT
+pin_hash          TEXT NOT NULL             -- bcrypt hash of PIN
+role              TEXT DEFAULT 'data_entry' -- 'admin', 'data_entry', 'viewer'
+```
+
+---
+
+### API Endpoints
+
+```
+# Auth
+POST   /api/v1/auth/login          { callsign, pin } → { token, admin }
+
+# Exercises
+GET    /api/v1/exercises            List all (with summary stats)
+POST   /api/v1/exercises            Create new exercise { date }
+GET    /api/v1/exercises/:id        Full exercise with reports
+PATCH  /api/v1/exercises/:id        Update status/notes
+GET    /api/v1/exercises/:id/stats  Live statistics
+
+# Exercise Repeaters
+GET    /api/v1/exercises/:id/repeaters
+POST   /api/v1/exercises/:id/repeaters     Activate repeater for exercise
+PATCH  /api/v1/exercises/:id/repeaters/:rid  Update OP assignment
+
+# Signal Reports
+GET    /api/v1/exercises/:id/reports
+POST   /api/v1/exercises/:id/reports       Create report
+PATCH  /api/v1/exercises/:id/reports/:rid  Edit report
+DELETE /api/v1/exercises/:id/reports/:rid  Delete report
+
+# Operators
+GET    /api/v1/operators            List/search (with ?q= autocomplete)
+POST   /api/v1/operators            Quick-add new operator
+GET    /api/v1/operators/:id        Full profile with history
+PATCH  /api/v1/operators/:id        Update operator
+
+# Reference Data
+GET    /api/v1/bundeslaender
+GET    /api/v1/bezirke
+GET    /api/v1/repeaters
+GET    /api/v1/einstiegspunkte
+
+# Reports/Export
+GET    /api/v1/exercises/:id/export/bund   TXT export (Bundesland-grouped)
+GET    /api/v1/exercises/:id/export/land   TXT export (repeater-grouped)
+GET    /api/v1/exercises/:id/export/combined  Combined report
+GET    /api/v1/overview                    Gesamtübersicht (annual summary)
+GET    /api/v1/exercises/:id/nebenstationen  District breakdown report
+```
+
+---
+
+### WebSocket Events (Socket.IO)
+
+```
+# Client → Server
+join_exercise      { exercise_id }
+report_created     { report }
+report_updated     { report }
+report_deleted     { report_id }
+attendance_updated { attendance }
+
+# Server → Client (broadcast to all in exercise room)
+report_created     { report, entered_by }
+report_updated     { report, entered_by }
+report_deleted     { report_id, entered_by }
+attendance_updated { attendance, entered_by }
+stats_updated      { stats }
+```
+
+---
+
+### Frontend Pages & Components
+
+#### 1. Login Page
+Simple callsign + PIN form. Warm, professional design.
+
+#### 2. Dashboard / Gesamtübersicht
+- Annual calendar showing all Sundays, colored by status (planned/active/completed)
+- Summary table: date, participants, total reports per exercise
+- Quick action: create or open today's/next exercise
+
+#### 3. Exercise Setup Page (Admin only)
+- Select date, activate repeaters from master list
+- Assign OP per repeater
+- Configure Einstiegspunkte for linked repeaters
+- Set exercise to "active"
+
+#### 4. Live Data Entry Page — THE CORE
+This is the most critical page. It must support **two modes** simultaneously:
+
+##### Mode A: "Bund" (Geography-first)
+- Displayed as Bundesland → Bezirk hierarchy (all 9 + Sonstige)
+- Per Bezirk: input row with Rufzeichen, Rapport, Einstiegspunkt dropdown, Sonstiges
+- Einstiegspunkt dropdown populated from linked repeater's entry points
+- Last selected Einstiegspunkt auto-propagates to all Bezirke in same Bundesland
+- Bundesland sections collapsible, with badge showing count per section
+- Badge colors: Hauptstadt = red badge (##code), normal = gray badge (#code)
+
+##### Mode B: "Land" (Repeater-first)
+- Repeater selector (dropdown or tabs) — only active repeaters for this exercise
+- Shows frequency details: frequency, offset, CTCSS/burst
+- Below: Bezirk list (configurable — for Kärnten admins: 10 Kärntner Bezirke + Sonstige)
+- Per Bezirk: Rufzeichen, Rapport, Sonstiges
+- Cross-repeater callsign sync: adding a callsign on one repeater creates empty placeholders on all others
+
+##### Shared Behavior (both modes)
+- Auto-complete on Rufzeichen field from operator registry
+- Auto-uppercase on Rufzeichen and Rapport fields
+- Enter key submits report and clears fields, keeps focus for next entry
+- Keyboard shortcuts: Alt+digit → "5/<digit>", Ctrl+digit → "OE<digit>"
+- Inline editing of submitted reports (click to edit)
+- Delete with confirmation
+- Running totals bar: present operators, total reports, per-repeater counts
+- Real-time sync: reports entered by other admins appear instantly
+- Unsaved data warning before navigation/export
+- Quick-add: if callsign not found, show inline "Neu anlegen" form
+
+#### 5. Reports Page
+- Exercise summary with all statistics
+- Nebenstationen breakdown (auto-calculated)
+- Per-repeater breakdown
+- Export buttons: TXT (Bund format), TXT (Land format), Combined, PDF
+
+#### 6. Operator Registry Page (Admin only)
+- Searchable/filterable list of all operators
+- Bulk import from Excel
+- Individual edit with full field set
+- Operator history: all exercises they participated in
+
+---
+
+### Seed Data
+
+Create a seed script that populates:
+
+1. **All 9 Austrian Bundesländer** + international entries (Slowenien, CZ, Deutschland, Italien, Slowakei, Kroatien, Liechtenstein, CH, Ungarn)
+
+2. **All Austrian Bezirke** — use this definitive list derived from both prototypes:
+   - Wien: W (Wien)
+   - Salzburg: HA (Hallein), JO (St. Johann), SC (Salzburg Stadt), SL (Salzburg-Umgebung), TA (Tamsweg), ZE (Zell am See)
+   - NÖ: AM, BN, BL, GF, GD, HL, HO, KO, KS, KR, LF, ME, MI, MD, NK, PL, SB, TU, WT, WN, WB, ZT
+   - Burgenland: EU, GS, JE, MA, ND, OP, OW
+   - OÖ: BR, EF, FR, GM, GR, KI, LL, PE, RI, RO, SD, SR, SE, UU, VB, WE, WL
+   - Steiermark: BM, DL, GU, HF, LB, LE, LI, MU, MT, SO, VO, WZ
+   - Tirol: IM, IL, KU, LZ, RE, SZ
+   - Kärnten: FE, HE, KC (Klagenfurt Stadt), KL, SV, SP, VI, VL, VK, WO
+   - Vorarlberg: DO, FK, BC (Bregenz)
+
+3. **Repeaters** with full technical details:
+   - Gerlitze 2m: OE8XNK, 145.7625 MHz, -0.6, BURST 1750 Hz
+   - Gerlitze 70cm: 439.050, -7.6, CTCSS 88.5 Hz
+   - Magdalensberg linked (OE8XMK): 438.575, -7.6, CTCSS 88.5 Hz, is_linked=true
+   - Buschberg: 438.800 MHz
+   - Goldeck 2m: OE8XOK, 145.650, -0.6, CTCSS 88.5 Hz
+   - Dobratsch 23cm: 1298.150, -28
+   - Struška: S55UJE, 439.325, -7.6, CTCSS 123 Hz
+   - Hochstuhl: 439.3625, -7.6, CTCSS 123 Hz
+   - Zirbitzkogel: 438.800
+   - Direkte 145.300 (simplex)
+   - Direkte 145.525 (simplex)
+
+4. **Einstiegspunkte** for the Magdalensberg linked system:
+   - Hermannskogel OE1XAT (Wien) → "HK"
+   - Gaisberg OE2XZR (Salzburg) → "GB"
+   - Nebelstein OE3XNR (NÖ) → "NBST"
+   - Jauerling OE3XWJ (NÖ) → "JAU"
+   - Feuerkogel OE5XFK (OÖ) → "FK"
+   - Schöckl OE6XAG (Steiermark) → "SCHÖ"
+   - Lachtal OE6XDG (Steiermark) → "LT"
+   - Telfs OE7XKG (Tirol) → "Telfs"
+   - Hochstein OE7XLI (Tirol) → "Hochstein"
+   - Ahorn OE7XZT (Tirol) → "Ahorn"
+   - Magdalensberg OE8XMK (Kärnten) → "MK"
+   - Dornbirn OE9XXD (Vorarlberg) → "DO"
+
+5. **Default admin:** OE8YML, PIN: changeme, role: admin
+
+---
+
+### Data Import
+
+Build an import endpoint/script that reads the existing Excel workbook and imports:
+- All ~1,066 operators with their full profile data
+- Historical exercise data from the 6 completed weekly sheets
+- Map the Excel Bezirks-Kenner codes to the unified Bezirk reference table
+
+Use the `xlsx` npm package for reading the Excel file.
+
+---
+
+### Docker Setup
+
+```dockerfile
+# Multi-stage build
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+COPY client/package*.json ./client/
+COPY server/package*.json ./server/
+RUN npm ci
+COPY . .
+RUN npm run build
+
+FROM node:20-alpine AS production
+WORKDIR /app
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/package.json ./
+VOLUME /data
+ENV DATABASE_PATH=/data/bosarsalog.db
+EXPOSE 3000
+CMD ["node", "dist/server/index.js"]
+```
+
+```yaml
+# docker-compose.yml
+services:
+  bosarsalog:
+    build: .
+    container_name: bosarsalog
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - bosarsalog-data:/data
+    environment:
+      - NODE_ENV=production
+      - DATABASE_PATH=/data/bosarsalog.db
+      - JWT_SECRET=${JWT_SECRET}
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: bosarsalog-tunnel
+    restart: unless-stopped
+    profiles:
+      - tunnel
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${TUNNEL_TOKEN}
+    depends_on:
+      - bosarsalog
+
+volumes:
+  bosarsalog-data:
+```
+
+---
+
+### Implementation Order
+
+Build in this sequence:
+
+1. **Project scaffolding** — monorepo, CLAUDE.md, package.json, tsconfig, Docker
+2. **Database schema + migrations** — SQLite setup with better-sqlite3
+3. **Seed script** — all reference data (Bundesländer, Bezirke, Repeaters, Einstiegspunkte)
+4. **Auth** — admin table, login endpoint, JWT middleware
+5. **Operator CRUD** — registry with search/autocomplete
+6. **Exercise CRUD** — create, configure repeaters, status management
+7. **Signal Report CRUD** — the core data entry API
+8. **Socket.IO real-time** — broadcast report changes to all connected admins
+9. **Frontend: Login + Dashboard** — basic navigation shell
+10. **Frontend: Live Entry (Land mode)** — repeater-first entry, keyboard shortcuts
+11. **Frontend: Live Entry (Bund mode)** — geography-first entry with Einstiegspunkt
+12. **Frontend: Running totals + live sync** — real-time stats bar
+13. **Reports + Export** — Gesamtübersicht, Nebenstationen, TXT exports
+14. **Excel import** — bulk import from existing workbook
+15. **Operator registry UI** — admin management page
+16. **Docker + deployment** — production build, compose, tunnel
+
+---
+
+### Key UX Details to Get Right
+
+- **Speed is everything.** During a live exercise, admins enter ~180 reports in ~60 minutes. Every keystroke matters. Autofocus, enter-to-submit, auto-uppercase, keyboard shortcuts.
+- **Einstiegspunkt auto-propagation:** When admin selects "Hermannskogel" in the WC (Wien) Bezirk, auto-set it for all other Wien Bezirke too. This was implemented in the existing Bund prototype and must be preserved.
+- **Cross-repeater sync:** When adding OE8PPK to Gerlitze 2m, auto-create empty placeholder entries for OE8PPK on Goldeck, Direkte, etc. This was implemented in the existing Land prototype.
+- **The warm beige background** (#faf3e4) from both prototypes is intentional — don't change it to cold corporate blue. Keep the warm, approachable feel.
+- **Badges:** Bezirk codes shown as badges — Hauptstadt districts with red (#dc3545), others with gray (#6c757d). Bundesland headers with blue badges.
+- **Running totals always visible:** Fixed bar showing "Anwesend: 125 | Rapporte: 179 | Gerlitze: 29 | Magdalensberg: 109 | ..."
+
+---
+
+### What NOT to Build (Out of Scope for MVP)
+
+- Mobile native app (responsive web is sufficient)
+- Offline mode with sync (nice-to-have for later)
+- Map visualization / geographic heat map
+- Integration with safeReach / Meshtastic / FunkPilot
+- Per-operator trend analysis
+- SSB/HF exercise mode (the SSB/Erdbeben columns in Excel are unused)
+
+---
+
+<task-notification>
+<task-id>b96f509</task-id>
+<output-file>/tmp/claude-1000/-home-achildrenmile-bosarsalog/tasks/b96f509.output</output-file>
+<status>completed</status>
+<summary>Background command "Find compose files on Synology volume" completed (exit code 0)</summary>
+</task-notification>
+Read the output file to retrieve the result: /tmp/claude-1000/-home-achildrenmile-bosarsalog/tasks/b96f509.output
