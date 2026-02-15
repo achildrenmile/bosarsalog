@@ -51,7 +51,9 @@ export function runMigrations(db: Database.Database): void {
       burst_hz REAL,
       type TEXT DEFAULT 'repeater',
       is_linked INTEGER DEFAULT 0,
-      sort_order INTEGER
+      sort_order INTEGER,
+      bundesland_code TEXT REFERENCES bundeslaender(code),
+      is_custom INTEGER DEFAULT 0
     );
 
     CREATE TABLE IF NOT EXISTS einstiegspunkte (
@@ -123,11 +125,20 @@ export function runMigrations(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_exercise_attendance_exercise ON exercise_attendance(exercise_id);
     CREATE INDEX IF NOT EXISTS idx_einstiegspunkte_repeater ON einstiegspunkte(repeater_id);
     CREATE INDEX IF NOT EXISTS idx_bezirke_bundesland ON bezirke(bundesland_code);
+    CREATE INDEX IF NOT EXISTS idx_repeaters_bundesland ON repeaters(bundesland_code);
   `);
 
   // Migrations for existing databases
   const cols = db.prepare("PRAGMA table_info(exercises)").all() as any[];
   if (!cols.some((c: any) => c.name === 'name')) {
     db.exec("ALTER TABLE exercises ADD COLUMN name TEXT");
+  }
+
+  const repCols = db.prepare("PRAGMA table_info(repeaters)").all() as any[];
+  if (!repCols.some((c: any) => c.name === 'bundesland_code')) {
+    db.exec("ALTER TABLE repeaters ADD COLUMN bundesland_code TEXT REFERENCES bundeslaender(code)");
+  }
+  if (!repCols.some((c: any) => c.name === 'is_custom')) {
+    db.exec("ALTER TABLE repeaters ADD COLUMN is_custom INTEGER DEFAULT 0");
   }
 }

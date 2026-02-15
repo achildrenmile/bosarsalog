@@ -48,11 +48,13 @@ exercisesRouter.get('/:id', (req, res) => {
 
   const repeaters = db.prepare(`
     SELECT er.*, r.short_name, r.site_name, r.band, r.callsign as repeater_callsign,
-      r.frequency_mhz, r.offset_mhz, r.ctcss_hz, r.burst_hz, r.type, r.is_linked
+      r.frequency_mhz, r.offset_mhz, r.ctcss_hz, r.burst_hz, r.type, r.is_linked,
+      r.bundesland_code, bl.name as bundesland_name
     FROM exercise_repeaters er
     JOIN repeaters r ON r.id = er.repeater_id
+    LEFT JOIN bundeslaender bl ON bl.code = r.bundesland_code
     WHERE er.exercise_id = ?
-    ORDER BY r.sort_order
+    ORDER BY r.bundesland_code, r.sort_order
   `).all(req.params.id);
 
   const reports = db.prepare(`
@@ -119,11 +121,13 @@ exercisesRouter.get('/:id/repeaters', (req, res) => {
   const db = getDb();
   const repeaters = db.prepare(`
     SELECT er.*, r.short_name, r.site_name, r.band, r.callsign as repeater_callsign,
-      r.frequency_mhz, r.offset_mhz, r.ctcss_hz, r.burst_hz, r.type, r.is_linked, r.sort_order
+      r.frequency_mhz, r.offset_mhz, r.ctcss_hz, r.burst_hz, r.type, r.is_linked, r.sort_order,
+      r.bundesland_code, bl.name as bundesland_name
     FROM exercise_repeaters er
     JOIN repeaters r ON r.id = er.repeater_id
+    LEFT JOIN bundeslaender bl ON bl.code = r.bundesland_code
     WHERE er.exercise_id = ?
-    ORDER BY r.sort_order
+    ORDER BY r.bundesland_code, r.sort_order
   `).all(req.params.id);
   res.json(repeaters);
 });

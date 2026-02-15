@@ -1,6 +1,19 @@
-import { useState, useEffect, useCallback, useRef, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { apiFetch } from '../services/api';
 import CallsignInput from './CallsignInput';
+
+const BUNDESLAND_NAMES: Record<string, string> = {
+  '01': 'OE1 Wien',
+  '02': 'OE2 Salzburg',
+  '03': 'OE3 Niederösterreich',
+  '04': 'OE4 Burgenland',
+  '05': 'OE5 Oberösterreich',
+  '06': 'OE6 Steiermark',
+  '07': 'OE7 Tirol',
+  '08': 'OE8 Kärnten',
+  '09': 'OE9 Vorarlberg',
+  '10': 'Slowenien',
+};
 
 interface Props {
   exerciseId: number;
@@ -13,7 +26,6 @@ interface Props {
 
 export default function LandMode({ exerciseId, repeaters, reports, onReportCreated, onReportUpdated, onReportDeleted }: Props) {
   const [activeRepeaterId, setActiveRepeaterId] = useState<number | null>(null);
-  const [bezirke, setBezirke] = useState<any[]>([]);
   const [allBezirke, setAllBezirke] = useState<any[]>([]);
   const [bundeslaender, setBundeslaender] = useState<any[]>([]);
 
@@ -23,14 +35,10 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
   const [rapport, setRapport] = useState('');
   const [notes, setNotes] = useState('');
   const [editingId, setEditingId] = useState<number | null>(null);
-  const callsignRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     apiFetch('/api/v1/reference/bundeslaender').then(setBundeslaender).catch(() => {});
-    apiFetch('/api/v1/reference/bezirke').then(data => {
-      setAllBezirke(data);
-      setBezirke(data);
-    }).catch(() => {});
+    apiFetch('/api/v1/reference/bezirke').then(setAllBezirke).catch(() => {});
   }, []);
 
   useEffect(() => {
@@ -41,6 +49,26 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
 
   const activeRepeater = repeaters.find(r => r.repeater_id === activeRepeaterId);
   const repeaterReports = reports.filter(r => r.repeater_id === activeRepeaterId);
+
+  // Group repeaters by Bundesland
+  const repeatersByBl: Record<string, any[]> = {};
+  const simplexRepeaters: any[] = [];
+  for (const r of repeaters) {
+    if (r.type === 'simplex') {
+      simplexRepeaters.push(r);
+    } else {
+      const blCode = r.bundesland_code || '_other';
+      if (!repeatersByBl[blCode]) repeatersByBl[blCode] = [];
+      repeatersByBl[blCode].push(r);
+    }
+  }
+
+  // Sort Bundesland codes
+  const sortedBlCodes = Object.keys(repeatersByBl).sort((a, b) => {
+    if (a === '_other') return 1;
+    if (b === '_other') return -1;
+    return a.localeCompare(b);
+  });
 
   const parseRapport = (raw: string) => {
     const match = raw.match(/^(\d)\/(\d)(.*)$/);
@@ -100,7 +128,6 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
         }
       } catch (err: any) {
         if (err.message?.includes('existiert')) {
-          // Update existing
           const existing = reports.find(r => r.operator_id === selectedOperator.id && r.repeater_id === activeRepeaterId);
           if (existing) {
             const updated = await apiFetch(`/api/v1/exercises/${exerciseId}/reports/${existing.id}`, {
@@ -148,20 +175,72 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
 
   return (
     <div className="space-y-3">
-      {/* Repeater tabs */}
-      <div className="flex flex-wrap gap-1">
-        {repeaters.map(r => (
-          <button
-            key={r.repeater_id}
-            onClick={() => setActiveRepeaterId(r.repeater_id)}
-            className={`px-3 py-1.5 rounded text-sm ${r.repeater_id === activeRepeaterId ? 'bg-[#5b3a1a] text-white font-medium' : 'bg-white text-gray-700 hover:bg-gray-100 border'}`}
-          >
-            {r.short_name}
-            {repeaterReports.length > 0 && r.repeater_id === activeRepeaterId && (
-              <span className="ml-1 bg-white/20 rounded-full px-1.5 text-xs">{repeaterReports.filter(rp => !rp.is_op_marker && rp.readability).length}</span>
-            )}
-          </button>
-        ))}
+      {/* Repeater tabs grouped by Bundesland */}
+      <div className="space-y-1">
+        {sortedBlCodes.map(blCode => {
+          const blReps = repeatersByBl[blCode];
+          const label = BUNDESLAND_NAMES[blCode] || 'Sonstige';
+          return (
+            <div key={blCode}>
+              <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-1 mb-0.5">{label}</div>
+              <div className="flex flex-wrap gap-1 mb-1">
+                {blReps.map(r => {
+                  const repReportCount = reports.filter(rp => rp.repeater_id === r.repeater_id && !rp.is_op_marker && rp.readability).length;
+                  return (
+                    <button
+                      key={r.repeater_id}
+                      onClick={() => setActiveRepeaterId(r.repeater_id)}
+                      className={`px-3 py-1.5 rounded text-sm flex items-center gap-1 ${r.repeater_id === activeRepeaterId ? 'bg-[#5b3a1a] text-white font-medium' : 'bg-white text-gray-700 hover:bg-gray-100 border'}`}
+                    >
+                      {r.short_name}
+                      {r.operator_callsign && (
+                        <span className={`text-xs px-1 py-0.5 rounded ${r.repeater_id === activeRepeaterId ? 'bg-white/20' : 'bg-amber-100 text-amber-800'}`}>
+                          {r.operator_callsign}
+                        </span>
+                      )}
+                      {repReportCount > 0 && (
+                        <span className={`text-xs rounded-full px-1.5 ${r.repeater_id === activeRepeaterId ? 'bg-white/20' : 'bg-gray-200'}`}>
+                          {repReportCount}
+                        </span>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          );
+        })}
+
+        {/* Simplex tabs */}
+        {simplexRepeaters.length > 0 && (
+          <div>
+            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-1 mb-0.5">Simplex</div>
+            <div className="flex flex-wrap gap-1 mb-1">
+              {simplexRepeaters.map(r => {
+                const repReportCount = reports.filter(rp => rp.repeater_id === r.repeater_id && !rp.is_op_marker && rp.readability).length;
+                return (
+                  <button
+                    key={r.repeater_id}
+                    onClick={() => setActiveRepeaterId(r.repeater_id)}
+                    className={`px-3 py-1.5 rounded text-sm flex items-center gap-1 ${r.repeater_id === activeRepeaterId ? 'bg-[#5b3a1a] text-white font-medium' : 'bg-white text-gray-700 hover:bg-gray-100 border'}`}
+                  >
+                    {r.short_name}
+                    {r.operator_callsign && (
+                      <span className={`text-xs px-1 py-0.5 rounded ${r.repeater_id === activeRepeaterId ? 'bg-white/20' : 'bg-amber-100 text-amber-800'}`}>
+                        {r.operator_callsign}
+                      </span>
+                    )}
+                    {repReportCount > 0 && (
+                      <span className={`text-xs rounded-full px-1.5 ${r.repeater_id === activeRepeaterId ? 'bg-white/20' : 'bg-gray-200'}`}>
+                        {repReportCount}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Repeater info */}
