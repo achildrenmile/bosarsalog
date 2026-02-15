@@ -18,14 +18,14 @@ exercisesRouter.get('/', (_req, res) => {
 
 // Create exercise
 exercisesRouter.post('/', (req, res) => {
-  const { date } = req.body;
+  const { date, name } = req.body;
   if (!date) {
     res.status(400).json({ error: 'Datum erforderlich' });
     return;
   }
   const db = getDb();
   try {
-    const result = db.prepare('INSERT INTO exercises (date) VALUES (?)').run(date);
+    const result = db.prepare('INSERT INTO exercises (date, name) VALUES (?, ?)').run(date, name || null);
     const exercise = db.prepare('SELECT * FROM exercises WHERE id = ?').get(result.lastInsertRowid);
     res.status(201).json(exercise);
   } catch (e: any) {
@@ -81,11 +81,12 @@ exercisesRouter.get('/:id', (req, res) => {
 // Update exercise status/notes
 exercisesRouter.patch('/:id', (req, res) => {
   const db = getDb();
-  const { status, notes } = req.body;
+  const { status, notes, name } = req.body;
   const updates: string[] = [];
   const params: any[] = [];
   if (status !== undefined) { updates.push('status = ?'); params.push(status); }
   if (notes !== undefined) { updates.push('notes = ?'); params.push(notes); }
+  if (name !== undefined) { updates.push('name = ?'); params.push(name); }
   if (updates.length === 0) {
     res.status(400).json({ error: 'Keine Änderungen' });
     return;

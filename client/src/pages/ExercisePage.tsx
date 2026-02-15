@@ -108,7 +108,7 @@ export default function ExercisePage() {
       <div className="flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-4">
           <h1 className="text-xl font-bold text-[#5b3a1a]">
-            Übung {new Date(exercise.date + 'T00:00:00').toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+            {exercise.name || 'Übung'} — {new Date(exercise.date + 'T00:00:00').toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric' })}
           </h1>
           <span className={`px-2 py-0.5 rounded-full text-xs text-white ${statusColor}`}>{statusLabel}</span>
         </div>

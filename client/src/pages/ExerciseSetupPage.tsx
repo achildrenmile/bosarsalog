@@ -71,6 +71,22 @@ export default function ExerciseSetupPage() {
         </div>
       </div>
 
+      <div className="bg-white rounded-xl shadow p-4 mb-4">
+        <h2 className="text-lg font-semibold text-[#5b3a1a] mb-3">Name der Übung</h2>
+        <input
+          type="text"
+          defaultValue={exercise.name || ''}
+          placeholder="z.B. Sonntagsrunde KW 07"
+          onBlur={async (e) => {
+            await apiFetch(`/api/v1/exercises/${id}`, {
+              method: 'PATCH',
+              body: JSON.stringify({ name: e.target.value || null }),
+            });
+          }}
+          className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full max-w-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+        />
+      </div>
+
       <div className="bg-white rounded-xl shadow p-4">
         <h2 className="text-lg font-semibold text-[#5b3a1a] mb-3">Umsetzer aktivieren</h2>
         <div className="space-y-2">

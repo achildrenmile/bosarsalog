@@ -66,6 +66,7 @@ export function runMigrations(db: Database.Database): void {
 
     CREATE TABLE IF NOT EXISTS exercises (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT,
       date TEXT UNIQUE NOT NULL,
       status TEXT DEFAULT 'planned',
       notes TEXT,
@@ -123,4 +124,10 @@ export function runMigrations(db: Database.Database): void {
     CREATE INDEX IF NOT EXISTS idx_einstiegspunkte_repeater ON einstiegspunkte(repeater_id);
     CREATE INDEX IF NOT EXISTS idx_bezirke_bundesland ON bezirke(bundesland_code);
   `);
+
+  // Migrations for existing databases
+  const cols = db.prepare("PRAGMA table_info(exercises)").all() as any[];
+  if (!cols.some((c: any) => c.name === 'name')) {
+    db.exec("ALTER TABLE exercises ADD COLUMN name TEXT");
+  }
 }

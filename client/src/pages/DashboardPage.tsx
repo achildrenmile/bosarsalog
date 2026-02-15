@@ -5,6 +5,7 @@ import { apiFetch } from '../services/api';
 
 interface ExerciseSummary {
   id: number;
+  name: string | null;
   date: string;
   status: string;
   participant_count: number;
@@ -80,6 +81,7 @@ export default function DashboardPage() {
             <thead className="bg-[#5b3a1a] text-white">
               <tr>
                 <th className="px-4 py-2 text-left">Datum</th>
+                <th className="px-4 py-2 text-left">Name</th>
                 <th className="px-4 py-2 text-left">Status</th>
                 <th className="px-4 py-2 text-right">Teilnehmer</th>
                 <th className="px-4 py-2 text-right">Rapporte</th>
@@ -90,6 +92,7 @@ export default function DashboardPage() {
               {exercises.map(ex => (
                 <tr key={ex.id} className="border-t hover:bg-amber-50">
                   <td className="px-4 py-2 font-mono">{formatDate(ex.date)}</td>
+                  <td className="px-4 py-2 text-gray-700">{ex.name || '—'}</td>
                   <td className="px-4 py-2">
                     <span className={`inline-block px-2 py-0.5 rounded-full text-xs text-white ${statusColor(ex.status)}`}>
                       {statusLabel(ex.status)}
