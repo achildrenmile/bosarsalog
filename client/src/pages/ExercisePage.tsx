@@ -144,13 +144,13 @@ export default function ExercisePage() {
           onClick={() => setMode('land')}
           className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 rounded text-xs sm:text-sm font-medium ${mode === 'land' ? 'bg-[#1e3a5f] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
         >
-          Land (Umsetzer)
+          Frequenzen
         </button>
         <button
           onClick={() => setMode('bund')}
           className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 rounded text-xs sm:text-sm font-medium ${mode === 'bund' ? 'bg-[#1e3a5f] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
         >
-          Bund (Bundesland)
+          OE-Link
         </button>
       </div>
 
