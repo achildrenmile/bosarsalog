@@ -308,11 +308,11 @@ if (magRepId) {
 }
 
 // ─── Users ───
-const adminHash = bcrypt.hashSync('BosArsa2024!', 10);
-const operatorHash = bcrypt.hashSync('Funk73!ops', 10);
-db.prepare('INSERT INTO admins (username, password_hash, role) VALUES (?, ?, ?)').run('admin', adminHash, 'admin');
-db.prepare('INSERT INTO admins (username, password_hash, role) VALUES (?, ?, ?)').run('operator', operatorHash, 'operator');
-console.log('  ✓ Users: admin, operator');
+const adminHash = bcrypt.hashSync('Xr9$kLm2!vBn7Qw4zJpT', 10);
+const operatorHash = bcrypt.hashSync('Wf5#dNc8&hYs3Rt6mKaU', 10);
+db.prepare('INSERT INTO admins (username, password_hash, role) VALUES (?, ?, ?)').run('einsatzleitung', adminHash, 'admin');
+db.prepare('INSERT INTO admins (username, password_hash, role) VALUES (?, ?, ?)').run('erfasser', operatorHash, 'operator');
+console.log('  ✓ Users: einsatzleitung, erfasser');
 
 console.log('Seed complete!');
 db.close();
