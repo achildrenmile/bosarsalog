@@ -12,26 +12,26 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <nav className="bg-[#5b3a1a] text-white px-4 py-2 flex items-center justify-between shadow-md">
+      <nav className="bg-[#1a365d] text-white px-4 py-2 flex items-center justify-between shadow-md">
         <div className="flex items-center gap-4">
           <a href="https://bosarsa.wordpress.com/" target="_blank" rel="noopener noreferrer" className="flex-shrink-0">
             <img src="/bosarsa.jpeg" alt="BOS-ARSA" className="h-10 rounded" />
           </a>
-          <Link to="/" className="text-lg font-bold tracking-wide hover:text-amber-200">
+          <Link to="/" className="text-lg font-bold tracking-wide hover:text-blue-200">
             BOS-ARSA Log
           </Link>
-          <Link to="/" className="text-sm hover:text-amber-200">
+          <Link to="/" className="text-sm hover:text-blue-200">
             Dashboard
           </Link>
-          <Link to="/operators" className="text-sm hover:text-amber-200">
+          <Link to="/operators" className="text-sm hover:text-blue-200">
             Rufzeichen
           </Link>
         </div>
         <div className="flex items-center gap-4 text-sm">
-          <span className="text-amber-200">{admin?.username}</span>
+          <span className="text-blue-200">{admin?.username}</span>
           <button
             onClick={handleLogout}
-            className="bg-amber-700 hover:bg-amber-800 px-3 py-1 rounded text-xs"
+            className="bg-blue-700 hover:bg-blue-800 px-3 py-1 rounded text-xs"
           >
             Abmelden
           </button>

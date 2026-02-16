@@ -149,7 +149,7 @@ export default function ExerciseSetupPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-[#5b3a1a]">
+        <h1 className="text-xl font-bold text-[#1a365d]">
           Übung einrichten — {new Date(exercise.date + 'T00:00:00').toLocaleDateString('de-AT')}
         </h1>
         <div className="flex gap-2">
@@ -162,7 +162,7 @@ export default function ExerciseSetupPage() {
       {/* Exercise name (admin only) */}
       {isAdmin && (
         <div className="bg-white rounded-xl shadow p-4">
-          <h2 className="text-lg font-semibold text-[#5b3a1a] mb-3">Name der Übung</h2>
+          <h2 className="text-lg font-semibold text-[#1a365d] mb-3">Name der Übung</h2>
           <input
             type="text"
             defaultValue={exercise.name || ''}
@@ -173,14 +173,14 @@ export default function ExerciseSetupPage() {
                 body: JSON.stringify({ name: e.target.value || null }),
               });
             }}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full max-w-md focus:outline-none focus:ring-2 focus:ring-amber-500"
+            className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full max-w-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
       )}
 
       {/* Bundesländer selection */}
       <div className="bg-white rounded-xl shadow p-4">
-        <h2 className="text-lg font-semibold text-[#5b3a1a] mb-3">Bundesländer auswählen</h2>
+        <h2 className="text-lg font-semibold text-[#1a365d] mb-3">Bundesländer auswählen</h2>
         <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-2">
           {BUNDESLAENDER.map(bl => {
             const isActive = activeBundeslaender.has(bl.code);
@@ -196,7 +196,7 @@ export default function ExerciseSetupPage() {
                 disabled={!isAdmin}
                 className={`flex flex-col items-center py-2 px-1 rounded-lg border-2 transition-colors text-sm ${
                   isActive
-                    ? 'border-amber-500 bg-amber-50 text-[#5b3a1a]'
+                    ? 'border-blue-500 bg-blue-50 text-[#1a365d]'
                     : 'border-gray-200 bg-gray-50 text-gray-500 hover:border-gray-300'
                 } ${!isAdmin ? 'cursor-default' : ''}`}
               >
@@ -221,9 +221,9 @@ export default function ExerciseSetupPage() {
               className="w-full flex items-center justify-between p-4 hover:bg-gray-50 transition-colors"
             >
               <div className="flex items-center gap-2">
-                <span className="font-bold text-[#5b3a1a]">{bl.label}</span>
-                <span className="font-semibold text-[#5b3a1a]">{bl.name}</span>
-                <span className="text-xs bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full">
+                <span className="font-bold text-[#1a365d]">{bl.label}</span>
+                <span className="font-semibold text-[#1a365d]">{bl.name}</span>
+                <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full">
                   {activeRepeaters.filter(ar => {
                     const rep = allRepeaters.find(r => r.id === ar.repeater_id);
                     return rep?.bundesland_code === bl.code;
@@ -246,7 +246,7 @@ export default function ExerciseSetupPage() {
                             checked={!!active}
                             disabled={!!active && !isAdmin}
                             onChange={() => toggleRepeater(rep.id)}
-                            className="w-4 h-4 accent-amber-600"
+                            className="w-4 h-4 accent-blue-600"
                           />
                           <span className="font-medium text-sm">{rep.short_name}</span>
                           <span className="text-xs text-gray-500">
@@ -273,12 +273,12 @@ export default function ExerciseSetupPage() {
                       <input type="text" placeholder="Rufzeichen" value={newRepCallsign} onChange={e => setNewRepCallsign(e.target.value.toUpperCase())} className="border rounded px-2 py-1 text-sm font-mono uppercase w-24" />
                     </div>
                     <div className="flex gap-2">
-                      <button onClick={() => addCustomRepeater(bl.code)} className="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1 rounded text-sm">Hinzufügen</button>
+                      <button onClick={() => addCustomRepeater(bl.code)} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">Hinzufügen</button>
                       <button onClick={() => setShowAddForm(null)} className="text-gray-500 text-sm hover:text-gray-700">Abbrechen</button>
                     </div>
                   </div>
                 ) : (
-                  <button onClick={() => setShowAddForm(bl.code)} className="mt-2 text-sm text-amber-700 hover:text-amber-900 font-medium">
+                  <button onClick={() => setShowAddForm(bl.code)} className="mt-2 text-sm text-blue-700 hover:text-blue-900 font-medium">
                     + Umsetzer hinzufügen
                   </button>
                 )}
@@ -291,7 +291,7 @@ export default function ExerciseSetupPage() {
       {/* Simplex frequencies */}
       <div className="bg-white rounded-xl shadow overflow-hidden">
         <div className="p-4">
-          <h2 className="text-lg font-semibold text-[#5b3a1a] mb-3">Simplex-Frequenzen</h2>
+          <h2 className="text-lg font-semibold text-[#1a365d] mb-3">Simplex-Frequenzen</h2>
           <div className="space-y-1">
             {simplexRepeaters.map(rep => {
               const active = activeRepeaters.find(r => r.repeater_id === rep.id);
@@ -303,7 +303,7 @@ export default function ExerciseSetupPage() {
                       checked={!!active}
                       disabled={!!active && !isAdmin}
                       onChange={() => toggleRepeater(rep.id)}
-                      className="w-4 h-4 accent-amber-600"
+                      className="w-4 h-4 accent-blue-600"
                     />
                     <span className="font-medium text-sm">{rep.short_name}</span>
                     <span className="text-xs text-gray-500">
@@ -324,12 +324,12 @@ export default function ExerciseSetupPage() {
                 <input type="text" placeholder="Frequenz MHz" value={newRepFreq} onChange={e => setNewRepFreq(e.target.value)} className="border rounded px-2 py-1 text-sm w-28" />
               </div>
               <div className="flex gap-2">
-                <button onClick={() => addCustomRepeater(null)} className="bg-amber-600 hover:bg-amber-700 text-white px-3 py-1 rounded text-sm">Hinzufügen</button>
+                <button onClick={() => addCustomRepeater(null)} className="bg-blue-600 hover:bg-blue-700 text-white px-3 py-1 rounded text-sm">Hinzufügen</button>
                 <button onClick={() => setShowAddForm(null)} className="text-gray-500 text-sm hover:text-gray-700">Abbrechen</button>
               </div>
             </div>
           ) : (
-            <button onClick={() => setShowAddForm('simplex')} className="mt-2 text-sm text-amber-700 hover:text-amber-900 font-medium">
+            <button onClick={() => setShowAddForm('simplex')} className="mt-2 text-sm text-blue-700 hover:text-blue-900 font-medium">
               + Simplex-Frequenz hinzufügen
             </button>
           )}

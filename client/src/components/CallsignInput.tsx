@@ -80,7 +80,7 @@ export default function CallsignInput({ value, onChange, onSelect, autoFocus, cl
         onKeyDown={handleKeyDown}
         onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
         onFocus={() => { if (suggestions.length > 0) setShowSuggestions(true); }}
-        className={`border border-gray-300 rounded px-2 py-1 font-mono uppercase text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 ${className || 'w-32'}`}
+        className={`border border-gray-300 rounded px-2 py-1 font-mono uppercase text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 ${className || 'w-32'}`}
         placeholder="Rufzeichen"
       />
       {showSuggestions && (
@@ -89,7 +89,7 @@ export default function CallsignInput({ value, onChange, onSelect, autoFocus, cl
             <div
               key={op.id}
               onMouseDown={() => selectSuggestion(op)}
-              className={`px-3 py-1.5 cursor-pointer text-sm ${i === selectedIdx ? 'bg-amber-100' : 'hover:bg-gray-100'}`}
+              className={`px-3 py-1.5 cursor-pointer text-sm ${i === selectedIdx ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
             >
               <span className="font-mono font-bold">{op.callsign}</span>
               {op.name && <span className="ml-2 text-gray-500">{op.name}</span>}

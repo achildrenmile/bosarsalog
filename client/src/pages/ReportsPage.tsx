@@ -94,7 +94,7 @@ export default function ReportsPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-xl font-bold text-[#5b3a1a]">Auswertung</h1>
+          <h1 className="text-xl font-bold text-[#1a365d]">Auswertung</h1>
           <p className="text-sm text-gray-500">{exercise.name} — {formatDate(exercise.date)}</p>
         </div>
         <Link to={`/exercises/${id}`} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded text-sm">
@@ -107,11 +107,11 @@ export default function ReportsPage() {
           {/* Summary cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div className="bg-white rounded-lg shadow-sm p-4 text-center">
-              <div className="text-3xl font-bold text-[#5b3a1a]">{stats.totalParticipants}</div>
+              <div className="text-3xl font-bold text-[#1a365d]">{stats.totalParticipants}</div>
               <div className="text-sm text-gray-500">Teilnehmer</div>
             </div>
             <div className="bg-white rounded-lg shadow-sm p-4 text-center">
-              <div className="text-3xl font-bold text-[#5b3a1a]">{stats.totalReports}</div>
+              <div className="text-3xl font-bold text-[#1a365d]">{stats.totalReports}</div>
               <div className="text-sm text-gray-500">Rapporte</div>
             </div>
             {stats.perRepeater.map((r) => (
@@ -134,7 +134,7 @@ export default function ReportsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Bar chart: Stationen + Rapporte */}
               <div className="bg-white rounded-xl shadow p-4">
-                <h2 className="text-sm font-semibold text-[#5b3a1a] mb-3">
+                <h2 className="text-sm font-semibold text-[#1a365d] mb-3">
                   BOS-ARSA Krisenkommunikationsübung am {new Date(exercise.date + 'T00:00:00').toLocaleDateString('de-AT')}
                 </h2>
                 <div style={{ height: 350 }}>
@@ -145,7 +145,7 @@ export default function ReportsPage() {
                         {
                           label: 'Stationen',
                           data: chartData.map(d => d.participants),
-                          backgroundColor: '#5b3a1a',
+                          backgroundColor: '#1a365d',
                         },
                         {
                           label: 'Rapporte',
@@ -169,7 +169,7 @@ export default function ReportsPage() {
 
               {/* Pie chart: Rapporte distribution */}
               <div className="bg-white rounded-xl shadow p-4">
-                <h2 className="text-sm font-semibold text-[#5b3a1a] mb-3">
+                <h2 className="text-sm font-semibold text-[#1a365d] mb-3">
                   Rapporte-Verteilung nach {chartLevel}
                 </h2>
                 <div style={{ height: 350 }} className="flex items-center justify-center">
@@ -179,9 +179,9 @@ export default function ReportsPage() {
                       datasets: [{
                         data: chartData.filter(d => d.reports > 0).map(d => d.reports),
                         backgroundColor: [
-                          '#5b3a1a', '#d97706', '#dc3545', '#0d6efd', '#198754',
+                          '#1a365d', '#d97706', '#dc3545', '#0d6efd', '#198754',
                           '#6f42c1', '#fd7e14', '#20c997', '#0dcaf0', '#6c757d',
-                          '#8b5a2b', '#e8a317', '#c70039', '#4361ee', '#2d6a4f',
+                          '#2c5282', '#e8a317', '#c70039', '#4361ee', '#2d6a4f',
                           '#9b59b6', '#e67e22', '#1abc9c', '#3498db', '#95a5a6',
                         ],
                       }],
@@ -203,7 +203,7 @@ export default function ReportsPage() {
           {/* Bundesland table (when no bezirk data) */}
           {stats.bezirkStats.length === 0 && stats.blStats.length > 0 && (
             <div className="bg-white rounded-xl shadow overflow-hidden">
-              <div className="bg-[#5b3a1a] text-white px-4 py-2 text-sm font-semibold">
+              <div className="bg-[#1a365d] text-white px-4 py-2 text-sm font-semibold">
                 Teilnehmer nach Bundesland
               </div>
               <table className="w-full text-sm">
@@ -216,13 +216,13 @@ export default function ReportsPage() {
                 </thead>
                 <tbody>
                   {stats.blStats.map(bl => (
-                    <tr key={bl.bundesland_code} className="border-t hover:bg-amber-50">
+                    <tr key={bl.bundesland_code} className="border-t hover:bg-blue-50">
                       <td className="px-4 py-1.5 font-medium">{bl.bundesland}</td>
                       <td className="px-4 py-1.5 text-right">{bl.participants}</td>
                       <td className="px-4 py-1.5 text-right">{bl.reports}</td>
                     </tr>
                   ))}
-                  <tr className="bg-[#5b3a1a] text-white font-bold">
+                  <tr className="bg-[#1a365d] text-white font-bold">
                     <td className="px-4 py-2">Gesamt</td>
                     <td className="px-4 py-2 text-right">{stats.totalParticipants}</td>
                     <td className="px-4 py-2 text-right">{stats.totalReports}</td>
@@ -235,7 +235,7 @@ export default function ReportsPage() {
           {/* Bezirk/Bundesland table */}
           {stats.bezirkStats.length > 0 && (
             <div className="bg-white rounded-xl shadow overflow-hidden">
-              <div className="bg-[#5b3a1a] text-white px-4 py-2 text-sm font-semibold">
+              <div className="bg-[#1a365d] text-white px-4 py-2 text-sm font-semibold">
                 Nebenstationen nach Bezirk
               </div>
               <table className="w-full text-sm">
@@ -257,7 +257,7 @@ export default function ReportsPage() {
                       </tr>
                       {/* Bezirk rows */}
                       {bl.bezirke.map(bz => (
-                        <tr key={bz.bezirk_code} className="border-t border-gray-100 hover:bg-amber-50">
+                        <tr key={bz.bezirk_code} className="border-t border-gray-100 hover:bg-blue-50">
                           <td className="px-4 py-1 pl-8">
                             <span className={`inline-block text-xs font-mono px-1.5 py-0.5 rounded text-white mr-2 ${bz.is_capital ? 'bg-[#dc3545]' : 'bg-[#6c757d]'}`}>
                               {bz.bezirk_code}
@@ -271,7 +271,7 @@ export default function ReportsPage() {
                     </>
                   ))}
                   {/* Gesamt */}
-                  <tr className="bg-[#5b3a1a] text-white font-bold">
+                  <tr className="bg-[#1a365d] text-white font-bold">
                     <td className="px-4 py-2">Gesamt</td>
                     <td className="px-4 py-2 text-right">{stats.totalParticipants}</td>
                     <td className="px-4 py-2 text-right">{stats.totalReports}</td>
@@ -285,7 +285,7 @@ export default function ReportsPage() {
           <div className="bg-white rounded-xl shadow overflow-hidden">
             <div
               onClick={() => setShowParticipants(v => !v)}
-              className="bg-[#5b3a1a] text-white px-4 py-2 text-sm font-semibold cursor-pointer hover:bg-[#7a5230] flex items-center justify-between"
+              className="bg-[#1a365d] text-white px-4 py-2 text-sm font-semibold cursor-pointer hover:bg-[#2a4a7f] flex items-center justify-between"
             >
               <span>Teilnehmer-Liste ({stats.participants.length})</span>
               <span className="text-xs">{showParticipants ? '▼' : '▶'}</span>
@@ -304,7 +304,7 @@ export default function ReportsPage() {
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {stats.participants.map((p, idx) => (
-                    <tr key={p.callsign} className="hover:bg-amber-50">
+                    <tr key={p.callsign} className="hover:bg-blue-50">
                       <td className="px-4 py-1 text-xs text-gray-400">{idx + 1}</td>
                       <td className="px-4 py-1 font-mono font-medium">{p.callsign}</td>
                       <td className="px-4 py-1 text-gray-600">{p.name || ''}</td>
@@ -324,25 +324,25 @@ export default function ReportsPage() {
 
           {/* Export buttons */}
           <div className="bg-white rounded-xl shadow p-4">
-            <h2 className="text-sm font-semibold text-[#5b3a1a] mb-3">Export</h2>
+            <h2 className="text-sm font-semibold text-[#1a365d] mb-3">Export</h2>
             <div className="flex flex-wrap gap-3">
               <a
                 href={`/api/v1/export/exercises/${id}/bund`}
-                className="bg-amber-100 hover:bg-amber-200 text-amber-800 px-4 py-2 rounded text-sm font-medium"
+                className="bg-blue-100 hover:bg-blue-200 text-blue-800 px-4 py-2 rounded text-sm font-medium"
                 target="_blank"
               >
                 TXT — Bund
               </a>
               <a
                 href={`/api/v1/export/exercises/${id}/land`}
-                className="bg-amber-100 hover:bg-amber-200 text-amber-800 px-4 py-2 rounded text-sm font-medium"
+                className="bg-blue-100 hover:bg-blue-200 text-blue-800 px-4 py-2 rounded text-sm font-medium"
                 target="_blank"
               >
                 TXT — Land
               </a>
               <a
                 href={`/api/v1/export/exercises/${id}/combined`}
-                className="bg-amber-100 hover:bg-amber-200 text-amber-800 px-4 py-2 rounded text-sm font-medium"
+                className="bg-blue-100 hover:bg-blue-200 text-blue-800 px-4 py-2 rounded text-sm font-medium"
                 target="_blank"
               >
                 TXT — Kombiniert

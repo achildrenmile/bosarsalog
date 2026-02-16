@@ -111,13 +111,13 @@ export default function DashboardPage() {
     <div>
       <div className="flex items-center justify-between mb-6">
         <div>
-          <h1 className="text-2xl font-bold text-[#5b3a1a]">Gesamtübersicht</h1>
+          <h1 className="text-2xl font-bold text-[#1a365d]">Gesamtübersicht</h1>
           <p className="text-sm text-gray-500">Willkommen, {admin?.username}</p>
         </div>
         {admin?.role === 'admin' && (
           <button
             onClick={() => setShowCreate(v => !v)}
-            className="bg-[#5b3a1a] hover:bg-[#7a5230] text-white px-4 py-2 rounded-lg text-sm font-medium"
+            className="bg-[#1a365d] hover:bg-[#2a4a7f] text-white px-4 py-2 rounded-lg text-sm font-medium"
           >
             + Neue Übung
           </button>
@@ -126,7 +126,7 @@ export default function DashboardPage() {
 
       {showCreate && (
         <div className="bg-white rounded-xl shadow p-4 mb-6">
-          <h2 className="text-sm font-semibold text-[#5b3a1a] mb-3">Neue Übung anlegen</h2>
+          <h2 className="text-sm font-semibold text-[#1a365d] mb-3">Neue Übung anlegen</h2>
           <div className="flex items-end gap-3 flex-wrap">
             <div>
               <label className="block text-xs text-gray-500 mb-1">Datum</label>
@@ -134,7 +134,7 @@ export default function DashboardPage() {
                 type="date"
                 value={newDate}
                 onChange={e => setNewDate(e.target.value)}
-                className="border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
             <div className="flex-1 min-w-[200px]">
@@ -143,7 +143,7 @@ export default function DashboardPage() {
                 <select
                   value={EXERCISE_TYPES.includes(newName) ? newName : ''}
                   onChange={e => setNewName(e.target.value)}
-                  className="border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
                   {EXERCISE_TYPES.map(t => (
                     <option key={t} value={t}>{t}</option>
@@ -156,7 +156,7 @@ export default function DashboardPage() {
                     value={newName}
                     onChange={e => setNewName(e.target.value)}
                     placeholder="Name der Übung"
-                    className="border border-gray-300 rounded px-2 py-1.5 text-sm flex-1 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                    className="border border-gray-300 rounded px-2 py-1.5 text-sm flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
                     autoFocus
                   />
                 )}
@@ -195,15 +195,15 @@ export default function DashboardPage() {
       {!loading && exercises.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
           <div className="bg-white rounded-lg shadow-sm p-4 text-center">
-            <div className="text-3xl font-bold text-[#5b3a1a]">{exercises.length}</div>
+            <div className="text-3xl font-bold text-[#1a365d]">{exercises.length}</div>
             <div className="text-sm text-gray-500">Übungen</div>
           </div>
           <div className="bg-white rounded-lg shadow-sm p-4 text-center">
-            <div className="text-3xl font-bold text-[#5b3a1a]">{yearParticipants}</div>
+            <div className="text-3xl font-bold text-[#1a365d]">{yearParticipants}</div>
             <div className="text-sm text-gray-500">Teilnehmer gesamt</div>
           </div>
           <div className="bg-white rounded-lg shadow-sm p-4 text-center">
-            <div className="text-3xl font-bold text-[#5b3a1a]">{yearReports}</div>
+            <div className="text-3xl font-bold text-[#1a365d]">{yearReports}</div>
             <div className="text-sm text-gray-500">Rapporte gesamt</div>
           </div>
           <div className="bg-white rounded-lg shadow-sm p-4 text-center">
@@ -218,7 +218,7 @@ export default function DashboardPage() {
       {/* Trend chart */}
       {!loading && exercises.length > 0 && (
         <div className="bg-white rounded-xl shadow p-4 mb-6">
-          <h2 className="text-sm font-semibold text-[#5b3a1a] mb-3">BOS-ARSA Krisenkommunikationsübungen {new Date().getFullYear()}</h2>
+          <h2 className="text-sm font-semibold text-[#1a365d] mb-3">BOS-ARSA Krisenkommunikationsübungen {new Date().getFullYear()}</h2>
           <div style={{ height: 300 }}>
             <Bar
               data={{
@@ -230,7 +230,7 @@ export default function DashboardPage() {
                   {
                     label: 'Teilnehmer',
                     data: exercises.map(e => e.participant_count),
-                    backgroundColor: '#5b3a1a',
+                    backgroundColor: '#1a365d',
                   },
                   {
                     label: 'Rapporte',
@@ -261,7 +261,7 @@ export default function DashboardPage() {
       ) : (
         <div className="bg-white rounded-xl shadow overflow-hidden">
           <table className="w-full text-sm">
-            <thead className="bg-[#5b3a1a] text-white">
+            <thead className="bg-[#1a365d] text-white">
               <tr>
                 <th className="px-4 py-2 text-left">Datum</th>
                 <th className="px-4 py-2 text-left">Name</th>
@@ -276,16 +276,16 @@ export default function DashboardPage() {
                   const ex = row.data!;
                   const isNearest = ex.id === nearestId;
                   return (
-                    <tr key={ex.id} className={`border-t ${isNearest ? 'bg-amber-100 font-medium' : 'hover:bg-amber-50'}`}>
+                    <tr key={ex.id} className={`border-t ${isNearest ? 'bg-blue-100 font-medium' : 'hover:bg-blue-50'}`}>
                       <td className="px-4 py-2 font-mono">
                         {formatDate(ex.date)}
-                        {isNearest && <span className="ml-2 text-xs bg-amber-600 text-white px-1.5 py-0.5 rounded">Aktuell</span>}
+                        {isNearest && <span className="ml-2 text-xs bg-blue-600 text-white px-1.5 py-0.5 rounded">Aktuell</span>}
                       </td>
                       <td className="px-4 py-2 text-gray-700">{ex.name || '—'}</td>
                       <td className="px-4 py-2 text-right">{ex.participant_count}</td>
                       <td className="px-4 py-2 text-right">{ex.report_count}</td>
                       <td className="px-4 py-2 text-right space-x-2">
-                        <Link to={`/exercises/${ex.id}`} className="text-amber-700 hover:underline text-xs">
+                        <Link to={`/exercises/${ex.id}`} className="text-blue-700 hover:underline text-xs">
                           Öffnen
                         </Link>
                         <Link to={`/exercises/${ex.id}/reports`} className="text-blue-600 hover:underline text-xs">
@@ -309,7 +309,7 @@ export default function DashboardPage() {
                 }
                 if (row.type === 'year') {
                   return (
-                    <tr key="year" className="bg-[#5b3a1a] text-white font-bold">
+                    <tr key="year" className="bg-[#1a365d] text-white font-bold">
                       <td className="px-4 py-2" colSpan={2}>Jahresgesamt</td>
                       <td className="px-4 py-2 text-right">{row.participants}</td>
                       <td className="px-4 py-2 text-right">{row.reports}</td>

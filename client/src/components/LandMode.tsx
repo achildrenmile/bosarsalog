@@ -181,11 +181,11 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
                     <button
                       key={r.repeater_id}
                       onClick={() => setActiveRepeaterId(r.repeater_id)}
-                      className={`px-3 py-1.5 rounded text-sm flex items-center gap-1 ${r.repeater_id === activeRepeaterId ? 'bg-[#5b3a1a] text-white font-medium' : 'bg-white text-gray-700 hover:bg-gray-100 border'}`}
+                      className={`px-3 py-1.5 rounded text-sm flex items-center gap-1 ${r.repeater_id === activeRepeaterId ? 'bg-[#1a365d] text-white font-medium' : 'bg-white text-gray-700 hover:bg-gray-100 border'}`}
                     >
                       {r.short_name}
                       {r.operator_callsign && (
-                        <span className={`text-xs px-1 py-0.5 rounded ${r.repeater_id === activeRepeaterId ? 'bg-white/20' : 'bg-amber-100 text-amber-800'}`}>
+                        <span className={`text-xs px-1 py-0.5 rounded ${r.repeater_id === activeRepeaterId ? 'bg-white/20' : 'bg-blue-100 text-blue-800'}`}>
                           {r.operator_callsign}
                         </span>
                       )}
@@ -212,11 +212,11 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
                   <button
                     key={r.repeater_id}
                     onClick={() => setActiveRepeaterId(r.repeater_id)}
-                    className={`px-3 py-1.5 rounded text-sm flex items-center gap-1 ${r.repeater_id === activeRepeaterId ? 'bg-[#5b3a1a] text-white font-medium' : 'bg-white text-gray-700 hover:bg-gray-100 border'}`}
+                    className={`px-3 py-1.5 rounded text-sm flex items-center gap-1 ${r.repeater_id === activeRepeaterId ? 'bg-[#1a365d] text-white font-medium' : 'bg-white text-gray-700 hover:bg-gray-100 border'}`}
                   >
                     {r.short_name}
                     {r.operator_callsign && (
-                      <span className={`text-xs px-1 py-0.5 rounded ${r.repeater_id === activeRepeaterId ? 'bg-white/20' : 'bg-amber-100 text-amber-800'}`}>
+                      <span className={`text-xs px-1 py-0.5 rounded ${r.repeater_id === activeRepeaterId ? 'bg-white/20' : 'bg-blue-100 text-blue-800'}`}>
                         {r.operator_callsign}
                       </span>
                     )}
@@ -288,7 +288,7 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
           value={rapport}
           onChange={e => setRapport(e.target.value.toUpperCase())}
           placeholder="5/9+20"
-          className="border border-gray-300 rounded px-2 py-1 font-mono text-sm w-24 focus:outline-none focus:ring-2 focus:ring-amber-500"
+          className="border border-gray-300 rounded px-2 py-1 font-mono text-sm w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
           onKeyDown={e => {
             if (e.altKey && e.key >= '1' && e.key <= '9') {
               e.preventDefault();
@@ -301,9 +301,9 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
           value={notes}
           onChange={e => setNotes(e.target.value)}
           placeholder="Sonstiges"
-          className="border border-gray-300 rounded px-2 py-1 text-sm flex-1 min-w-[100px] focus:outline-none focus:ring-2 focus:ring-amber-500"
+          className="border border-gray-300 rounded px-2 py-1 text-sm flex-1 min-w-[100px] focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        <button type="submit" className="bg-[#5b3a1a] hover:bg-[#7a5230] text-white px-4 py-1 rounded text-sm font-medium">
+        <button type="submit" className="bg-[#1a365d] hover:bg-[#2a4a7f] text-white px-4 py-1 rounded text-sm font-medium">
           {editingId ? 'Speichern' : 'Eintragen'}
         </button>
         {editingId && (
@@ -324,11 +324,11 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
             <div key={rep.repeater_id} className="bg-white rounded-lg shadow-sm overflow-hidden">
               <div
                 onClick={() => setActiveRepeaterId(rep.repeater_id)}
-                className={`px-3 py-1.5 flex items-center gap-2 border-b cursor-pointer ${isActive ? 'bg-[#5b3a1a] text-white' : 'bg-gray-50 hover:bg-gray-100'}`}
+                className={`px-3 py-1.5 flex items-center gap-2 border-b cursor-pointer ${isActive ? 'bg-[#1a365d] text-white' : 'bg-gray-50 hover:bg-gray-100'}`}
               >
                 <span className={`font-medium text-sm ${isActive ? '' : 'text-gray-800'}`}>{rep.short_name}</span>
                 {rep.operator_callsign && (
-                  <span className={`text-xs px-1 py-0.5 rounded ${isActive ? 'bg-white/20' : 'bg-amber-100 text-amber-800'}`}>
+                  <span className={`text-xs px-1 py-0.5 rounded ${isActive ? 'bg-white/20' : 'bg-blue-100 text-blue-800'}`}>
                     {rep.operator_callsign}
                   </span>
                 )}
@@ -344,7 +344,7 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
                       <tr
                         key={r.id}
                         onClick={() => { setActiveRepeaterId(rep.repeater_id); handleEdit(r); }}
-                        className="hover:bg-amber-50 cursor-pointer"
+                        className="hover:bg-blue-50 cursor-pointer"
                       >
                         <td className="px-3 py-1 text-xs text-gray-400 w-8">{idx + 1}</td>
                         <td className="px-3 py-1">

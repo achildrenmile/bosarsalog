@@ -1,8 +1,8 @@
 @import "tailwindcss";
 
 :root {
-  --color-warm-bg: #faf3e4;
-  --color-warm-bg-dark: #f0e6d0;
+  --color-warm-bg: #f0f4fa;
+  --color-warm-bg-dark: #dce4f0;
   --color-badge-capital: #dc3545;
   --color-badge-normal: #6c757d;
   --color-badge-bundesland: #0d6efd;

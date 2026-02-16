@@ -27,7 +27,7 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex items-center justify-center">
       <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-[#5b3a1a] text-center mb-1">BOS-ARSA Log</h1>
+        <h1 className="text-2xl font-bold text-[#1a365d] text-center mb-1">BOS-ARSA Log</h1>
         <p className="text-sm text-gray-500 text-center mb-6">Krisenkommunikationsübung</p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -36,7 +36,7 @@ export default function LoginPage() {
               type="text"
               value={username}
               onChange={e => setUsername(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               placeholder="admin"
               required
               autoFocus
@@ -48,7 +48,7 @@ export default function LoginPage() {
               type="password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
           </div>
@@ -56,7 +56,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-[#5b3a1a] hover:bg-[#7a5230] text-white font-medium py-2 rounded-lg disabled:opacity-50"
+            className="w-full bg-[#1a365d] hover:bg-[#2a4a7f] text-white font-medium py-2 rounded-lg disabled:opacity-50"
           >
             {loading ? 'Anmelden...' : 'Anmelden'}
           </button>
