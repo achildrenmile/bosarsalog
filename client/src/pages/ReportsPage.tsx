@@ -77,20 +77,23 @@ export default function ReportsPage() {
     if (!pageRef.current || !exercise) return;
     setExporting(true);
     try {
+      // Add padding for the exported image only
+      pageRef.current.style.padding = '24px';
       const url = await toPng(pageRef.current, {
         backgroundColor: '#f3f4f6',
         pixelRatio: 2,
         filter: (node) => {
-          // Hide download/navigation buttons in export
           if (node instanceof HTMLElement && node.dataset.noExport === 'true') return false;
           return true;
         },
       });
+      pageRef.current.style.padding = '';
       const link = document.createElement('a');
       link.download = `BOS-ARSA_Auswertung_${exercise.date}.png`;
       link.href = url;
       link.click();
     } catch {} finally {
+      if (pageRef.current) pageRef.current.style.padding = '';
       setExporting(false);
     }
   };
@@ -140,7 +143,7 @@ export default function ReportsPage() {
             disabled={exporting}
             className="bg-[#1e3a5f] hover:bg-[#2a4a7f] text-white px-2 sm:px-3 py-1.5 rounded text-xs sm:text-sm disabled:opacity-50"
           >
-            {exporting ? 'Exportieren...' : 'Seite als Bild'}
+            {exporting ? 'Exportieren...' : 'Download Auswertung'}
           </button>
           <Link to={`/exercises/${id}`} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 sm:px-3 py-1.5 rounded text-xs sm:text-sm">
             Zurück
@@ -403,7 +406,7 @@ export default function ReportsPage() {
                 disabled={exporting}
                 className="bg-[#1e3a5f] hover:bg-[#2a4a7f] text-white px-4 py-2 rounded text-sm font-medium disabled:opacity-50"
               >
-                {exporting ? 'Exportieren...' : 'PNG — Gesamte Auswertung'}
+                {exporting ? 'Exportieren...' : 'PNG — Download Auswertung'}
               </button>
               <a
                 href={`/api/v1/export/exercises/${id}/bund`}
