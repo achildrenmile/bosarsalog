@@ -224,14 +224,14 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
                 >
                   + Umsetzer
                 </button>
-                <label className="text-xs text-gray-500">OP:</label>
+                <label className={`text-xs ${blOpCallsigns[bl.code] ? 'text-gray-500' : 'text-[#c8102e] font-semibold'}`}>OP:</label>
                 <input
                   type="text"
                   value={blOpCallsigns[bl.code] || ''}
                   onChange={e => setBlOpCallsigns(prev => ({ ...prev, [bl.code]: e.target.value.toUpperCase() }))}
                   onBlur={e => saveOpCallsign(bl.code, e.target.value.toUpperCase())}
                   placeholder="Rufz."
-                  className="border border-gray-300 rounded px-1.5 py-0.5 text-xs font-mono uppercase w-20 sm:w-24 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className={`border rounded px-1.5 py-0.5 text-xs font-mono uppercase w-20 sm:w-24 focus:outline-none focus:ring-1 focus:ring-blue-500 ${blOpCallsigns[bl.code] ? 'border-gray-300' : 'border-[#c8102e] placeholder-[#c8102e]/60'}`}
                 />
               </div>
             </div>

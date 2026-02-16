@@ -118,14 +118,14 @@ export default function ExercisePage() {
         <div className="flex items-center gap-2 flex-wrap">
           {mode === 'land' && (
             <div className="flex items-center gap-1.5">
-              <label className="text-xs text-gray-500">OP:</label>
+              <label className={`text-xs ${opCallsign ? 'text-gray-500' : 'text-[#c8102e] font-semibold'}`}>OP:</label>
               <input
                 type="text"
                 value={opCallsign}
                 onChange={e => setOpCallsign(e.target.value.toUpperCase())}
                 onBlur={e => updateOpCallsign(e.target.value.toUpperCase())}
                 placeholder="Rufzeichen"
-                className="border border-gray-300 rounded px-2 py-1 text-sm font-mono uppercase w-24 sm:w-28 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className={`border rounded px-2 py-1 text-sm font-mono uppercase w-24 sm:w-28 focus:outline-none focus:ring-2 focus:ring-blue-500 ${opCallsign ? 'border-gray-300' : 'border-[#c8102e] placeholder-[#c8102e]/60'}`}
               />
             </div>
           )}
