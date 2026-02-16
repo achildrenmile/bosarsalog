@@ -1,6 +1,6 @@
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, useRef, type FormEvent } from 'react';
 import { apiFetch, getOrCreateOperator } from '../services/api';
-import CallsignInput from './CallsignInput';
+import CallsignInput, { type CallsignInputRef } from './CallsignInput';
 
 const BUNDESLAND_NAMES: Record<string, string> = {
   '01': 'OE1 Wien',
@@ -30,9 +30,10 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
   // Entry form state
   const [callsign, setCallsign] = useState('');
   const [selectedOperator, setSelectedOperator] = useState<any>(null);
-  const [rapport, setRapport] = useState('');
+  const [rapport, setRapport] = useState('5/9');
   const [notes, setNotes] = useState('');
   const [editingId, setEditingId] = useState<number | null>(null);
+  const callsignRef = useRef<CallsignInputRef>(null);
 
   useEffect(() => {
     if (repeaters.length > 0 && !activeRepeaterId) {
@@ -76,9 +77,8 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!activeRepeaterId) { alert('Kein Umsetzer ausgewählt'); return; }
-    if (!callsign) { alert('Rufzeichen eingeben'); return; }
-    if (!rapport && !editingId) { alert('Rapport eingeben (z.B. 5/9)'); return; }
+    if (!activeRepeaterId) return;
+    if (!callsign) return;
     const operator = await getOrCreateOperator(callsign, selectedOperator);
     if (!operator) { alert('Rufzeichen ungültig (min. 3 Zeichen)'); return; }
     setSelectedOperator(operator);
@@ -144,8 +144,9 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
 
     setCallsign('');
     setSelectedOperator(null);
-    setRapport('');
+    setRapport('5/9');
     setNotes('');
+    setTimeout(() => callsignRef.current?.focus(), 50);
   };
 
   const handleEdit = (report: any) => {
@@ -282,6 +283,7 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
       {/* Entry form */}
       <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm p-3 flex items-center gap-2 flex-wrap">
         <CallsignInput
+          ref={callsignRef}
           value={callsign}
           onChange={setCallsign}
           onSelect={setSelectedOperator}

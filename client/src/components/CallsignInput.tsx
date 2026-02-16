@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { apiFetch } from '../services/api';
 
 interface Props {
@@ -9,12 +9,20 @@ interface Props {
   className?: string;
 }
 
-export default function CallsignInput({ value, onChange, onSelect, autoFocus, className }: Props) {
+export interface CallsignInputRef {
+  focus: () => void;
+}
+
+const CallsignInput = forwardRef<CallsignInputRef, Props>(({ value, onChange, onSelect, autoFocus, className }, ref) => {
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIdx, setSelectedIdx] = useState(-1);
   const inputRef = useRef<HTMLInputElement>(null);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
+
+  useImperativeHandle(ref, () => ({
+    focus: () => inputRef.current?.focus(),
+  }));
 
   useEffect(() => {
     if (autoFocus && inputRef.current) inputRef.current.focus();
@@ -49,17 +57,6 @@ export default function CallsignInput({ value, onChange, onSelect, autoFocus, cl
     } else if (e.key === 'Enter' && selectedIdx >= 0) {
       e.preventDefault();
       selectSuggestion(suggestions[selectedIdx]);
-    } else if (e.key === 'Enter') {
-      // Move focus to next input instead of submitting form
-      e.preventDefault();
-      const form = (e.target as HTMLElement).closest('form');
-      if (form) {
-        const inputs = Array.from(form.querySelectorAll('input, select, button[type="submit"]'));
-        const idx = inputs.indexOf(e.target as HTMLElement);
-        if (idx >= 0 && idx < inputs.length - 1) {
-          (inputs[idx + 1] as HTMLElement).focus();
-        }
-      }
     } else if (e.key === 'Escape') {
       setShowSuggestions(false);
     }
@@ -113,4 +110,6 @@ export default function CallsignInput({ value, onChange, onSelect, autoFocus, cl
       )}
     </div>
   );
-}
+});
+
+export default CallsignInput;

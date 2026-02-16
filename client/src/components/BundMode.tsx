@@ -1,6 +1,6 @@
-import { useState, useEffect, type FormEvent } from 'react';
+import { useState, useEffect, useRef, type FormEvent } from 'react';
 import { apiFetch, getOrCreateOperator } from '../services/api';
-import CallsignInput from './CallsignInput';
+import CallsignInput, { type CallsignInputRef } from './CallsignInput';
 
 interface Props {
   exerciseId: string;
@@ -360,8 +360,9 @@ interface BezirkRowProps {
 }
 
 function BezirkRow({ bezirk, reports, linkedRepeaters, defaultRepeaterId, onSubmit, onEdit, onDelete, editingId, editForm, onEditChange, onEditSave, onEditCancel }: BezirkRowProps) {
-  const [form, setForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '', notes: '' });
+  const [form, setForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '5/9', notes: '' });
   const [repeaterId, setRepeaterId] = useState(defaultRepeaterId);
+  const callsignRef = useRef<CallsignInputRef>(null);
 
   useEffect(() => {
     if (defaultRepeaterId && !repeaterId) setRepeaterId(defaultRepeaterId);
@@ -370,10 +371,10 @@ function BezirkRow({ bezirk, reports, linkedRepeaters, defaultRepeaterId, onSubm
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
     if (!form.callsign && !form.operator) return;
-    if (!repeaterId) { alert('Kein Umsetzer ausgewählt'); return; }
-    if (!form.rapport) { alert('Rapport eingeben (z.B. 5/9)'); return; }
+    if (!repeaterId) return;
     onSubmit(repeaterId, form);
-    setForm({ callsign: '', operator: null, rapport: '', notes: '' });
+    setForm({ callsign: '', operator: null, rapport: '5/9', notes: '' });
+    setTimeout(() => callsignRef.current?.focus(), 50);
   };
 
   return (
@@ -437,6 +438,7 @@ function BezirkRow({ bezirk, reports, linkedRepeaters, defaultRepeaterId, onSubm
           </select>
         )}
         <CallsignInput
+          ref={callsignRef}
           value={form.callsign}
           onChange={v => setForm(f => ({ ...f, callsign: v }))}
           onSelect={op => setForm(f => ({ ...f, operator: op, callsign: op.callsign }))}
