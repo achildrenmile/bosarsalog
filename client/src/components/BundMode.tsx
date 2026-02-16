@@ -369,7 +369,9 @@ function BezirkRow({ bezirk, reports, linkedRepeaters, defaultRepeaterId, onSubm
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    if ((!form.operator && !form.callsign) || !repeaterId) return;
+    if (!form.callsign && !form.operator) return;
+    if (!repeaterId) { alert('Kein Umsetzer ausgewählt'); return; }
+    if (!form.rapport) { alert('Rapport eingeben (z.B. 5/9)'); return; }
     onSubmit(repeaterId, form);
     setForm({ callsign: '', operator: null, rapport: '', notes: '' });
   };

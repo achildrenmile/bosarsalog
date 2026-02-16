@@ -77,6 +77,8 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (!activeRepeaterId) { alert('Kein Umsetzer ausgewählt'); return; }
+    if (!callsign) { alert('Rufzeichen eingeben'); return; }
+    if (!rapport && !editingId) { alert('Rapport eingeben (z.B. 5/9)'); return; }
     const operator = await getOrCreateOperator(callsign, selectedOperator);
     if (!operator) { alert('Rufzeichen ungültig (min. 3 Zeichen)'); return; }
     setSelectedOperator(operator);

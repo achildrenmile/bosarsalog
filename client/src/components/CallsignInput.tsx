@@ -49,6 +49,17 @@ export default function CallsignInput({ value, onChange, onSelect, autoFocus, cl
     } else if (e.key === 'Enter' && selectedIdx >= 0) {
       e.preventDefault();
       selectSuggestion(suggestions[selectedIdx]);
+    } else if (e.key === 'Enter') {
+      // Move focus to next input instead of submitting form
+      e.preventDefault();
+      const form = (e.target as HTMLElement).closest('form');
+      if (form) {
+        const inputs = Array.from(form.querySelectorAll('input, select, button[type="submit"]'));
+        const idx = inputs.indexOf(e.target as HTMLElement);
+        if (idx >= 0 && idx < inputs.length - 1) {
+          (inputs[idx + 1] as HTMLElement).focus();
+        }
+      }
     } else if (e.key === 'Escape') {
       setShowSuggestions(false);
     }
