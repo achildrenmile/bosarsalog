@@ -24,30 +24,35 @@ interface Props {
   onReportDeleted: (reportId: number) => void;
 }
 
+interface EntryForm {
+  callsign: string;
+  operator: any;
+  rapport: string;
+  notes: string;
+}
+
 export default function LandMode({ exerciseId, repeaters, reports, onReportCreated, onReportUpdated, onReportDeleted }: Props) {
-  const [activeRepeaterId, setActiveRepeaterId] = useState<number | null>(null);
-
-  // Entry form state
-  const [callsign, setCallsign] = useState('');
-  const [selectedOperator, setSelectedOperator] = useState<any>(null);
-  const [rapport, setRapport] = useState('5/9');
-  const [notes, setNotes] = useState('');
+  const [collapsedReps, setCollapsedReps] = useState<Set<number>>(new Set());
+  const [opCallsigns, setOpCallsigns] = useState<Record<number, string>>({});
   const [editingId, setEditingId] = useState<number | null>(null);
-  const callsignRef = useRef<CallsignInputRef>(null);
+  const [editForm, setEditForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '', notes: '' });
 
+  // Load OP callsigns from exercise_repeaters
   useEffect(() => {
-    if (repeaters.length > 0 && !activeRepeaterId) {
-      setActiveRepeaterId(repeaters[0].repeater_id);
-    }
-  }, [repeaters, activeRepeaterId]);
-
-  const activeRepeater = repeaters.find(r => r.repeater_id === activeRepeaterId);
-  const repeaterReports = reports.filter(r => r.repeater_id === activeRepeaterId);
+    apiFetch(`/api/v1/exercises/${exerciseId}/repeaters`).then((exReps: any[]) => {
+      const ops: Record<number, string> = {};
+      for (const er of exReps) {
+        if (er.operator_callsign) {
+          ops[er.repeater_id] = er.operator_callsign;
+        }
+      }
+      setOpCallsigns(ops);
+    }).catch(() => {});
+  }, [exerciseId]);
 
   // Group repeaters by Bundesland
   const repeatersByBl: Record<string, any[]> = {};
   const simplexRepeaters: any[] = [];
-  const linkedRepeaters: any[] = [];
   for (const r of repeaters) {
     if (r.type === 'simplex') {
       simplexRepeaters.push(r);
@@ -55,7 +60,6 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
       const blCode = r.bundesland_code || '_other';
       if (!repeatersByBl[blCode]) repeatersByBl[blCode] = [];
       repeatersByBl[blCode].push(r);
-      if (r.is_linked) linkedRepeaters.push(r);
     }
   }
 
@@ -64,6 +68,28 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
     if (b === '_other') return -1;
     return a.localeCompare(b);
   });
+
+  const toggleRepeater = (repId: number) => {
+    setCollapsedReps(prev => {
+      const next = new Set(prev);
+      if (next.has(repId)) next.delete(repId); else next.add(repId);
+      return next;
+    });
+  };
+
+  const saveOpCallsign = async (repeaterId: number, val: string) => {
+    try {
+      await apiFetch(`/api/v1/exercises/${exerciseId}/repeaters`, {
+        method: 'POST',
+        body: JSON.stringify({ repeater_id: repeaterId, operator_callsign: val || null }),
+      });
+    } catch {
+      await apiFetch(`/api/v1/exercises/${exerciseId}/repeaters/${repeaterId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ operator_callsign: val || null }),
+      });
+    }
+  };
 
   const parseRapport = (raw: string) => {
     const match = raw.match(/^(\d)\/(\d)(.*)$/);
@@ -75,86 +101,60 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
     };
   };
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    if (!activeRepeaterId) return;
-    if (!callsign) return;
-    const operator = await getOrCreateOperator(callsign, selectedOperator);
-    if (!operator) return;
-    setSelectedOperator(operator);
+  const handleRepeaterSubmit = async (repeaterId: number, form: EntryForm) => {
+    try {
+      const operator = await getOrCreateOperator(form.callsign, form.operator);
+      if (!operator) return;
 
-    const parsed = parseRapport(rapport);
+      const parsed = parseRapport(form.rapport);
 
-    if (editingId) {
-      try {
-        const updated = await apiFetch(`/api/v1/exercises/${exerciseId}/reports/${editingId}`, {
-          method: 'PATCH',
-          body: JSON.stringify({ ...parsed, notes: notes || null }),
-        });
-        onReportUpdated(updated);
-        setEditingId(null);
-      } catch {}
-    } else {
       try {
         const report = await apiFetch(`/api/v1/exercises/${exerciseId}/reports`, {
           method: 'POST',
           body: JSON.stringify({
             operator_id: operator.id,
-            repeater_id: activeRepeaterId,
+            repeater_id: repeaterId,
             ...parsed,
-            notes: notes || null,
+            notes: form.notes || null,
           }),
         });
         onReportCreated(report);
-
-        // Cross-repeater sync: create placeholder entries on other repeaters
-        for (const rep of repeaters) {
-          if (rep.repeater_id !== activeRepeaterId) {
-            const exists = reports.some(r => r.operator_id === operator.id && r.repeater_id === rep.repeater_id);
-            if (!exists) {
-              try {
-                const placeholder = await apiFetch(`/api/v1/exercises/${exerciseId}/reports`, {
-                  method: 'POST',
-                  body: JSON.stringify({
-                    operator_id: operator.id,
-                    repeater_id: rep.repeater_id,
-                  }),
-                });
-                onReportCreated(placeholder);
-              } catch {}
-            }
-          }
-        }
       } catch (err: any) {
         if (err.message?.includes('existiert')) {
-          const existing = reports.find(r => r.operator_id === operator.id && r.repeater_id === activeRepeaterId);
+          const existing = reports.find(r => r.operator_id === operator.id && r.repeater_id === repeaterId);
           if (existing) {
             const updated = await apiFetch(`/api/v1/exercises/${exerciseId}/reports/${existing.id}`, {
               method: 'PATCH',
-              body: JSON.stringify({ ...parsed, notes: notes || null }),
+              body: JSON.stringify({ ...parsed, notes: form.notes || null }),
             });
             onReportUpdated(updated);
           }
         }
       }
-    }
-
-    setCallsign('');
-    setSelectedOperator(null);
-    setRapport('5/9');
-    setNotes('');
-    setTimeout(() => callsignRef.current?.focus(), 50);
+    } catch {}
   };
 
   const handleEdit = (report: any) => {
     setEditingId(report.id);
-    setCallsign(report.callsign);
-    setSelectedOperator({ id: report.operator_id, callsign: report.callsign });
-    const rapportStr = report.readability && report.strength
-      ? `${report.readability}/${report.strength}${report.db_over_s9 || ''}`
-      : '';
-    setRapport(rapportStr);
-    setNotes(report.notes || '');
+    setEditForm({
+      callsign: report.callsign,
+      operator: { id: report.operator_id, callsign: report.callsign },
+      rapport: report.readability && report.strength ? `${report.readability}/${report.strength}${report.db_over_s9 || ''}` : '',
+      notes: report.notes || '',
+    });
+  };
+
+  const handleUpdate = async () => {
+    if (!editingId) return;
+    const parsed = parseRapport(editForm.rapport);
+    try {
+      const updated = await apiFetch(`/api/v1/exercises/${exerciseId}/reports/${editingId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ ...parsed, notes: editForm.notes || null }),
+      });
+      onReportUpdated(updated);
+      setEditingId(null);
+    } catch {}
   };
 
   const handleDelete = async (reportId: number) => {
@@ -165,222 +165,193 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
     } catch {}
   };
 
-  return (
-    <div className="space-y-3">
-      {/* Repeater tabs grouped by Bundesland */}
-      <div className="space-y-1">
-        {sortedBlCodes.map(blCode => {
-          const blReps = repeatersByBl[blCode];
-          const label = BUNDESLAND_NAMES[blCode] || 'Sonstige';
-          return (
-            <div key={blCode}>
-              <div className="px-1 mb-0.5">
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</span>
-              </div>
-              <div className="flex flex-wrap gap-1 mb-1">
-                {blReps.map(r => {
-                  const repReportCount = reports.filter(rp => rp.repeater_id === r.repeater_id && !rp.is_op_marker && rp.readability).length;
-                  return (
-                    <button
-                      key={r.repeater_id}
-                      onClick={() => setActiveRepeaterId(r.repeater_id)}
-                      className={`px-3 py-1.5 rounded text-sm flex items-center gap-1 ${r.repeater_id === activeRepeaterId ? 'bg-[#1e3a5f] text-white font-medium' : 'bg-white text-gray-700 hover:bg-gray-100 border'}`}
-                    >
-                      {r.short_name}
-                      {r.operator_callsign && (
-                        <span className={`text-xs px-1 py-0.5 rounded ${r.repeater_id === activeRepeaterId ? 'bg-white/20' : 'bg-blue-100 text-blue-800'}`}>
-                          {r.operator_callsign}
-                        </span>
-                      )}
-                      {repReportCount > 0 && (
-                        <span className={`text-xs rounded-full px-1.5 ${r.repeater_id === activeRepeaterId ? 'bg-white/20' : 'bg-gray-200'}`}>
-                          {repReportCount}
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          );
-        })}
+  const renderRepeaterCard = (rep: any) => {
+    const repReports = reports.filter(r => r.repeater_id === rep.repeater_id && !r.is_op_marker);
+    const reportCount = repReports.filter(r => r.readability).length;
+    const isCollapsed = collapsedReps.has(rep.repeater_id);
 
-        {simplexRepeaters.length > 0 && (
-          <div>
-            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-1 mb-0.5">Simplex</div>
-            <div className="flex flex-wrap gap-1 mb-1">
-              {simplexRepeaters.map(r => {
-                const repReportCount = reports.filter(rp => rp.repeater_id === r.repeater_id && !rp.is_op_marker && rp.readability).length;
-                return (
-                  <button
-                    key={r.repeater_id}
-                    onClick={() => setActiveRepeaterId(r.repeater_id)}
-                    className={`px-3 py-1.5 rounded text-sm flex items-center gap-1 ${r.repeater_id === activeRepeaterId ? 'bg-[#1e3a5f] text-white font-medium' : 'bg-white text-gray-700 hover:bg-gray-100 border'}`}
-                  >
-                    {r.short_name}
-                    {r.operator_callsign && (
-                      <span className={`text-xs px-1 py-0.5 rounded ${r.repeater_id === activeRepeaterId ? 'bg-white/20' : 'bg-blue-100 text-blue-800'}`}>
-                        {r.operator_callsign}
-                      </span>
-                    )}
-                    {repReportCount > 0 && (
-                      <span className={`text-xs rounded-full px-1.5 ${r.repeater_id === activeRepeaterId ? 'bg-white/20' : 'bg-gray-200'}`}>
-                        {repReportCount}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
+    return (
+      <div key={rep.repeater_id} className="bg-white rounded-lg shadow-sm">
+        <div className="bg-gray-50 px-3 py-2 flex items-center justify-between border-b">
+          <div
+            onClick={() => toggleRepeater(rep.repeater_id)}
+            className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 rounded px-1 -mx-1"
+          >
+            <span className="text-xs text-gray-400">{isCollapsed ? '▶' : '▼'}</span>
+            <span className="font-medium text-sm">{rep.short_name}</span>
+            <span className="bg-[#0d6efd] text-white text-xs px-1.5 py-0.5 rounded-full">{reportCount}</span>
+            {rep.frequency_mhz && (
+              <span className="text-xs text-gray-400">{rep.frequency_mhz} MHz</span>
+            )}
+            {rep.offset_mhz && (
+              <span className="text-xs text-gray-400">({rep.offset_mhz > 0 ? '+' : ''}{rep.offset_mhz})</span>
+            )}
+            {rep.ctcss_hz && (
+              <span className="text-xs text-gray-400">CTCSS {rep.ctcss_hz}</span>
+            )}
           </div>
-        )}
+          <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+            <label className="text-xs text-gray-500">OP:</label>
+            <input
+              type="text"
+              value={opCallsigns[rep.repeater_id] || ''}
+              onChange={e => setOpCallsigns(prev => ({ ...prev, [rep.repeater_id]: e.target.value.toUpperCase() }))}
+              onBlur={e => saveOpCallsign(rep.repeater_id, e.target.value.toUpperCase())}
+              placeholder="Rufzeichen"
+              className="border border-gray-300 rounded px-1.5 py-0.5 text-xs font-mono uppercase w-24 focus:outline-none focus:ring-1 focus:ring-blue-500"
+            />
+          </div>
+        </div>
 
-        {linkedRepeaters.length > 0 && (
-          <div>
-            <div className="text-xs font-semibold text-gray-500 uppercase tracking-wide px-1 mb-0.5">OE-Link</div>
-            <div className="flex flex-wrap gap-1 mb-1">
-              {linkedRepeaters.map(r => {
-                const repReportCount = reports.filter(rp => rp.repeater_id === r.repeater_id && !rp.is_op_marker && rp.readability).length;
-                return (
-                  <button
-                    key={`oelink-${r.repeater_id}`}
-                    onClick={() => setActiveRepeaterId(r.repeater_id)}
-                    className={`px-3 py-1.5 rounded text-sm flex items-center gap-1 ${r.repeater_id === activeRepeaterId ? 'bg-blue-700 text-white font-medium' : 'bg-blue-50 text-blue-800 hover:bg-blue-100 border border-blue-200'}`}
-                  >
-                    {r.short_name}
-                    {r.operator_callsign && (
-                      <span className={`text-xs px-1 py-0.5 rounded ${r.repeater_id === activeRepeaterId ? 'bg-white/20' : 'bg-blue-100 text-blue-700'}`}>
-                        {r.operator_callsign}
-                      </span>
-                    )}
-                    {repReportCount > 0 && (
-                      <span className={`text-xs rounded-full px-1.5 ${r.repeater_id === activeRepeaterId ? 'bg-white/20' : 'bg-blue-200'}`}>
-                        {repReportCount}
-                      </span>
-                    )}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
+        {!isCollapsed && (
+          <RepeaterRow
+            repeater={rep}
+            reports={repReports}
+            exerciseId={exerciseId}
+            onSubmit={(form) => handleRepeaterSubmit(rep.repeater_id, form)}
+            onEdit={handleEdit}
+            onDelete={handleDelete}
+            editingId={editingId}
+            editForm={editForm}
+            onEditChange={setEditForm}
+            onEditSave={handleUpdate}
+            onEditCancel={() => setEditingId(null)}
+          />
         )}
       </div>
+    );
+  };
 
-      {/* Repeater info */}
-      {activeRepeater && (
-        <div className="text-xs text-gray-500 flex gap-4">
-          {activeRepeater.frequency_mhz && <span>{activeRepeater.frequency_mhz} MHz</span>}
-          {activeRepeater.offset_mhz && <span>Offset: {activeRepeater.offset_mhz > 0 ? '+' : ''}{activeRepeater.offset_mhz} MHz</span>}
-          {activeRepeater.ctcss_hz && <span>CTCSS: {activeRepeater.ctcss_hz} Hz</span>}
-          {activeRepeater.burst_hz && <span>Burst: {activeRepeater.burst_hz} Hz</span>}
-          {activeRepeater.repeater_callsign && <span className="font-mono">{activeRepeater.repeater_callsign}</span>}
+  return (
+    <div className="space-y-2">
+      {sortedBlCodes.map(blCode => {
+        const blReps = repeatersByBl[blCode];
+        const label = BUNDESLAND_NAMES[blCode] || 'Sonstige';
+        return (
+          <div key={blCode}>
+            <div className="px-1 mb-1 mt-2">
+              <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</span>
+            </div>
+            <div className="space-y-2">
+              {blReps.map(rep => renderRepeaterCard(rep))}
+            </div>
+          </div>
+        );
+      })}
+
+      {simplexRepeaters.length > 0 && (
+        <div>
+          <div className="px-1 mb-1 mt-2">
+            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Simplex</span>
+          </div>
+          <div className="space-y-2">
+            {simplexRepeaters.map(rep => renderRepeaterCard(rep))}
+          </div>
         </div>
       )}
+    </div>
+  );
+}
 
-      {/* Entry form */}
-      <form onSubmit={handleSubmit} className="bg-white rounded-lg shadow-sm p-3 flex items-center gap-2 flex-wrap">
+interface RepeaterRowProps {
+  repeater: any;
+  reports: any[];
+  exerciseId: string;
+  onSubmit: (form: EntryForm) => void;
+  onEdit: (report: any) => void;
+  onDelete: (id: number) => void;
+  editingId: number | null;
+  editForm: EntryForm;
+  onEditChange: (form: EntryForm) => void;
+  onEditSave: () => void;
+  onEditCancel: () => void;
+}
+
+function RepeaterRow({ repeater, reports, exerciseId, onSubmit, onEdit, onDelete, editingId, editForm, onEditChange, onEditSave, onEditCancel }: RepeaterRowProps) {
+  const [form, setForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '5/9', notes: '' });
+  const callsignRef = useRef<CallsignInputRef>(null);
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (!form.callsign && !form.operator) return;
+    onSubmit(form);
+    setForm({ callsign: '', operator: null, rapport: '5/9', notes: '' });
+    setTimeout(() => callsignRef.current?.focus(), 50);
+  };
+
+  return (
+    <div className="px-3 py-1.5">
+      {reports.length > 0 && (
+        <table className="w-full text-xs mb-1">
+          <tbody>
+            {reports.map((r, idx) => (
+              <tr key={r.id} className="hover:bg-blue-50 group">
+                {editingId === r.id ? (
+                  <td colSpan={5} className="py-0.5">
+                    <div className="flex items-center gap-1 bg-blue-50 rounded p-1">
+                      <span className="font-mono font-medium">{r.callsign}</span>
+                      <input value={editForm.rapport} onChange={e => onEditChange({ ...editForm, rapport: e.target.value.toUpperCase() })} className="border rounded px-1 py-0.5 font-mono text-xs w-20" autoFocus />
+                      <input value={editForm.notes} onChange={e => onEditChange({ ...editForm, notes: e.target.value })} placeholder="Sonst." className="border rounded px-1 py-0.5 text-xs w-20" />
+                      <button onClick={onEditSave} className="text-green-600 text-xs font-bold">OK</button>
+                      <button onClick={onEditCancel} className="text-gray-400 text-xs">X</button>
+                    </div>
+                  </td>
+                ) : (
+                  <>
+                    <td className="py-0.5 text-gray-400 w-4">{idx + 1}</td>
+                    <td className="py-0.5 font-mono font-medium cursor-pointer" onClick={() => onEdit(r)}>
+                      {r.callsign}
+                      {r.bezirk_code && (
+                        <span className="ml-1 text-xs bg-gray-200 rounded px-1">{r.bezirk_code}</span>
+                      )}
+                    </td>
+                    <td className="py-0.5 font-mono text-gray-500 w-24 cursor-pointer" onClick={() => onEdit(r)}>
+                      {r.readability && r.strength ? `${r.readability}/${r.strength}${r.db_over_s9 || ''}` : '—'}
+                    </td>
+                    <td className="py-0.5 text-gray-500 cursor-pointer" onClick={() => onEdit(r)}>{r.notes || ''}</td>
+                    <td className="py-0.5 w-4">
+                      <button onClick={() => onDelete(r.id)} className="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100">x</button>
+                    </td>
+                  </>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      <form onSubmit={handleSubmit} className="flex items-center gap-1">
         <CallsignInput
           ref={callsignRef}
-          value={callsign}
-          onChange={setCallsign}
-          onSelect={setSelectedOperator}
-          autoFocus
-          className="w-36"
+          value={form.callsign}
+          onChange={v => setForm(f => ({ ...f, callsign: v }))}
+          onSelect={op => setForm(f => ({ ...f, operator: op, callsign: op.callsign }))}
+          className="w-28"
         />
         <input
           type="text"
-          value={rapport}
-          onChange={e => setRapport(e.target.value.toUpperCase())}
-          placeholder="5/9+20"
-          className="border border-gray-300 rounded px-2 py-1 font-mono text-sm w-24 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          value={form.rapport}
+          onChange={e => setForm(f => ({ ...f, rapport: e.target.value.toUpperCase() }))}
+          placeholder="5/9"
+          className="border border-gray-300 rounded px-1.5 py-0.5 font-mono text-xs w-20 focus:outline-none focus:ring-1 focus:ring-blue-500"
           onKeyDown={e => {
             if (e.altKey && e.key >= '1' && e.key <= '9') {
               e.preventDefault();
-              setRapport(`5/${e.key}`);
+              setForm(f => ({ ...f, rapport: `5/${e.key}` }));
             }
           }}
         />
         <input
           type="text"
-          value={notes}
-          onChange={e => setNotes(e.target.value)}
-          placeholder="Sonstiges"
-          className="border border-gray-300 rounded px-2 py-1 text-sm flex-1 min-w-[100px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+          value={form.notes}
+          onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+          placeholder="Sonst."
+          className="border border-gray-300 rounded px-1.5 py-0.5 text-xs flex-1 min-w-[60px] focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
-        <button type="submit" className="bg-[#c8102e] hover:bg-[#a00d24] text-white px-4 py-1 rounded text-sm font-medium">
-          {editingId ? 'Speichern' : 'Eintragen'}
+        <button type="submit" className="bg-[#c8102e] hover:bg-[#a00d24] text-white px-2 py-0.5 rounded text-xs">
+          +
         </button>
-        {editingId && (
-          <button type="button" onClick={() => { setEditingId(null); setCallsign(''); setSelectedOperator(null); setRapport(''); setNotes(''); }} className="text-gray-500 text-sm hover:text-gray-700">
-            Abbrechen
-          </button>
-        )}
       </form>
-
-      {/* Reports per Umsetzer */}
-      <div className="space-y-2">
-        {repeaters.map(rep => {
-          const repReports = reports.filter(r => r.repeater_id === rep.repeater_id && !r.is_op_marker);
-          const reportCount = repReports.filter(r => r.readability).length;
-          const isActive = rep.repeater_id === activeRepeaterId;
-
-          return (
-            <div key={rep.repeater_id} className="bg-white rounded-lg shadow-sm overflow-hidden">
-              <div
-                onClick={() => setActiveRepeaterId(rep.repeater_id)}
-                className={`px-3 py-1.5 flex items-center gap-2 border-b cursor-pointer ${isActive ? 'bg-[#1e3a5f] text-white' : 'bg-gray-50 hover:bg-gray-100'}`}
-              >
-                <span className={`font-medium text-sm ${isActive ? '' : 'text-gray-800'}`}>{rep.short_name}</span>
-                {rep.operator_callsign && (
-                  <span className={`text-xs px-1 py-0.5 rounded ${isActive ? 'bg-white/20' : 'bg-blue-100 text-blue-800'}`}>
-                    {rep.operator_callsign}
-                  </span>
-                )}
-                <span className={`text-xs px-1.5 py-0.5 rounded-full ${isActive ? 'bg-white/20' : 'bg-[#0d6efd] text-white'}`}>{reportCount}</span>
-                {rep.frequency_mhz && (
-                  <span className={`text-xs ${isActive ? 'text-white/70' : 'text-gray-400'}`}>{rep.frequency_mhz} MHz</span>
-                )}
-              </div>
-              {repReports.length > 0 && (
-                <table className="w-full text-sm">
-                  <tbody className="divide-y divide-gray-100">
-                    {repReports.map((r, idx) => (
-                      <tr
-                        key={r.id}
-                        onClick={() => { setActiveRepeaterId(rep.repeater_id); handleEdit(r); }}
-                        className="hover:bg-blue-50 cursor-pointer"
-                      >
-                        <td className="px-3 py-1 text-xs text-gray-400 w-8">{idx + 1}</td>
-                        <td className="px-3 py-1">
-                          <span className="font-mono font-medium text-xs">{r.callsign}</span>
-                          {r.bezirk_code && (
-                            <span className="ml-1 text-xs bg-gray-200 rounded px-1">{r.bezirk_code}</span>
-                          )}
-                        </td>
-                        <td className="px-3 py-1 font-mono text-xs w-24">
-                          {r.readability && r.strength
-                            ? `${r.readability}/${r.strength}${r.db_over_s9 || ''}`
-                            : <span className="text-gray-300">—</span>
-                          }
-                        </td>
-                        <td className="px-3 py-1 text-xs text-gray-600">{r.notes || ''}</td>
-                        <td className="px-3 py-1 w-8">
-                          <button
-                            onClick={e => { e.stopPropagation(); handleDelete(r.id); }}
-                            className="text-red-400 hover:text-red-600 text-xs"
-                          >
-                            x
-                          </button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              )}
-            </div>
-          );
-        })}
-      </div>
     </div>
   );
 }
