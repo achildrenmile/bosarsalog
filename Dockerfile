@@ -1,5 +1,6 @@
 # Multi-stage build
 FROM node:20-alpine AS builder
+RUN apk add --no-cache python3 make g++
 WORKDIR /app
 
 # Install root deps
@@ -8,7 +9,7 @@ RUN npm ci
 
 # Install server deps
 COPY server/package*.json ./server/
-RUN cd server && npm ci
+RUN cd server && npm ci --build-from-source
 
 # Install client deps
 COPY client/package*.json ./client/
