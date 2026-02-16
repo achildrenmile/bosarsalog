@@ -232,7 +232,7 @@ export default function ReportsPage() {
             <div ref={mapCardRef} className="bg-white rounded-xl shadow p-3 sm:p-4">
               <div className="flex items-center justify-between mb-2 sm:mb-3">
                 <h2 className="text-xs sm:text-sm font-semibold text-[#1e3a5f]">
-                  Teilnehmer nach Bundesland
+                  Teilnehmer nach Bundesland / Land
                 </h2>
                 <button
                   onClick={() => downloadChart(mapCardRef, `BOS-ARSA_Karte_${exercise.date}.png`)}
@@ -245,7 +245,7 @@ export default function ReportsPage() {
               </div>
               <AustriaMap
                 data={stats.blStats.map((bl) => ({
-                  code: `OE${parseInt(bl.bundesland_code, 10)}`,
+                  code: bl.bundesland_code,
                   participants: bl.participants,
                   reports: bl.reports,
                 }))}

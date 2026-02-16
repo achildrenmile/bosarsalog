@@ -1,4 +1,5 @@
 import type Database from 'better-sqlite3';
+import { callsignToCountryCode } from '../utils/callsignCountry.js';
 
 export function runMigrations(db: Database.Database): void {
   db.exec(`
@@ -215,4 +216,18 @@ export function runMigrations(db: Database.Database): void {
 
   // Create index after migration ensures column exists
   db.exec("CREATE INDEX IF NOT EXISTS idx_repeaters_bundesland ON repeaters(bundesland_code)");
+
+  // Migration: backfill operators with null bundesland_code using callsign prefix
+  const nullBlOps = db.prepare("SELECT id, callsign FROM operators WHERE bundesland_code IS NULL").all() as { id: number; callsign: string }[];
+  if (nullBlOps.length > 0) {
+    const updateBl = db.prepare("UPDATE operators SET bundesland_code = ? WHERE id = ?");
+    const backfill = db.transaction(() => {
+      for (const op of nullBlOps) {
+        const code = callsignToCountryCode(op.callsign);
+        if (code) updateBl.run(code, op.id);
+      }
+    });
+    backfill();
+    if (nullBlOps.length > 0) console.log(`  Migration: backfilled bundesland_code for ${nullBlOps.length} operators`);
+  }
 }

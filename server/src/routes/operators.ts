@@ -1,5 +1,6 @@
 import { Router } from 'express';
 import { getDb } from '../db/database.js';
+import { callsignToCountryCode } from '../utils/callsignCountry.js';
 
 export const operatorsRouter = Router();
 
@@ -14,7 +15,6 @@ operatorsRouter.get('/', (req, res) => {
         (SELECT COUNT(*) FROM signal_reports sr WHERE sr.operator_id = o.id AND sr.readability IS NOT NULL) as total_reports
       FROM operators o
       LEFT JOIN bundeslaender bl ON bl.code = o.bundesland_code
-        OR (o.bundesland_code IS NULL AND bl.code = '0' || SUBSTR(o.callsign, 3, 1))
       WHERE o.callsign LIKE ? OR UPPER(o.name) LIKE ? OR UPPER(o.qth) LIKE ?
       ORDER BY o.callsign LIMIT 50
     `).all(pattern, pattern, pattern);
@@ -61,10 +61,11 @@ operatorsRouter.post('/', (req, res) => {
     return;
   }
   try {
+    const derivedBl = bundesland_code || callsignToCountryCode(callsign) || null;
     const result = db.prepare(`
       INSERT INTO operators (callsign, name, qth, bezirk_code, bundesland_code)
       VALUES (?, ?, ?, ?, ?)
-    `).run(callsign.toUpperCase(), name || null, qth || null, bezirk_code || null, bundesland_code || null);
+    `).run(callsign.toUpperCase(), name || null, qth || null, bezirk_code || null, derivedBl);
     const operator = db.prepare('SELECT * FROM operators WHERE id = ?').get(result.lastInsertRowid);
     res.status(201).json(operator);
   } catch (e: any) {
