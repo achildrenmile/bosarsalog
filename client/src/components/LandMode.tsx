@@ -209,14 +209,14 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
             )}
           </div>
           <div className="flex items-center gap-1.5" onClick={e => e.stopPropagation()}>
-            <label className="text-xs text-gray-500">OP:</label>
+            <label className={`text-xs ${opCallsigns[rep.repeater_id] ? 'text-gray-500' : 'text-[#c8102e] font-semibold'}`}>OP:</label>
             <input
               type="text"
               value={opCallsigns[rep.repeater_id] || ''}
               onChange={e => setOpCallsigns(prev => ({ ...prev, [rep.repeater_id]: e.target.value.toUpperCase() }))}
               onBlur={e => saveOpCallsign(rep.repeater_id, e.target.value.toUpperCase())}
               placeholder="Rufz."
-              className="border border-gray-300 rounded px-1.5 py-0.5 text-xs font-mono uppercase w-20 sm:w-24 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className={`border rounded px-1.5 py-0.5 text-xs font-mono uppercase w-20 sm:w-24 focus:outline-none focus:ring-1 focus:ring-blue-500 ${opCallsigns[rep.repeater_id] ? 'border-gray-300' : 'border-[#c8102e] placeholder-[#c8102e]/60'}`}
             />
           </div>
         </div>
