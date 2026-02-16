@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "fc7208e938a7",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "client/src/components/AustriaMap.tsx"
+  ],
+  "sessions": [
+    {
+      "metadata": "/fc/7208e938a7/0/metadata.json",
+      "transcript": "/fc/7208e938a7/0/full.jsonl",
+      "context": "/fc/7208e938a7/0/context.md",
+      "content_hash": "/fc/7208e938a7/0/content_hash.txt",
+      "prompt": "/fc/7208e938a7/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 26,
+    "cache_creation_tokens": 27318,
+    "cache_read_tokens": 2463525,
+    "output_tokens": 597,
+    "api_call_count": 18
+  }
+}
