@@ -34,12 +34,17 @@ interface EntryForm {
 export default function LandMode({ exerciseId, repeaters, reports, onReportCreated, onReportUpdated, onReportDeleted }: Props) {
   const [collapsedReps, setCollapsedReps] = useState<Set<number>>(new Set());
   const [opCallsigns, setOpCallsigns] = useState<Record<number, string>>({});
+  const [bezirke, setBezirke] = useState<any[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editForm, setEditForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '', notes: '' });
 
-  // Load OP callsigns from exercise_repeaters
+  // Load bezirke + OP callsigns
   useEffect(() => {
-    apiFetch(`/api/v1/exercises/${exerciseId}/repeaters`).then((exReps: any[]) => {
+    Promise.all([
+      apiFetch('/api/v1/reference/bezirke'),
+      apiFetch(`/api/v1/exercises/${exerciseId}/repeaters`),
+    ]).then(([bz, exReps]) => {
+      setBezirke(bz);
       const ops: Record<number, string> = {};
       for (const er of exReps) {
         if (er.operator_callsign) {
@@ -102,7 +107,7 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
     };
   };
 
-  const handleRepeaterSubmit = async (repeaterId: number, form: EntryForm) => {
+  const handleBezirkSubmit = async (repeaterId: number, form: EntryForm) => {
     try {
       const operator = await getOrCreateOperator(form.callsign, form.operator);
       if (!operator) return;
@@ -170,6 +175,7 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
     const repReports = reports.filter(r => r.repeater_id === rep.repeater_id && !r.is_op_marker);
     const reportCount = repReports.filter(r => r.readability).length;
     const isCollapsed = collapsedReps.has(rep.repeater_id);
+    const repBezirke = bezirke.filter(b => b.bundesland_code === rep.bundesland_code);
 
     return (
       <div key={rep.repeater_id} className="bg-white rounded-lg shadow-sm">
@@ -205,19 +211,68 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
         </div>
 
         {!isCollapsed && (
-          <RepeaterRow
-            repeater={rep}
-            reports={repReports}
-            exerciseId={exerciseId}
-            onSubmit={(form) => handleRepeaterSubmit(rep.repeater_id, form)}
-            onEdit={handleEdit}
-            onDelete={handleDelete}
-            editingId={editingId}
-            editForm={editForm}
-            onEditChange={setEditForm}
-            onEditSave={handleUpdate}
-            onEditCancel={() => setEditingId(null)}
-          />
+          <div className="divide-y divide-gray-100">
+            {repBezirke.map(bz => {
+              const bzReports = repReports.filter(r => r.bezirk_code === bz.code);
+              return (
+                <BezirkRow
+                  key={bz.code}
+                  bezirk={bz}
+                  reports={bzReports}
+                  repeaterId={rep.repeater_id}
+                  onSubmit={(form) => handleBezirkSubmit(rep.repeater_id, form)}
+                  onEdit={handleEdit}
+                  onDelete={handleDelete}
+                  editingId={editingId}
+                  editForm={editForm}
+                  onEditChange={setEditForm}
+                  onEditSave={handleUpdate}
+                  onEditCancel={() => setEditingId(null)}
+                />
+              );
+            })}
+            {/* Reports without matching bezirk */}
+            {(() => {
+              const bzCodes = new Set(repBezirke.map(b => b.code));
+              const unassigned = repReports.filter(r => !r.bezirk_code || !bzCodes.has(r.bezirk_code));
+              if (unassigned.length === 0) return null;
+              return (
+                <div className="px-3 py-1.5">
+                  <table className="w-full text-xs mb-1">
+                    <tbody>
+                      {unassigned.map((r, idx) => (
+                        <tr key={r.id} className="hover:bg-blue-50 group">
+                          {editingId === r.id ? (
+                            <td colSpan={5} className="py-0.5">
+                              <div className="flex items-center gap-1 bg-blue-50 rounded p-1">
+                                <span className="font-mono font-medium">{r.callsign}</span>
+                                <input value={editForm.rapport} onChange={e => setEditForm({ ...editForm, rapport: e.target.value.toUpperCase() })} className="border rounded px-1 py-0.5 font-mono text-xs w-20" autoFocus />
+                                <input value={editForm.notes} onChange={e => setEditForm({ ...editForm, notes: e.target.value })} placeholder="Sonst." className="border rounded px-1 py-0.5 text-xs w-20" />
+                                <button onClick={handleUpdate} className="text-green-600 text-xs font-bold">OK</button>
+                                <button onClick={() => setEditingId(null)} className="text-gray-400 text-xs">X</button>
+                              </div>
+                            </td>
+                          ) : (
+                            <>
+                              <td className="py-0.5 text-gray-400 w-4">{idx + 1}</td>
+                              <td className="py-0.5 font-mono font-medium cursor-pointer" onClick={() => handleEdit(r)}>{r.callsign}</td>
+                              <td className="py-0.5 font-mono text-gray-500 w-24 cursor-pointer" onClick={() => handleEdit(r)}>
+                                {r.readability && r.strength ? `${r.readability}/${r.strength}${r.db_over_s9 || ''}` : '—'}
+                              </td>
+                              <td className="py-0.5 text-gray-500 cursor-pointer" onClick={() => handleEdit(r)}>{r.notes || ''}</td>
+                              <td className="py-0.5 w-4">
+                                <button onClick={() => handleDelete(r.id)} className="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100">x</button>
+                              </td>
+                            </>
+                          )}
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              );
+            })()}
+          </div>
         )}
       </div>
     );
@@ -254,10 +309,10 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
   );
 }
 
-interface RepeaterRowProps {
-  repeater: any;
+interface BezirkRowProps {
+  bezirk: any;
   reports: any[];
-  exerciseId: string;
+  repeaterId: number;
   onSubmit: (form: EntryForm) => void;
   onEdit: (report: any) => void;
   onDelete: (id: number) => void;
@@ -268,7 +323,7 @@ interface RepeaterRowProps {
   onEditCancel: () => void;
 }
 
-function RepeaterRow({ repeater, reports, exerciseId, onSubmit, onEdit, onDelete, editingId, editForm, onEditChange, onEditSave, onEditCancel }: RepeaterRowProps) {
+function BezirkRow({ bezirk, reports, repeaterId, onSubmit, onEdit, onDelete, editingId, editForm, onEditChange, onEditSave, onEditCancel }: BezirkRowProps) {
   const [form, setForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '5/9', notes: '' });
   const callsignRef = useRef<CallsignInputRef>(null);
 
@@ -282,6 +337,16 @@ function RepeaterRow({ repeater, reports, exerciseId, onSubmit, onEdit, onDelete
 
   return (
     <div className="px-3 py-1.5">
+      {bezirk.code !== '??' && (
+        <div className="flex items-center gap-2 mb-1">
+          <span className={`text-xs font-mono px-1.5 py-0.5 rounded text-white ${bezirk.is_capital ? 'bg-[#dc3545]' : 'bg-[#6c757d]'}`}>
+            {bezirk.code}
+          </span>
+          <span className="text-xs text-gray-500">{bezirk.name}</span>
+          {reports.length > 0 && <span className="text-xs text-gray-400">({reports.length})</span>}
+        </div>
+      )}
+
       {reports.length > 0 && (
         <table className="w-full text-xs mb-1">
           <tbody>
