@@ -3,9 +3,11 @@
   "checkpoint_id": "148395aa7bbc",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 0,
+  "checkpoints_count": 3,
   "files_touched": [
+    "Dockerfile",
     "LICENSE",
+    "client/index.html",
     "client/src/components/BundMode.tsx",
     "client/src/components/CallsignInput.tsx",
     "client/src/components/LandMode.tsx",
@@ -14,12 +16,19 @@
     "client/src/pages/DashboardPage.tsx",
     "client/src/pages/ExercisePage.tsx",
     "client/src/pages/ExerciseSetupPage.tsx",
+    "client/src/pages/LoginPage.tsx",
     "client/src/pages/OperatorsPage.tsx",
     "client/src/pages/ReportsPage.tsx",
+    "docker-compose.yml",
+    "server/src/db/database.ts",
     "server/src/db/schema.ts",
     "server/src/db/seed.ts",
+    "server/src/index.ts",
+    "server/src/middleware/auth.ts",
+    "server/src/routes/auth.ts",
     "server/src/routes/exercises.ts",
-    "server/src/routes/export.ts"
+    "server/src/routes/export.ts",
+    "server/src/routes/operators.ts"
   ],
   "sessions": [
     {
@@ -28,13 +37,20 @@
       "context": "/14/8395aa7bbc/0/context.md",
       "content_hash": "/14/8395aa7bbc/0/content_hash.txt",
       "prompt": "/14/8395aa7bbc/0/prompt.txt"
+    },
+    {
+      "metadata": "/14/8395aa7bbc/1/metadata.json",
+      "transcript": "/14/8395aa7bbc/1/full.jsonl",
+      "context": "/14/8395aa7bbc/1/context.md",
+      "content_hash": "/14/8395aa7bbc/1/content_hash.txt",
+      "prompt": "/14/8395aa7bbc/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 25,
-    "cache_creation_tokens": 32154,
-    "cache_read_tokens": 1699446,
-    "output_tokens": 2591,
-    "api_call_count": 19
+    "input_tokens": 159,
+    "cache_creation_tokens": 91476,
+    "cache_read_tokens": 3593072,
+    "output_tokens": 4090,
+    "api_call_count": 68
   }
 }
