@@ -223,66 +223,84 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
 
         {!isCollapsed && (
           <div className="divide-y divide-gray-100">
-            {repBezirke.map(bz => {
-              const bzReports = repReports.filter(r => r.bezirk_code === bz.code);
-              return (
-                <BezirkRow
-                  key={bz.code}
-                  bezirk={bz}
-                  reports={bzReports}
-                  repeaterId={rep.repeater_id}
-                  onSubmit={(form) => handleBezirkSubmit(bz.code, rep.repeater_id, form)}
-                  onEdit={handleEdit}
-                  onDelete={handleDelete}
-                  editingId={editingId}
-                  editForm={editForm}
-                  onEditChange={setEditForm}
-                  onEditSave={handleUpdate}
-                  onEditCancel={() => setEditingId(null)}
-                />
-              );
-            })}
-            {/* Reports without matching bezirk */}
-            {(() => {
-              const bzCodes = new Set(repBezirke.map(b => b.code));
-              const unassigned = repReports.filter(r => !r.bezirk_code || !bzCodes.has(r.bezirk_code));
-              if (unassigned.length === 0) return null;
-              return (
-                <div className="px-3 py-1.5">
-                  <table className="w-full text-xs mb-1">
-                    <tbody>
-                      {unassigned.map((r, idx) => (
-                        <tr key={r.id} className="hover:bg-blue-50 group">
-                          {editingId === r.id ? (
-                            <td colSpan={5} className="py-0.5">
-                              <div className="flex items-center gap-1 bg-blue-50 rounded p-1">
-                                <span className="font-mono font-medium">{r.callsign}</span>
-                                <input value={editForm.rapport} onChange={e => setEditForm({ ...editForm, rapport: e.target.value.toUpperCase() })} className="border rounded px-1 py-0.5 font-mono text-xs w-20" autoFocus />
-                                <input value={editForm.notes} onChange={e => setEditForm({ ...editForm, notes: e.target.value })} placeholder="Sonst." className="border rounded px-1 py-0.5 text-xs w-20" />
-                                <button onClick={handleUpdate} className="text-green-600 text-xs font-bold">OK</button>
-                                <button onClick={() => setEditingId(null)} className="text-gray-400 text-xs">X</button>
-                              </div>
-                            </td>
-                          ) : (
-                            <>
-                              <td className="py-0.5 text-gray-400 w-4">{idx + 1}</td>
-                              <td className="py-0.5 font-mono font-medium cursor-pointer" onClick={() => handleEdit(r)}>{r.callsign}</td>
-                              <td className="py-0.5 font-mono text-gray-500 w-24 cursor-pointer" onClick={() => handleEdit(r)}>
-                                {r.readability && r.strength ? `${r.readability}/${r.strength}${r.db_over_s9 || ''}` : '—'}
-                              </td>
-                              <td className="py-0.5 text-gray-500 cursor-pointer" onClick={() => handleEdit(r)}>{r.notes || ''}</td>
-                              <td className="py-0.5 w-4">
-                                <button onClick={() => handleDelete(r.id)} className="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100">x</button>
-                              </td>
-                            </>
-                          )}
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              );
-            })()}
+            {repBezirke.length > 0 ? (
+              <>
+                {repBezirke.map(bz => {
+                  const bzReports = repReports.filter(r => r.bezirk_code === bz.code);
+                  return (
+                    <BezirkRow
+                      key={bz.code}
+                      bezirk={bz}
+                      reports={bzReports}
+                      repeaterId={rep.repeater_id}
+                      onSubmit={(form) => handleBezirkSubmit(bz.code, rep.repeater_id, form)}
+                      onEdit={handleEdit}
+                      onDelete={handleDelete}
+                      editingId={editingId}
+                      editForm={editForm}
+                      onEditChange={setEditForm}
+                      onEditSave={handleUpdate}
+                      onEditCancel={() => setEditingId(null)}
+                    />
+                  );
+                })}
+                {/* Reports without matching bezirk */}
+                {(() => {
+                  const bzCodes = new Set(repBezirke.map(b => b.code));
+                  const unassigned = repReports.filter(r => !r.bezirk_code || !bzCodes.has(r.bezirk_code));
+                  if (unassigned.length === 0) return null;
+                  return (
+                    <div className="px-3 py-1.5">
+                      <table className="w-full text-xs mb-1">
+                        <tbody>
+                          {unassigned.map((r, idx) => (
+                            <tr key={r.id} className="hover:bg-blue-50 group">
+                              {editingId === r.id ? (
+                                <td colSpan={5} className="py-0.5">
+                                  <div className="flex items-center gap-1 bg-blue-50 rounded p-1">
+                                    <span className="font-mono font-medium">{r.callsign}</span>
+                                    <input value={editForm.rapport} onChange={e => setEditForm({ ...editForm, rapport: e.target.value.toUpperCase() })} className="border rounded px-1 py-0.5 font-mono text-xs w-20" autoFocus />
+                                    <input value={editForm.notes} onChange={e => setEditForm({ ...editForm, notes: e.target.value })} placeholder="Sonst." className="border rounded px-1 py-0.5 text-xs w-20" />
+                                    <button onClick={handleUpdate} className="text-green-600 text-xs font-bold">OK</button>
+                                    <button onClick={() => setEditingId(null)} className="text-gray-400 text-xs">X</button>
+                                  </div>
+                                </td>
+                              ) : (
+                                <>
+                                  <td className="py-0.5 text-gray-400 w-4">{idx + 1}</td>
+                                  <td className="py-0.5 font-mono font-medium cursor-pointer" onClick={() => handleEdit(r)}>{r.callsign}</td>
+                                  <td className="py-0.5 font-mono text-gray-500 w-24 cursor-pointer" onClick={() => handleEdit(r)}>
+                                    {r.readability && r.strength ? `${r.readability}/${r.strength}${r.db_over_s9 || ''}` : '—'}
+                                  </td>
+                                  <td className="py-0.5 text-gray-500 cursor-pointer" onClick={() => handleEdit(r)}>{r.notes || ''}</td>
+                                  <td className="py-0.5 w-4">
+                                    <button onClick={() => handleDelete(r.id)} className="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100">x</button>
+                                  </td>
+                                </>
+                              )}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  );
+                })()}
+              </>
+            ) : (
+              /* No Bezirke — flat list with input form */
+              <FlatReportRow
+                reports={repReports}
+                repeaterId={rep.repeater_id}
+                onSubmit={(form) => handleBezirkSubmit('', rep.repeater_id, form)}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                editingId={editingId}
+                editForm={editForm}
+                onEditChange={setEditForm}
+                onEditSave={handleUpdate}
+                onEditCancel={() => setEditingId(null)}
+              />
+            )}
           </div>
         )}
       </div>
@@ -358,6 +376,103 @@ function BezirkRow({ bezirk, reports, repeaterId, onSubmit, onEdit, onDelete, ed
         </div>
       )}
 
+      {reports.length > 0 && (
+        <table className="w-full text-xs mb-1">
+          <tbody>
+            {reports.map((r, idx) => (
+              <tr key={r.id} className="hover:bg-blue-50 group">
+                {editingId === r.id ? (
+                  <td colSpan={5} className="py-0.5">
+                    <div className="flex items-center gap-1 bg-blue-50 rounded p-1 flex-wrap">
+                      <span className="font-mono font-medium">{r.callsign}</span>
+                      <input value={editForm.rapport} onChange={e => onEditChange({ ...editForm, rapport: e.target.value.toUpperCase() })} className="border rounded px-1 py-0.5 font-mono text-xs w-16 sm:w-20" autoFocus />
+                      <input value={editForm.notes} onChange={e => onEditChange({ ...editForm, notes: e.target.value })} placeholder="Sonst." className="border rounded px-1 py-0.5 text-xs w-16 sm:w-20" />
+                      <button onClick={onEditSave} className="text-green-600 text-xs font-bold">OK</button>
+                      <button onClick={onEditCancel} className="text-gray-400 text-xs">X</button>
+                    </div>
+                  </td>
+                ) : (
+                  <>
+                    <td className="py-0.5 text-gray-400 w-4">{idx + 1}</td>
+                    <td className="py-0.5 font-mono font-medium cursor-pointer" onClick={() => onEdit(r)}>{r.callsign}</td>
+                    <td className="py-0.5 font-mono text-gray-500 w-16 sm:w-24 cursor-pointer" onClick={() => onEdit(r)}>
+                      {r.readability && r.strength ? `${r.readability}/${r.strength}${r.db_over_s9 || ''}` : '—'}
+                    </td>
+                    <td className="py-0.5 text-gray-500 cursor-pointer hidden sm:table-cell" onClick={() => onEdit(r)}>{r.notes || ''}</td>
+                    <td className="py-0.5 w-4">
+                      <button onClick={() => onDelete(r.id)} className="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100">x</button>
+                    </td>
+                  </>
+                )}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
+
+      <form onSubmit={handleSubmit} className="flex items-center gap-1">
+        <CallsignInput
+          ref={callsignRef}
+          value={form.callsign}
+          onChange={v => setForm(f => ({ ...f, callsign: v }))}
+          onSelect={op => setForm(f => ({ ...f, operator: op, callsign: op.callsign }))}
+          className="w-24 sm:w-28"
+        />
+        <input
+          type="text"
+          value={form.rapport}
+          onChange={e => setForm(f => ({ ...f, rapport: e.target.value.toUpperCase() }))}
+          placeholder="5/9"
+          className="border border-gray-300 rounded px-1.5 py-0.5 font-mono text-xs w-16 sm:w-20 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          onKeyDown={e => {
+            if (e.altKey && e.key >= '1' && e.key <= '9') {
+              e.preventDefault();
+              setForm(f => ({ ...f, rapport: `5/${e.key}` }));
+            }
+          }}
+        />
+        <input
+          type="text"
+          value={form.notes}
+          onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+          placeholder="Sonst."
+          className="border border-gray-300 rounded px-1.5 py-0.5 text-xs flex-1 min-w-[40px] sm:min-w-[60px] focus:outline-none focus:ring-1 focus:ring-blue-500"
+        />
+        <button type="submit" className="bg-[#c8102e] hover:bg-[#a00d24] text-white px-2 py-0.5 rounded text-xs flex-shrink-0">
+          +
+        </button>
+      </form>
+    </div>
+  );
+}
+
+interface FlatReportRowProps {
+  reports: any[];
+  repeaterId: number;
+  onSubmit: (form: EntryForm) => void;
+  onEdit: (report: any) => void;
+  onDelete: (id: number) => void;
+  editingId: number | null;
+  editForm: EntryForm;
+  onEditChange: (form: EntryForm) => void;
+  onEditSave: () => void;
+  onEditCancel: () => void;
+}
+
+function FlatReportRow({ reports, repeaterId, onSubmit, onEdit, onDelete, editingId, editForm, onEditChange, onEditSave, onEditCancel }: FlatReportRowProps) {
+  const [form, setForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '5/9', notes: '' });
+  const callsignRef = useRef<CallsignInputRef>(null);
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    if (!form.callsign && !form.operator) return;
+    onSubmit(form);
+    setForm({ callsign: '', operator: null, rapport: '5/9', notes: '' });
+    setTimeout(() => callsignRef.current?.focus(), 50);
+  };
+
+  return (
+    <div className="px-2 sm:px-3 py-1.5">
       {reports.length > 0 && (
         <table className="w-full text-xs mb-1">
           <tbody>
