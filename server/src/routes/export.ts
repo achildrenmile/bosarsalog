@@ -24,7 +24,7 @@ exportRouter.get('/exercises/:id/bund', (req, res) => {
     ORDER BY bl.sort_order, bz.code, o.callsign
   `).all(req.params.id) as any[];
 
-  let text = `BOS-ARSA Krisenkommunikationsübung — ${exercise.date}\n`;
+  let text = `BOS-ARSA Übung — ${exercise.date}\n`;
   text += `Auswertung OE-Link\n`;
   text += '='.repeat(60) + '\n\n';
 
@@ -73,7 +73,7 @@ exportRouter.get('/exercises/:id/land', (req, res) => {
     ORDER BY r.sort_order, bl.sort_order, bz.code, o.callsign
   `).all(req.params.id) as any[];
 
-  let text = `BOS-ARSA Krisenkommunikationsübung — ${exercise.date}\n`;
+  let text = `BOS-ARSA Übung — ${exercise.date}\n`;
   text += `Auswertung Frequenzen\n`;
   text += '='.repeat(60) + '\n\n';
 
@@ -121,7 +121,7 @@ exportRouter.get('/exercises/:id/combined', (req, res) => {
     GROUP BY sr.repeater_id ORDER BY r.sort_order
   `).all(req.params.id) as any[];
 
-  let text = `BOS-ARSA Krisenkommunikationsübung — ${exercise.date}\n`;
+  let text = `BOS-ARSA Übung — ${exercise.date}\n`;
   text += '='.repeat(60) + '\n';
   text += `Teilnehmer: ${stats.participants}\n`;
   text += `Rapporte gesamt: ${stats.reports}\n\n`;

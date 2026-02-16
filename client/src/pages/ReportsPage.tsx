@@ -239,7 +239,7 @@ export default function ReportsPage() {
               <div ref={barCardRef} className="bg-white rounded-xl shadow p-3 sm:p-4">
                 <div className="flex items-center justify-between mb-2 sm:mb-3">
                   <h2 className="text-xs sm:text-sm font-semibold text-[#1e3a5f]">
-                    BOS-ARSA Krisenkommunikationsübung am {new Date(exercise.date + 'T00:00:00').toLocaleDateString('de-AT')}
+                    BOS-ARSA Übung am {new Date(exercise.date + 'T00:00:00').toLocaleDateString('de-AT')}
                   </h2>
                   <button
                     onClick={() => downloadChart(barCardRef, `BOS-ARSA_Stationen_${exercise.date}.png`)}

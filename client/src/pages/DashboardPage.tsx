@@ -218,7 +218,7 @@ export default function DashboardPage() {
       {/* Trend chart */}
       {!loading && exercises.length > 0 && (
         <div className="bg-white rounded-xl shadow p-4 mb-6">
-          <h2 className="text-sm font-semibold text-[#1e3a5f] mb-3">BOS-ARSA Krisenkommunikationsübungen {new Date().getFullYear()}</h2>
+          <h2 className="text-sm font-semibold text-[#1e3a5f] mb-3">BOS-ARSA Übungen {new Date().getFullYear()}</h2>
           <div className="h-48 sm:h-[300px]">
             <Bar
               data={{
