@@ -15,6 +15,8 @@ interface EntryForm {
   operator: any;
   rapport: string;
   notes: string;
+  opName: string;
+  opQth: string;
 }
 
 export default function BundMode({ exerciseId, reports, onReportCreated, onReportUpdated, onReportDeleted }: Props) {
@@ -29,7 +31,7 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
   const [newRepFreq, setNewRepFreq] = useState('');
   const [newRepCallsign, setNewRepCallsign] = useState('');
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editForm, setEditForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '', notes: '' });
+  const [editForm, setEditForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '', notes: '', opName: '', opQth: '' });
 
   useEffect(() => {
     Promise.all([
@@ -172,6 +174,8 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
       operator: { id: report.operator_id, callsign: report.callsign },
       rapport: report.readability && report.strength ? `${report.readability}/${report.strength}${report.db_over_s9 || ''}` : '',
       notes: report.notes || '',
+      opName: report.operator_name || '',
+      opQth: '',
     });
   };
 
@@ -364,7 +368,7 @@ interface BezirkRowProps {
 }
 
 function BezirkRow({ bezirk, reports, linkedRepeaters, defaultRepeaterId, onSubmit, onEdit, onDelete, editingId, editForm, onEditChange, onEditSave, onEditCancel }: BezirkRowProps) {
-  const [form, setForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '5/9', notes: '' });
+  const [form, setForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '5/9', notes: '', opName: '', opQth: '' });
   const [repeaterId, setRepeaterId] = useState(defaultRepeaterId);
   const callsignRef = useRef<CallsignInputRef>(null);
 
@@ -377,8 +381,20 @@ function BezirkRow({ bezirk, reports, linkedRepeaters, defaultRepeaterId, onSubm
     if (!form.callsign && !form.operator) return;
     if (!repeaterId) return;
     onSubmit(repeaterId, form);
-    setForm({ callsign: '', operator: null, rapport: '5/9', notes: '' });
+    setForm({ callsign: '', operator: null, rapport: '5/9', notes: '', opName: '', opQth: '' });
     setTimeout(() => callsignRef.current?.focus(), 50);
+  };
+
+  const saveOperatorField = (field: 'name' | 'qth', value: string) => {
+    if (!form.operator?.id) return;
+    const original = field === 'name' ? (form.operator.name || '') : (form.operator.qth || '');
+    if (value === original) return;
+    apiFetch(`/api/v1/operators/${form.operator.id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ [field]: value || null }),
+    }).then(() => {
+      setForm(f => ({ ...f, operator: { ...f.operator, [field]: value || null } }));
+    }).catch(() => {});
   };
 
   return (
@@ -444,9 +460,25 @@ function BezirkRow({ bezirk, reports, linkedRepeaters, defaultRepeaterId, onSubm
         <CallsignInput
           ref={callsignRef}
           value={form.callsign}
-          onChange={v => setForm(f => ({ ...f, callsign: v }))}
-          onSelect={op => setForm(f => ({ ...f, operator: op, callsign: op.callsign }))}
+          onChange={v => setForm(f => ({ ...f, callsign: v, operator: null, opName: '', opQth: '' }))}
+          onSelect={op => setForm(f => ({ ...f, operator: op, callsign: op.callsign, opName: op.name || '', opQth: op.qth || '' }))}
           className="w-24 sm:w-28"
+        />
+        <input
+          type="text"
+          value={form.opName}
+          onChange={e => setForm(f => ({ ...f, opName: e.target.value }))}
+          onBlur={e => saveOperatorField('name', e.target.value)}
+          placeholder="Name"
+          className="border border-gray-300 rounded px-1.5 py-0.5 text-xs w-20 sm:w-24 focus:outline-none focus:ring-1 focus:ring-blue-500 hidden sm:block"
+        />
+        <input
+          type="text"
+          value={form.opQth}
+          onChange={e => setForm(f => ({ ...f, opQth: e.target.value }))}
+          onBlur={e => saveOperatorField('qth', e.target.value)}
+          placeholder="QTH"
+          className="border border-gray-300 rounded px-1.5 py-0.5 text-xs w-16 sm:w-20 focus:outline-none focus:ring-1 focus:ring-blue-500 hidden sm:block"
         />
         <input
           type="text"
