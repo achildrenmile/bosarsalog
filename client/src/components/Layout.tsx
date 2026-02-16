@@ -27,6 +27,9 @@ export default function Layout() {
           <Link to="/operators" className="text-xs sm:text-sm hover:text-blue-200 hidden sm:inline">
             Rufzeichen
           </Link>
+          <Link to="/hilfe" className="text-xs sm:text-sm hover:text-blue-200 hidden sm:inline">
+            Hilfe
+          </Link>
         </div>
         <div className="flex items-center gap-2 sm:gap-4 text-sm flex-shrink-0">
           <span className="text-blue-200 text-xs sm:text-sm">{admin?.username}</span>
@@ -41,6 +44,7 @@ export default function Layout() {
       <div className="sm:hidden bg-[#1e3a5f] text-white px-2 pb-2 flex gap-3 text-xs border-t border-white/10">
         <Link to="/" className="hover:text-blue-200">Dashboard</Link>
         <Link to="/operators" className="hover:text-blue-200">Rufzeichen</Link>
+        <Link to="/hilfe" className="hover:text-blue-200">Hilfe</Link>
       </div>
       <main className="p-2 sm:p-4 max-w-[1600px] mx-auto flex-1 w-full">
         <Outlet />
@@ -53,6 +57,8 @@ export default function Layout() {
         <Link to="/impressum" className="hover:text-gray-700">Impressum</Link>
         <span>·</span>
         <Link to="/datenschutz" className="hover:text-gray-700">Datenschutz</Link>
+        <span>·</span>
+        <Link to="/hilfe" className="hover:text-gray-700">Hilfe</Link>
         <span>·</span>
         <a href="https://github.com/achildrenmile/bosarsalog" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700">GitHub</a>
       </footer>

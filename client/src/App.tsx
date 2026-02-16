@@ -9,6 +9,7 @@ import OperatorsPage from './pages/OperatorsPage';
 import ReportsPage from './pages/ReportsPage';
 import ImpressumPage from './pages/ImpressumPage';
 import DatenschutzPage from './pages/DatenschutzPage';
+import HilfePage from './pages/HilfePage';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
   const { token } = useAuth();
@@ -36,6 +37,7 @@ export default function App() {
           <Route path="operators" element={<OperatorsPage />} />
           <Route path="impressum" element={<ImpressumPage />} />
           <Route path="datenschutz" element={<DatenschutzPage />} />
+          <Route path="hilfe" element={<HilfePage />} />
         </Route>
       </Routes>
     </AuthProvider>

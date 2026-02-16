@@ -1,8 +1,8 @@
 # BOS-ARSA Log
 
-**Krisenkommunikationsübung — Live-Erfassung, Multi-User, Auswertung**
+**Amateurfunk Notfunkübung — Live-Erfassung, Multi-User, Auswertung**
 
-A real-time, multi-user web application for the BOS-ARSA weekly ham radio crisis communication exercises. Every Sunday, a team of admin operators queries multiple repeaters and direct frequencies across Austria to collect signal reports from ~100 amateur radio operators. BOS-ARSA Log replaces the shared Excel workbook and standalone HTML prototypes with a single unified tool.
+A real-time, multi-user web application for BOS-ARSA amateur radio exercises across Austria. Multiple operators simultaneously log signal reports from ~100 ham radio stations on repeaters and direct frequencies. BOS-ARSA Log replaces the shared Excel workbook and standalone HTML prototypes with a single unified tool.
 
 Part of the [oeradio.at](https://oeradio.at) ecosystem.
 
@@ -13,7 +13,8 @@ Part of the [oeradio.at](https://oeradio.at) ecosystem.
 | Frontend | React 18, TypeScript, Vite, Tailwind CSS, Socket.IO client |
 | Backend | Node.js, Express, TypeScript, Socket.IO server |
 | Database | SQLite via better-sqlite3 |
-| Auth | Simple callsign + PIN with JWT tokens |
+| Auth | Username/password with bcrypt + JWT tokens |
+| Security | Helmet, rate limiting, CORS restriction, non-root Docker |
 | Deployment | Docker, Docker Compose, Cloudflare Tunnel |
 
 ## Architecture
@@ -21,10 +22,10 @@ Part of the [oeradio.at](https://oeradio.at) ecosystem.
 ```
 /client          React SPA (Vite)
 /server          Express API + WebSocket server
-/data            SQLite database (volume-mounted in Docker)
+/data            SQLite database (Docker volume-mounted)
 ```
 
-- RESTful API for CRUD operations, WebSocket (Socket.IO) for real-time sync between concurrent admins
+- RESTful API for CRUD operations, WebSocket (Socket.IO) for real-time sync between concurrent users
 - Server serves the built client in production
 - SQLite keeps deployment simple — the data volume is small (~1,000 operators, ~200 reports/week)
 
@@ -37,7 +38,7 @@ Part of the [oeradio.at](https://oeradio.at) ecosystem.
 | **Linked Repeater** | One logical repeater spanning multiple physical sites (Einstiegspunkte) |
 | **Einstiegspunkt** | Physical entry point in a linked repeater network, e.g. Hermannskogel (HK) |
 | **Signal Report (Rapport)** | RST format, e.g. "5/9+30 HK" = R5 / S9+30dB via Hermannskogel |
-| **Exercise (Übung)** | One Sunday session with configured repeaters and collected reports |
+| **Exercise (Übung)** | One session with configured repeaters and collected reports |
 | **Bezirk** | Austrian political district, identified by 2-3 letter code |
 | **Bundesland** | Austrian state (OE1=Wien through OE9=Vorarlberg) |
 
@@ -45,12 +46,20 @@ Part of the [oeradio.at](https://oeradio.at) ecosystem.
 
 ### Two Data Entry Modes
 
-- **Land (Umsetzer)** — Repeater-first entry. Select a repeater, enter reports grouped by Bezirk. Cross-repeater callsign sync: adding a callsign on one repeater auto-creates placeholder entries on all others.
-- **Bund (Bundesland)** — Geography-first entry. Bundesland/Bezirk hierarchy with inline entry per district. Einstiegspunkt auto-propagation: selecting an entry point in one Wien district auto-applies it to all Wien districts.
+- **Frequenzen (Land)** — Repeater-first entry. Select a repeater, enter reports grouped by Bezirk.
+- **OE-Link (Bund)** — Geography-first entry. Bundesland/Bezirk hierarchy with linked repeater selection per district. Only available when OE-Link mode is enabled for the exercise.
+
+### Exercise Setup
+
+- Bundesland selection grid (OE1–OE9) with one-click activation of all repeaters per state
+- ~80 pre-configured Austrian repeaters from OEVSV data
+- Custom repeater and simplex frequency creation
+- OE-Link toggle for linked repeater mode
+- Per-repeater operator (OP) callsign assignment
 
 ### Live Multi-User
 
-- Socket.IO real-time sync — reports entered by one admin appear instantly for all others
+- Socket.IO real-time sync — reports entered by one user appear instantly for all others
 - Running totals bar always visible: participant count, total reports, per-repeater counts
 - Optimized for speed: autofocus, enter-to-submit, auto-uppercase, keyboard shortcuts
 
@@ -62,18 +71,48 @@ Part of the [oeradio.at](https://oeradio.at) ecosystem.
 | `Ctrl+1` through `Ctrl+9` | Insert "OE1" through "OE9" in callsign field |
 | `Enter` | Submit report and clear fields |
 | `Arrow Up/Down` | Navigate autocomplete suggestions |
+| `Escape` | Close autocomplete dropdown |
 
 ### Reports & Export
 
-- Exercise summary with per-repeater breakdown
-- Nebenstationen report (participants by district)
-- TXT export in Bund format (Bundesland-grouped) and Land format (repeater-grouped)
+- Exercise summary with per-repeater and per-Bezirk breakdown
+- Bar chart (stations vs. reports) and pie chart (distribution)
+- Participants list with callsign, name, location, report count
+- Export formats:
+  - **PNG** — Full-page screenshot of the analytics view
+  - **TXT OE-Link** — Bundesland-grouped text export
+  - **TXT Frequenzen** — Repeater-grouped text export
+  - **TXT Kombiniert** — Summary statistics with per-repeater breakdown
 
 ### Operator Registry
 
-- Searchable/filterable list of all operators
+- Searchable operator database (callsign, name, QTH)
 - Quick-add during live entry when callsign not found
-- Full profile with equipment, location, membership flags
+- Inline editing of operator details
+- Paginated browsing (50 per page)
+
+### Security
+
+- Helmet security headers (CSP, HSTS, X-Frame-Options)
+- Rate limiting on login (10 attempts per 15 minutes)
+- CORS restricted to configured origin
+- JWT secret fail-fast in production
+- Request body size limit (1MB)
+- Input length validation
+- Docker container runs as non-root user
+- Port bound to localhost only (Cloudflare tunnel access)
+
+### User Roles
+
+| Capability | Admin | Erfasser |
+|-----------|-------|----------|
+| Create exercises | ✓ | — |
+| Configure repeaters | ✓ | — |
+| Change exercise name/date | ✓ | — |
+| Enable OE-Link | ✓ | — |
+| Enter/edit/delete reports | ✓ | ✓ |
+| Manage operators | ✓ | ✓ |
+| View analytics & export | ✓ | ✓ |
 
 ## Getting Started
 
@@ -90,7 +129,7 @@ npm install
 cd server && npm install && cd ..
 cd client && npm install && cd ..
 
-# Seed the database with reference data
+# Seed the database with reference data (idempotent — safe to run multiple times)
 npm run db:seed
 
 # Start both client and server in dev mode
@@ -99,35 +138,23 @@ npm run dev
 
 The client runs on `http://localhost:5173` with API proxy to `http://localhost:3000`.
 
-### Default Login
-
-| Callsign | PIN | Role |
-|----------|-----|------|
-| OE8YML | changeme | admin |
-
 ### Production (Docker)
 
 ```bash
 # Build and run
 docker compose up -d
 
-# Seed database (first run)
+# Seed database (first run only — idempotent, won't overwrite existing data)
 docker exec bosarsalog node dist/server/db/seed.js
 ```
 
-### Deploy to Remote Host
+Required environment variables:
 
-```bash
-# Configure deployment
-cp .env.production.example .env.production
-# Edit .env.production with your settings
-
-# Deploy
-./deploy-production.sh
-
-# Rebuild without cache
-./deploy-production.sh --rebuild
-```
+| Variable | Description |
+|----------|-------------|
+| `JWT_SECRET` | Random 64+ char secret (required in production) |
+| `CORS_ORIGIN` | Allowed origin URL (default: `https://bosarsalog.oeradio.at`) |
+| `DATABASE_PATH` | SQLite DB path (default: `/data/bosarsalog.db`) |
 
 ## API
 
@@ -136,16 +163,16 @@ All endpoints are prefixed with `/api/v1/`. Protected routes require `Authorizat
 ### Auth
 
 ```
-POST /api/v1/auth/login    { callsign, pin } -> { token, admin }
+POST /api/v1/auth/login    { username, password } -> { token, admin }
 ```
 
 ### Exercises
 
 ```
 GET    /api/v1/exercises              List all (with summary stats)
-POST   /api/v1/exercises              Create { date }
+POST   /api/v1/exercises              Create { date, name }
 GET    /api/v1/exercises/:id          Full exercise with reports
-PATCH  /api/v1/exercises/:id          Update status/notes
+PATCH  /api/v1/exercises/:id          Update (name, organisator, oe_link)
 GET    /api/v1/exercises/:id/stats    Live statistics
 GET    /api/v1/exercises/:id/reports  All signal reports
 POST   /api/v1/exercises/:id/reports  Create report
@@ -207,32 +234,15 @@ Server -> Client (broadcast):
   attendance_updated { attendance, entered_by }
 ```
 
-## Database Schema
-
-### Tables
-
-| Table | Description | Records |
-|-------|-------------|---------|
-| `bundeslaender` | Austrian states + international | 18 |
-| `bezirke` | Political districts | 84 |
-| `operators` | Ham radio operator registry | ~1,066 |
-| `repeaters` | Repeater/frequency master list | 11 |
-| `einstiegspunkte` | Entry points for linked repeaters | 12 |
-| `exercises` | Weekly exercise sessions | growing |
-| `exercise_repeaters` | Active repeaters per exercise | per exercise |
-| `exercise_attendance` | Participant tracking | per exercise |
-| `signal_reports` | The core data — signal reports | ~200/week |
-| `admins` | Admin users | ~5 |
-
 ## Seed Data
 
-The seed script (`npm run db:seed`) populates:
+The seed script (`npm run db:seed`) is **idempotent** — it only inserts data if the tables are empty, and never deletes existing data. It populates:
 
-- **9 Austrian Bundesländer** + 9 international entries (Slowenien, CZ, Deutschland, Italien, Slowakei, Kroatien, Liechtenstein, CH, Ungarn)
-- **84 Austrian Bezirke** with capital flags
-- **11 Repeaters**: Gerlitze 2m/70cm, Magdalensberg linked, Buschberg, Goldeck, Dobratsch 23cm, Struška, Hochstuhl, Zirbitzkogel, Direkte 145.300/145.525
-- **12 Einstiegspunkte** for the Magdalensberg linked system (HK, GB, NBST, JAU, FK, SCHÖ, LT, Telfs, Hochstein, Ahorn, MK, DO)
-- **Default admin** OE8YML with PIN "changeme"
+- **18 Bundesländer** — 9 Austrian states + 9 international entries
+- **84 Bezirke** — Austrian political districts with capital flags
+- **~80 Repeaters** — Comprehensive OEVSV data across OE1–OE9 plus international and simplex
+- **12 Einstiegspunkte** — Entry points for the Magdalensberg linked system
+- **2 Users** — Admin and operator accounts
 
 ## Conventions
 
@@ -241,9 +251,8 @@ The seed script (`npm run db:seed`) populates:
 - RST format: R/S with optional +dB modifier and location suffix
 - All timestamps in Europe/Vienna timezone
 - API prefix: `/api/v1/`
-- Bezirk badges: Hauptstadt = red (#dc3545), normal = gray (#6c757d)
-- Bundesland headers with blue badges (#0d6efd)
-- Warm beige background (#faf3e4)
+- Bezirk badges: Hauptstadt = red, normal = gray
+- Bundesland headers with blue badges
 
 ## License
 
