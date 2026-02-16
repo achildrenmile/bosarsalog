@@ -40,6 +40,7 @@ app.use(helmet({
       scriptSrc: ["'self'"],
       connectSrc: ["'self'", "wss:", "ws:"],
       imgSrc: ["'self'", "data:"],
+      frameAncestors: ["'none'"],
     },
   },
 }));

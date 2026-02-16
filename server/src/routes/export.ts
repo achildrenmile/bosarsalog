@@ -3,6 +3,10 @@ import { getDb } from '../db/database.js';
 
 export const exportRouter = Router();
 
+function safeFilename(name: string): string {
+  return name.replace(/[^\w\-]/g, '_');
+}
+
 // Bund export (Bundesland-grouped)
 exportRouter.get('/exercises/:id/bund', (req, res) => {
   const db = getDb();
@@ -48,7 +52,7 @@ exportRouter.get('/exercises/:id/bund', (req, res) => {
   }
 
   res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-  res.setHeader('Content-Disposition', `attachment; filename="bos-arsa-oelink-${exercise.date}.txt"`);
+  res.setHeader('Content-Disposition', `attachment; filename="bos-arsa-oelink-${safeFilename(exercise.date)}.txt"`);
   res.send(text);
 });
 
@@ -97,7 +101,7 @@ exportRouter.get('/exercises/:id/land', (req, res) => {
   }
 
   res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-  res.setHeader('Content-Disposition', `attachment; filename="bos-arsa-frequenzen-${exercise.date}.txt"`);
+  res.setHeader('Content-Disposition', `attachment; filename="bos-arsa-frequenzen-${safeFilename(exercise.date)}.txt"`);
   res.send(text);
 });
 
@@ -132,6 +136,6 @@ exportRouter.get('/exercises/:id/combined', (req, res) => {
   text += '\n';
 
   res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-  res.setHeader('Content-Disposition', `attachment; filename="bos-arsa-combined-${exercise.date}.txt"`);
+  res.setHeader('Content-Disposition', `attachment; filename="bos-arsa-combined-${safeFilename(exercise.date)}.txt"`);
   res.send(text);
 });

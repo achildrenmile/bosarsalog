@@ -303,11 +303,17 @@ if (magRepId && count('einstiegspunkte') === 0) {
 
 // ─── Users (skip if already exist) ───
 if (count('admins') === 0) {
-  const adminHash = bcrypt.hashSync('Xr9$kLm2!vBn7Qw4zJpT', 10);
-  const operatorHash = bcrypt.hashSync('Wf5#dNc8&hYs3Rt6mKaU', 10);
-  db.prepare('INSERT INTO admins (username, password_hash, role) VALUES (?, ?, ?)').run('bosarsa', adminHash, 'admin');
-  db.prepare('INSERT INTO admins (username, password_hash, role) VALUES (?, ?, ?)').run('erfasser', operatorHash, 'operator');
-  console.log('  ✓ Users: bosarsa, erfasser');
+  const adminPw = process.env.ADMIN_PASSWORD;
+  const operatorPw = process.env.OPERATOR_PASSWORD;
+  if (!adminPw || !operatorPw) {
+    console.warn('  ⚠ Set ADMIN_PASSWORD and OPERATOR_PASSWORD env vars to seed users');
+  } else {
+    const adminHash = bcrypt.hashSync(adminPw, 10);
+    const operatorHash = bcrypt.hashSync(operatorPw, 10);
+    db.prepare('INSERT INTO admins (username, password_hash, role) VALUES (?, ?, ?)').run('bosarsa', adminHash, 'admin');
+    db.prepare('INSERT INTO admins (username, password_hash, role) VALUES (?, ?, ?)').run('erfasser', operatorHash, 'operator');
+    console.log('  ✓ Users: bosarsa, erfasser');
+  }
 } else {
   console.log(`  ⏭ ${count('admins')} Users already exist, skipping`);
 }
