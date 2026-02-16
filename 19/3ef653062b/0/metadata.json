@@ -1,0 +1,43 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "193ef653062b",
+  "session_id": "f3619e03-9d1e-4cfc-95cc-2af785639c53",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-16T19:54:44.159018692Z",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "README.md",
+    "client/src/components/AustriaMap.tsx",
+    "client/src/components/Layout.tsx",
+    "client/src/pages/DashboardPage.tsx",
+    "client/src/pages/HilfePage.tsx",
+    "client/src/pages/LoginPage.tsx",
+    "client/src/pages/ReportsPage.tsx",
+    "package.json",
+    "server/src/db/schema.ts",
+    "server/src/routes/exercises.ts",
+    "server/src/routes/operators.ts",
+    "server/src/utils/callsignCountry.ts"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "b55da7e1-0493-40b8-a7e9-50d08f198ef9",
+  "checkpoint_transcript_start": 708,
+  "transcript_lines_at_start": 708,
+  "token_usage": {
+    "input_tokens": 10,
+    "cache_creation_tokens": 16949,
+    "cache_read_tokens": 647296,
+    "output_tokens": 2976,
+    "api_call_count": 8
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-16T19:54:43.729318915Z",
+    "agent_lines": 5,
+    "human_added": 742,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 747,
+    "agent_percentage": 0.6693440428380187
+  }
+}
