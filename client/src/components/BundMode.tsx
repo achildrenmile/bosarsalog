@@ -120,37 +120,45 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
   };
 
   const handleBezirkSubmit = async (bezirkCode: string, repeaterId: number, form: EntryForm) => {
-    if (!repeaterId) { alert('Kein Umsetzer ausgewählt'); return; }
-    const operator = await getOrCreateOperator(form.callsign, form.operator);
-    if (!operator) { alert('Rufzeichen ungültig (min. 3 Zeichen)'); return; }
-
-    const parsed = parseRapport(form.rapport);
-
     try {
-      const report = await apiFetch(`/api/v1/exercises/${exerciseId}/reports`, {
-        method: 'POST',
-        body: JSON.stringify({
-          operator_id: operator.id,
-          repeater_id: repeaterId,
-          ...parsed,
-          notes: form.notes || null,
-        }),
-      });
-      onReportCreated(report);
-    } catch (err: any) {
-      if (err.message?.includes('existiert')) {
-        const existing = reports.find(r => r.operator_id === operator.id && r.repeater_id === repeaterId);
-        if (existing) {
-          const updated = await apiFetch(`/api/v1/exercises/${exerciseId}/reports/${existing.id}`, {
-            method: 'PATCH',
-            body: JSON.stringify({ ...parsed, notes: form.notes || null }),
-          });
-          onReportUpdated(updated);
+      if (!repeaterId) { alert('Kein Umsetzer'); return; }
+      const operator = await getOrCreateOperator(form.callsign, form.operator);
+      if (!operator) { alert('Operator nicht gefunden/erstellt'); return; }
+      alert(`Operator OK: ${operator.callsign} id=${operator.id}, sending to rep=${repeaterId}`);
+
+      const parsed = parseRapport(form.rapport);
+
+      try {
+        const report = await apiFetch(`/api/v1/exercises/${exerciseId}/reports`, {
+          method: 'POST',
+          body: JSON.stringify({
+            operator_id: operator.id,
+            repeater_id: repeaterId,
+            ...parsed,
+            notes: form.notes || null,
+          }),
+        });
+        alert('Report erstellt: ' + report.id);
+        onReportCreated(report);
+      } catch (err: any) {
+        if (err.message?.includes('existiert')) {
+          const existing = reports.find(r => r.operator_id === operator.id && r.repeater_id === repeaterId);
+          if (existing) {
+            const updated = await apiFetch(`/api/v1/exercises/${exerciseId}/reports/${existing.id}`, {
+              method: 'PATCH',
+              body: JSON.stringify({ ...parsed, notes: form.notes || null }),
+            });
+            alert('Report updated: ' + updated.id);
+            onReportUpdated(updated);
+          } else {
+            alert('Existiert aber nicht in lokaler Liste gefunden');
+          }
+        } else {
+          alert('API Fehler: ' + (err.message || JSON.stringify(err)));
         }
-      } else {
-        console.error('Report error:', err);
-        alert('Fehler: ' + (err.message || 'Unbekannt'));
       }
+    } catch (outerErr: any) {
+      alert('Unerwarteter Fehler: ' + (outerErr.message || JSON.stringify(outerErr)));
     }
   };
 
