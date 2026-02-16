@@ -1,15 +1,29 @@
 import { Router } from 'express';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
+import rateLimit from 'express-rate-limit';
 import { getDb } from '../db/database.js';
 import { JWT_SECRET } from '../middleware/auth.js';
 
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 10,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: 'Zu viele Anmeldeversuche. Bitte in 15 Minuten erneut versuchen.' },
+});
+
 export const authRouter = Router();
 
-authRouter.post('/login', (req, res) => {
+authRouter.post('/login', loginLimiter, (req, res) => {
   const { username, password } = req.body;
   if (!username || !password) {
     res.status(400).json({ error: 'Benutzername und Passwort erforderlich' });
+    return;
+  }
+  if (typeof username !== 'string' || username.length > 50 ||
+      typeof password !== 'string' || password.length > 128) {
+    res.status(400).json({ error: 'Ungültige Eingabe' });
     return;
   }
 

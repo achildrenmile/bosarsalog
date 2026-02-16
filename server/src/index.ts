@@ -2,6 +2,7 @@ import express from 'express';
 import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
+import helmet from 'helmet';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { initDb } from './db/database.js';
@@ -18,6 +19,7 @@ import { authMiddleware } from './middleware/auth.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const PORT = parseInt(process.env.PORT || '3000', 10);
+const CORS_ORIGIN = process.env.CORS_ORIGIN || 'https://bosarsalog.oeradio.at';
 
 // Initialize database
 const db = initDb();
@@ -27,11 +29,22 @@ console.log('Database initialized');
 const app = express();
 const server = createServer(app);
 const io = new Server(server, {
-  cors: { origin: '*' },
+  cors: { origin: CORS_ORIGIN },
 });
 
-app.use(cors());
-app.use(express.json());
+app.use(helmet({
+  contentSecurityPolicy: {
+    directives: {
+      defaultSrc: ["'self'"],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      scriptSrc: ["'self'"],
+      connectSrc: ["'self'", "wss:", "ws:"],
+      imgSrc: ["'self'", "data:"],
+    },
+  },
+}));
+app.use(cors({ origin: CORS_ORIGIN }));
+app.use(express.json({ limit: '1mb' }));
 
 // Public routes
 app.use('/api/v1/auth', authRouter);
@@ -57,6 +70,12 @@ app.get('/api/v1/overview', authMiddleware, (_req, res) => {
 
 // Setup Socket.IO
 setupSocket(io);
+
+// Global error handler — no stack traces in production
+app.use((err: Error, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
+  console.error('Unhandled error:', err);
+  res.status(500).json({ error: 'Interner Serverfehler' });
+});
 
 // Serve static client in production
 const clientDir = path.join(__dirname, '..', 'client');

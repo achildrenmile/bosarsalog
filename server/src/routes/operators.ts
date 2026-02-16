@@ -20,8 +20,8 @@ operatorsRouter.get('/', (req, res) => {
     `).all(pattern, pattern, pattern);
     res.json(operators);
   } else {
-    const limit = parseInt(req.query.limit as string) || 100;
-    const offset = parseInt(req.query.offset as string) || 0;
+    const limit = Math.min(Math.max(parseInt(req.query.limit as string) || 100, 1), 1000);
+    const offset = Math.max(parseInt(req.query.offset as string) || 0, 0);
     const operators = db.prepare('SELECT * FROM operators ORDER BY callsign LIMIT ? OFFSET ?').all(limit, offset);
     const total = (db.prepare('SELECT COUNT(*) as c FROM operators').get() as any).c;
     res.json({ operators, total });

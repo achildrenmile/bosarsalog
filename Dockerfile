@@ -33,8 +33,9 @@ COPY --from=builder /app/server/node_modules ./node_modules
 COPY --from=builder /app/package.json ./
 COPY docker-entrypoint.sh ./
 RUN chmod +x docker-entrypoint.sh
-RUN mkdir -p /data
+RUN mkdir -p /data && adduser -D -u 1001 app && chown -R app:app /app /data
 ENV DATABASE_PATH=/data/bosarsalog.db
 ENV NODE_ENV=production
 EXPOSE 3000
+USER app
 ENTRYPOINT ["./docker-entrypoint.sh"]
