@@ -60,40 +60,78 @@ export default function ReportsPage() {
   const [showParticipants, setShowParticipants] = useState(true);
   const barChartRef = useRef<any>(null);
   const pieChartRef = useRef<any>(null);
+  const barCardRef = useRef<HTMLDivElement>(null);
+  const pieCardRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
 
-  const downloadChart = (chartRef: React.RefObject<any>, filename: string) => {
-    const chart = chartRef.current;
-    if (!chart) return;
-    const url = chart.toBase64Image('image/png', 1);
-    const link = document.createElement('a');
-    link.download = filename;
-    link.href = url;
-    link.click();
+  const createExportHeader = () => {
+    const header = document.createElement('div');
+    header.style.cssText = 'display:flex;align-items:center;gap:12px;padding:16px 24px;background:#1e3a5f;border-radius:8px 8px 0 0;';
+    const img = document.createElement('img');
+    img.src = '/bosarsa.jpeg';
+    img.style.cssText = 'height:36px;border-radius:4px;';
+    header.appendChild(img);
+    const text = document.createElement('div');
+    const title = document.createElement('div');
+    title.textContent = 'BOS-ARSA Log';
+    title.style.cssText = 'font-size:16px;font-weight:bold;color:#ffffff;letter-spacing:0.5px;';
+    text.appendChild(title);
+    const sub = document.createElement('div');
+    sub.textContent = 'Im Sinne der Sicherheit';
+    sub.style.cssText = 'font-size:10px;color:#93c5fd;letter-spacing:1px;';
+    text.appendChild(sub);
+    header.appendChild(text);
+    return header;
+  };
+
+  const createExportFooter = () => {
+    const footer = document.createElement('div');
+    footer.style.cssText = 'text-align:center;padding:12px 0;margin-top:16px;border-top:1px solid #e5e7eb;font-size:12px;color:#6b7280;';
+    footer.textContent = 'oeradio.at  \u00B7  bos-arsa.at';
+    return footer;
+  };
+
+  const exportWithBranding = async (sourceEl: HTMLElement, filename: string) => {
+    const wrapper = document.createElement('div');
+    wrapper.style.cssText = 'position:absolute;left:-9999px;top:0;background:#f3f4f6;padding:24px;min-width:800px;';
+    wrapper.appendChild(createExportHeader());
+    const content = document.createElement('div');
+    content.style.cssText = 'padding:16px 0;';
+    const clone = sourceEl.cloneNode(true) as HTMLElement;
+    // Remove no-export elements from clone
+    clone.querySelectorAll('[data-no-export="true"]').forEach(el => el.remove());
+    content.appendChild(clone);
+    wrapper.appendChild(content);
+    wrapper.appendChild(createExportFooter());
+    document.body.appendChild(wrapper);
+    try {
+      const url = await toPng(wrapper, { backgroundColor: '#f3f4f6', pixelRatio: 2 });
+      const link = document.createElement('a');
+      link.download = filename;
+      link.href = url;
+      link.click();
+    } finally {
+      document.body.removeChild(wrapper);
+    }
+  };
+
+  const downloadChart = async (cardRef: React.RefObject<HTMLDivElement | null>, filename: string) => {
+    if (!cardRef.current || !exercise) return;
+    setExporting(true);
+    try {
+      await exportWithBranding(cardRef.current, filename);
+    } catch {} finally {
+      setExporting(false);
+    }
   };
 
   const downloadFullPage = async () => {
     if (!pageRef.current || !exercise) return;
     setExporting(true);
     try {
-      // Add padding for the exported image only
-      pageRef.current.style.padding = '24px';
-      const url = await toPng(pageRef.current, {
-        backgroundColor: '#f3f4f6',
-        pixelRatio: 2,
-        filter: (node) => {
-          if (node instanceof HTMLElement && node.dataset.noExport === 'true') return false;
-          return true;
-        },
-      });
-      pageRef.current.style.padding = '';
-      const link = document.createElement('a');
-      link.download = `BOS-ARSA_Auswertung_${exercise.date}.png`;
-      link.href = url;
-      link.click();
+      await exportWithBranding(pageRef.current, `BOS-ARSA_Auswertung_${exercise.date}.png`);
     } catch {} finally {
-      if (pageRef.current) pageRef.current.style.padding = '';
       setExporting(false);
     }
   };
@@ -182,13 +220,13 @@ export default function ReportsPage() {
             return chartData.length > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Bar chart: Stationen + Rapporte */}
-              <div className="bg-white rounded-xl shadow p-3 sm:p-4">
+              <div ref={barCardRef} className="bg-white rounded-xl shadow p-3 sm:p-4">
                 <div className="flex items-center justify-between mb-2 sm:mb-3">
                   <h2 className="text-xs sm:text-sm font-semibold text-[#1e3a5f]">
                     BOS-ARSA Krisenkommunikationsübung am {new Date(exercise.date + 'T00:00:00').toLocaleDateString('de-AT')}
                   </h2>
                   <button
-                    onClick={() => downloadChart(barChartRef, `BOS-ARSA_Stationen_${exercise.date}.png`)}
+                    onClick={() => downloadChart(barCardRef, `BOS-ARSA_Stationen_${exercise.date}.png`)}
                     className="text-xs text-gray-400 hover:text-blue-600 flex-shrink-0 ml-2"
                     title="Grafik als PNG herunterladen"
                     data-no-export="true"
@@ -228,13 +266,13 @@ export default function ReportsPage() {
               </div>
 
               {/* Pie chart: Rapporte distribution */}
-              <div className="bg-white rounded-xl shadow p-3 sm:p-4">
+              <div ref={pieCardRef} className="bg-white rounded-xl shadow p-3 sm:p-4">
                 <div className="flex items-center justify-between mb-2 sm:mb-3">
                   <h2 className="text-xs sm:text-sm font-semibold text-[#1e3a5f]">
                     Rapporte-Verteilung nach {chartLevel}
                   </h2>
                   <button
-                    onClick={() => downloadChart(pieChartRef, `BOS-ARSA_Verteilung_${exercise.date}.png`)}
+                    onClick={() => downloadChart(pieCardRef, `BOS-ARSA_Verteilung_${exercise.date}.png`)}
                     className="text-xs text-gray-400 hover:text-blue-600 flex-shrink-0 ml-2"
                     title="Grafik als PNG herunterladen"
                     data-no-export="true"
