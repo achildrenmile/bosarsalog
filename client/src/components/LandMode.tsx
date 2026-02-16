@@ -181,7 +181,7 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
                     <button
                       key={r.repeater_id}
                       onClick={() => setActiveRepeaterId(r.repeater_id)}
-                      className={`px-3 py-1.5 rounded text-sm flex items-center gap-1 ${r.repeater_id === activeRepeaterId ? 'bg-[#1a365d] text-white font-medium' : 'bg-white text-gray-700 hover:bg-gray-100 border'}`}
+                      className={`px-3 py-1.5 rounded text-sm flex items-center gap-1 ${r.repeater_id === activeRepeaterId ? 'bg-[#1e3a5f] text-white font-medium' : 'bg-white text-gray-700 hover:bg-gray-100 border'}`}
                     >
                       {r.short_name}
                       {r.operator_callsign && (
@@ -212,7 +212,7 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
                   <button
                     key={r.repeater_id}
                     onClick={() => setActiveRepeaterId(r.repeater_id)}
-                    className={`px-3 py-1.5 rounded text-sm flex items-center gap-1 ${r.repeater_id === activeRepeaterId ? 'bg-[#1a365d] text-white font-medium' : 'bg-white text-gray-700 hover:bg-gray-100 border'}`}
+                    className={`px-3 py-1.5 rounded text-sm flex items-center gap-1 ${r.repeater_id === activeRepeaterId ? 'bg-[#1e3a5f] text-white font-medium' : 'bg-white text-gray-700 hover:bg-gray-100 border'}`}
                   >
                     {r.short_name}
                     {r.operator_callsign && (
@@ -303,7 +303,7 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
           placeholder="Sonstiges"
           className="border border-gray-300 rounded px-2 py-1 text-sm flex-1 min-w-[100px] focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
-        <button type="submit" className="bg-[#1a365d] hover:bg-[#2a4a7f] text-white px-4 py-1 rounded text-sm font-medium">
+        <button type="submit" className="bg-[#c8102e] hover:bg-[#a00d24] text-white px-4 py-1 rounded text-sm font-medium">
           {editingId ? 'Speichern' : 'Eintragen'}
         </button>
         {editingId && (
@@ -324,7 +324,7 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
             <div key={rep.repeater_id} className="bg-white rounded-lg shadow-sm overflow-hidden">
               <div
                 onClick={() => setActiveRepeaterId(rep.repeater_id)}
-                className={`px-3 py-1.5 flex items-center gap-2 border-b cursor-pointer ${isActive ? 'bg-[#1a365d] text-white' : 'bg-gray-50 hover:bg-gray-100'}`}
+                className={`px-3 py-1.5 flex items-center gap-2 border-b cursor-pointer ${isActive ? 'bg-[#1e3a5f] text-white' : 'bg-gray-50 hover:bg-gray-100'}`}
               >
                 <span className={`font-medium text-sm ${isActive ? '' : 'text-gray-800'}`}>{rep.short_name}</span>
                 {rep.operator_callsign && (

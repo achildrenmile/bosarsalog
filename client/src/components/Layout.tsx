@@ -12,7 +12,7 @@ export default function Layout() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      <nav className="bg-[#1a365d] text-white px-4 py-2 flex items-center justify-between shadow-md">
+      <nav className="bg-[#1e3a5f] text-white px-4 py-2 flex items-center justify-between shadow-md">
         <div className="flex items-center gap-4">
           <a href="https://bosarsa.wordpress.com/" target="_blank" rel="noopener noreferrer" className="flex-shrink-0">
             <img src="/bosarsa.jpeg" alt="BOS-ARSA" className="h-10 rounded" />
@@ -31,7 +31,7 @@ export default function Layout() {
           <span className="text-blue-200">{admin?.username}</span>
           <button
             onClick={handleLogout}
-            className="bg-blue-700 hover:bg-blue-800 px-3 py-1 rounded text-xs"
+            className="bg-red-700 hover:bg-red-800 px-3 py-1 rounded text-xs"
           >
             Abmelden
           </button>

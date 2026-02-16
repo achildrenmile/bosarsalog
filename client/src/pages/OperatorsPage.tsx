@@ -69,8 +69,8 @@ export default function OperatorsPage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-[#1a365d]">Rufzeichen-Register</h1>
-        <button onClick={() => setShowAdd(true)} className="bg-[#1a365d] hover:bg-[#2a4a7f] text-white px-3 py-1.5 rounded text-sm">
+        <h1 className="text-xl font-bold text-[#1e3a5f]">Rufzeichen-Register</h1>
+        <button onClick={() => setShowAdd(true)} className="bg-[#c8102e] hover:bg-[#a00d24] text-white px-3 py-1.5 rounded text-sm">
           + Neues Rufzeichen
         </button>
       </div>
@@ -104,7 +104,7 @@ export default function OperatorsPage() {
 
       <div className="bg-white rounded-xl shadow overflow-hidden">
         <table className="w-full text-sm">
-          <thead className="bg-[#1a365d] text-white">
+          <thead className="bg-[#1e3a5f] text-white">
             <tr>
               <th className="px-3 py-2 text-left">Rufzeichen</th>
               <th className="px-3 py-2 text-left">Name</th>
@@ -144,7 +144,7 @@ export default function OperatorsPage() {
                     <td className="px-3 py-1.5 text-gray-500">{op.bundesland_code}</td>
                     <td className="px-3 py-1.5 text-xs text-gray-400">{op.equipment}</td>
                     <td className="px-3 py-1.5">
-                      <button onClick={() => setEditing({ ...op })} className="text-blue-700 hover:underline text-xs">
+                      <button onClick={() => setEditing({ ...op })} className="text-red-700 hover:underline text-xs">
                         Bearbeiten
                       </button>
                     </td>

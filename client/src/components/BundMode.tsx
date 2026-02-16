@@ -405,7 +405,7 @@ function BezirkRow({ bezirk, reports, linkedRepeaters, defaultRepeaterId, onSubm
           placeholder="Sonst."
           className="border border-gray-300 rounded px-1.5 py-0.5 text-xs flex-1 min-w-[60px] focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
-        <button type="submit" className="bg-[#1a365d] hover:bg-[#2a4a7f] text-white px-2 py-0.5 rounded text-xs">
+        <button type="submit" className="bg-[#c8102e] hover:bg-[#a00d24] text-white px-2 py-0.5 rounded text-xs">
           +
         </button>
       </form>

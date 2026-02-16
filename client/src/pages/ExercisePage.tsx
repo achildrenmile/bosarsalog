@@ -109,7 +109,7 @@ export default function ExercisePage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <h1 className="text-xl font-bold text-[#1a365d]">
+        <h1 className="text-xl font-bold text-[#1e3a5f]">
           {exercise.name || 'Übung'} — {new Date(exercise.date + 'T00:00:00').toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric' })}
         </h1>
         <div className="flex items-center gap-2">
@@ -129,7 +129,7 @@ export default function ExercisePage() {
           <Link to={`/exercises/${id}/setup`} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm">
             Einrichten
           </Link>
-          <Link to={`/exercises/${id}/reports`} className="bg-blue-100 hover:bg-blue-200 text-blue-800 px-3 py-1 rounded text-sm">
+          <Link to={`/exercises/${id}/reports`} className="bg-red-100 hover:bg-red-200 text-red-800 px-3 py-1 rounded text-sm">
             Auswertung
           </Link>
         </div>
@@ -140,13 +140,13 @@ export default function ExercisePage() {
       <div className="flex gap-1 bg-white rounded-lg p-1 shadow-sm w-fit">
         <button
           onClick={() => setMode('land')}
-          className={`px-4 py-1.5 rounded text-sm font-medium ${mode === 'land' ? 'bg-[#1a365d] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+          className={`px-4 py-1.5 rounded text-sm font-medium ${mode === 'land' ? 'bg-[#1e3a5f] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
         >
           Land (Umsetzer)
         </button>
         <button
           onClick={() => setMode('bund')}
-          className={`px-4 py-1.5 rounded text-sm font-medium ${mode === 'bund' ? 'bg-[#1a365d] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+          className={`px-4 py-1.5 rounded text-sm font-medium ${mode === 'bund' ? 'bg-[#1e3a5f] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
         >
           Bund (Bundesland)
         </button>
