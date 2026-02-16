@@ -48,7 +48,7 @@ export default function HilfePage() {
         <h4 className="font-semibold text-[#1e3a5f] mt-3">Übungstabelle</h4>
         <p>
           Jede Übung wird mit Datum, Name, Teilnehmeranzahl und Rapportanzahl aufgelistet.
-          Die aktuelle Übung (nächste zum heutigen Datum) ist blau hervorgehoben und mit <b>Aktuell</b> markiert.
+          Die aktuelle Übung (nächste zum heutigen Datum oder in der Zukunft) ist blau hervorgehoben und mit <b>Aktuell</b> markiert.
           Quartals-Zwischensummen und ein Jahresgesamt werden automatisch berechnet.
         </p>
         <ul className="list-disc ml-5 space-y-1">
@@ -192,18 +192,25 @@ export default function HilfePage() {
         <p>
           Die Auswertungsseite zeigt statistische Grafiken und Tabellen für eine Übung.
         </p>
+        <h4 className="font-semibold text-[#1e3a5f] mt-3">Karte</h4>
+        <p>
+          Eine interaktive Karte zeigt Österreich mit allen 9 Bundesländern und den 9 Nachbarländern
+          (Deutschland, Tschechien, Slowakei, Ungarn, Slowenien, Italien, Schweiz, Liechtenstein, Kroatien).
+          Die Farbintensität zeigt die Anzahl der Teilnehmer pro Region.
+          Beim Überfahren mit der Maus werden Teilnehmer- und Rapportanzahl angezeigt.
+        </p>
         <h4 className="font-semibold text-[#1e3a5f] mt-3">Diagramme</h4>
         <ul className="list-disc ml-5 space-y-1">
-          <li><b>Balkendiagramm</b> — Stationen und Rapporte pro Bezirk/Bundesland</li>
-          <li><b>Kreisdiagramm</b> — Verteilung der Rapporte nach Standort</li>
+          <li><b>Balkendiagramm</b> — Stationen und Rapporte pro Bezirk/Bundesland/Land</li>
+          <li><b>Kreisdiagramm</b> — Rapporte Verteilung nach Bundesland / Land</li>
         </ul>
         <p>
           Jedes Diagramm kann einzeln als PNG-Bild heruntergeladen werden.
         </p>
         <h4 className="font-semibold text-[#1e3a5f] mt-3">Tabellen</h4>
         <ul className="list-disc ml-5 space-y-1">
-          <li><b>Bezirk-Tabelle</b> — Aufschlüsselung nach Bundesland und Bezirk mit Zwischensummen</li>
-          <li><b>Teilnehmerliste</b> — Aufklappbare Liste aller Teilnehmer mit Rufzeichen, Name, Bezirk, Bundesland und Rapportanzahl</li>
+          <li><b>Bezirk-Tabelle</b> — Aufschlüsselung nach Bundesland / Land und Bezirk mit Zwischensummen</li>
+          <li><b>Teilnehmerliste</b> — Aufklappbare Liste aller Teilnehmer mit Rufzeichen, Name, Bezirk, Bundesland / Land und Rapportanzahl</li>
         </ul>
         <h4 className="font-semibold text-[#1e3a5f] mt-3">Export-Formate</h4>
         <div className="overflow-x-auto">
@@ -238,6 +245,12 @@ export default function HilfePage() {
         <p>
           Mit <b>+ Neu</b> können Sie manuell einen neuen Operator anlegen (Rufzeichen, Name, QTH, Bezirk, Bundesland).
           Operatoren werden auch automatisch angelegt, wenn ein unbekanntes Rufzeichen bei der Datenerfassung eingegeben wird.
+        </p>
+        <h4 className="font-semibold text-[#1e3a5f] mt-3">Automatische Länderzuordnung</h4>
+        <p>
+          Das Bundesland bzw. Nachbarland wird automatisch anhand des Rufzeichen-Präfixes zugeordnet
+          (z.B. OE8 → Kärnten, S55 → Slowenien, DL → Deutschland).
+          Suffixe wie /P, /M oder /OE8 werden dabei ignoriert.
         </p>
         <h4 className="font-semibold text-[#1e3a5f] mt-3">Operator bearbeiten</h4>
         <p>

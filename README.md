@@ -41,6 +41,7 @@ Part of the [oeradio.at](https://oeradio.at) ecosystem.
 | **Exercise (Übung)** | One session with configured repeaters and collected reports |
 | **Bezirk** | Austrian political district, identified by 2-3 letter code |
 | **Bundesland** | Austrian state (OE1=Wien through OE9=Vorarlberg) |
+| **Nachbarland** | Neighbor country (SI, CZ, DE, IT, SK, HR, LI, CH, HU) |
 
 ## Features
 
@@ -56,6 +57,21 @@ Part of the [oeradio.at](https://oeradio.at) ecosystem.
 - Custom repeater and simplex frequency creation
 - OE-Link toggle for linked repeater mode
 - Per-repeater operator (OP) callsign assignment
+
+### Interactive Austria Map with Neighbor Countries
+
+- Choropleth map of Austria (OE1–OE9) with participant/report density
+- 9 neighbor countries displayed: Germany, Czech Republic, Slovakia, Hungary, Slovenia, Italy, Switzerland, Liechtenstein, Croatia
+- High-resolution borders from Natural Earth 10m data
+- Countries with participating operators are color-coded by activity level
+- Hover tooltips showing participant count and report count per region
+
+### Automatic Callsign-to-Country Assignment
+
+- Foreign callsign prefixes automatically mapped to the correct country (e.g. S55UJE → Slovenia, DL1ABC → Germany)
+- Supported prefixes: OE1–OE9, S5 (Slovenia), OK/OL (Czech Republic), DA-DR (Germany), I (Italy), OM (Slovakia), 9A (Croatia), HB0 (Liechtenstein), HB (Switzerland), HA/HG (Hungary)
+- Strips portable/mobile suffixes (/P, /M, /OE8) before matching
+- Auto-derived on operator creation; existing operators backfilled via migration
 
 ### Live Multi-User
 
@@ -75,8 +91,9 @@ Part of the [oeradio.at](https://oeradio.at) ecosystem.
 
 ### Reports & Export
 
-- Exercise summary with per-repeater and per-Bezirk breakdown
-- Bar chart (stations vs. reports) and pie chart (distribution)
+- Exercise summary with per-repeater and per-Bezirk/Bundesland/Land breakdown
+- Interactive Austria map with neighbor countries showing participant distribution
+- Bar chart (stations vs. reports) and pie chart (distribution by Bundesland/Land)
 - Participants list with callsign, name, location, report count
 - Export formats:
   - **PNG** — Full-page screenshot of the analytics view

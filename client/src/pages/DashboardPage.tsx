@@ -53,14 +53,15 @@ export default function DashboardPage() {
     return date.toLocaleDateString('de-AT', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
   };
 
-  // Compute nearest exercise to today
+  // Compute nearest exercise today or in the future
   const today = new Date().toISOString().split('T')[0];
-  const nearestId = exercises.length > 0
-    ? exercises.reduce((closest, e) => {
-        const dCur = Math.abs(new Date(e.date).getTime() - new Date(today).getTime());
-        const dBest = Math.abs(new Date(closest.date).getTime() - new Date(today).getTime());
+  const futureExercises = exercises.filter(e => e.date >= today);
+  const nearestId = futureExercises.length > 0
+    ? futureExercises.reduce((closest, e) => {
+        const dCur = new Date(e.date).getTime() - new Date(today).getTime();
+        const dBest = new Date(closest.date).getTime() - new Date(today).getTime();
         return dCur < dBest ? e : closest;
-      }, exercises[0]).id
+      }, futureExercises[0]).id
     : null;
 
   // Compute quarterly and yearly totals
