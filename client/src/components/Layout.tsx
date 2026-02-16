@@ -17,8 +17,9 @@ export default function Layout() {
           <a href="https://bosarsa.wordpress.com/" target="_blank" rel="noopener noreferrer" className="flex-shrink-0">
             <img src="/bosarsa.jpeg" alt="BOS-ARSA" className="h-10 rounded" />
           </a>
-          <Link to="/" className="text-lg font-bold tracking-wide hover:text-blue-200">
-            BOS-ARSA Log
+          <Link to="/" className="hover:text-blue-200">
+            <div className="text-lg font-bold tracking-wide leading-tight">BOS-ARSA Log</div>
+            <div className="text-[10px] text-blue-300 tracking-wider">Im Sinne der Sicherheit</div>
           </Link>
           <Link to="/" className="text-sm hover:text-blue-200">
             Dashboard
