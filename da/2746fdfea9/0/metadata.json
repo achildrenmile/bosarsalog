@@ -1,0 +1,33 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "da2746fdfea9",
+  "session_id": "6a216e27-0036-4285-9be7-fe9753b90aca",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-16T18:58:35.82275196Z",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "client/src/components/AustriaMap.tsx",
+    "client/src/pages/ReportsPage.tsx"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "885dd7d5-1e8c-4d12-aa07-c40f598d8447",
+  "checkpoint_transcript_start": 662,
+  "transcript_lines_at_start": 662,
+  "token_usage": {
+    "input_tokens": 11,
+    "cache_creation_tokens": 69062,
+    "cache_read_tokens": 613229,
+    "output_tokens": 3166,
+    "api_call_count": 7
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-16T18:58:35.355990112Z",
+    "agent_lines": 183,
+    "human_added": 64,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 247,
+    "agent_percentage": 74.08906882591093
+  }
+}

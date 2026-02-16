@@ -1,0 +1,268 @@
+Implement the following plan:
+
+# Austria Map Feature — Bundesland Statistics
+
+## Context
+The ReportsPage already shows per-Bundesland statistics (participants, reports) in tables and charts. Adding a choropleth map of Austria colored by Bundesland gives an immediate visual overview — which regions are active, which are missing.
+
+## Approach
+Create an inline SVG component `AustriaMap` with the 9 Bundesländer shapes. No external map library needed — the shapes are static and simple. Color intensity based on participant count per Bundesland. Place it in ReportsPage between the summary cards and the charts.
+
+## Changes
+
+### 1. New component: `client/src/components/AustriaMap.tsx`
+- Inline SVG with path data for all 9 Austrian Bundesländer (OE1–OE9)
+- Props: `data: { code: string; participants: number; reports: number }[]`
+- Color scale: white (0 participants) → light blue → dark blue (`#1e3a5f`) based on max value
+- Each Bundesland shape shows:
+  - Fill color based on participant count
+  - Label overlay: OE code + participant count (e.g. "OE8: 12")
+  - Hover tooltip with full details (Bundesland name, participants, reports)
+- Responsive: scales to container width via `viewBox`
+- Supports PNG export (works with existing `html-to-image` setup)
+
+### 2. Integrate into `client/src/pages/ReportsPage.tsx`
+- Import `AustriaMap` component
+- Add map card between summary cards (line ~226) and charts section (line ~228)
+- Pass `blStats` data to the map component
+- Add ref + download button for PNG export (same pattern as existing charts)
+- Full-width card with title "Teilnehmer nach Bundesland"
+- Include color legend (gradient bar with min/max labels)
+
+## SVG Path Strategy
+Use simplified SVG paths for Austria's Bundesländer. The paths represent approximate geographic shapes positioned correctly relative to each other within a ~800×500 viewBox. Each path has an `id` matching the bundesland code ("01"–"09") for data binding.
+
+## Color Scale
+```
+0 participants  → #e8eef5 (very light blue-gray)
+max participants → #1e3a5f (dark navy — matches brand)
+```
+Linear interpolation between the two. Bundesländer with 0 data get a light gray (#f3f4f6) to distinguish "no data" from "low count".
+
+## Files Modified
+- `client/src/components/AustriaMap.tsx` (new)
+- `client/src/pages/ReportsPage.tsx` (add map section)
+
+## Verification
+1. `nix-shell -p nodejs --run "npm run build"` compiles
+2. Open ReportsPage for an exercise with data — map shows colored Bundesländer
+3. Hover shows tooltip with details
+4. "Download Auswertung" PNG export includes the map
+5. Mobile responsive — map scales down properly
+6. Deploy
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+
+---
+
+deploy
+
+---
+
+feature nicht sichtbar
+
+---
+
+finde das feature nicht
+
+---
+
+[Request interrupted by user for tool use]
+
+---
+
+do not deploy locally! deploy on production
+
+---
+
+erstelle eine richtige österreich karte. die zeichnung sieht fürchterlich aus. vorlage?
+
+---
+
+beschriftungsalignment gehört etwas verbessert
+
+---
+
+revert back
+
+---
+
+die karte ist weg. füge sie hinzu
+
+---
+
+[Request interrupted by user]
+
+---
+
+ich wollte nur, dass du den letzten karten commit revertest nicht alle!!!
+
+---
+
+oe7 etwas mehr runter und oe2 etwas mehr runter von der höhe positionieren
+
+---
+
+da auch nachbarländer bei den übungen mitmachen. füge die nachbarländer in die karte hinzu und erweitere auch die auswertungen nach nachbarland. die rufzeichen sollen natürlich automatisch zugeordnet werden
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me chronologically analyze the conversation:
+
+1. **Initial request**: User asked to implement an Austria Map feature showing Bundesland statistics as a choropleth map on the ReportsPage. A detailed plan was provided.
+
+2. **First implementation**: I created `AustriaMap.tsx` with hand-drawn SVG paths and integrated it into `ReportsPage.tsx`. Built successfully. Deployed locally with `docker compose up -d --build`.
+
+3. **"feature nicht sichtbar" (feature not visible)**: The `bundesland_code` from the API uses "01", "02" format but the map expected "OE1", "OE2". Fixed by adding `OE${parseInt(bl.bundesland_code, 10)}` mapping. Rebuilt and deployed locally again.
+
+4. **"finde das feature nicht" (can't find the feature)**: The server wasn't starting because `JWT_SECRET` was not set. Container logs showed `Error: JWT_SECRET must be set in production`. I tried to deploy locally with `--env-file .env.production` but user rejected this.
+
+5. **"do not deploy locally! deploy on production"**: User wanted production deployment. I found `deploy-production.sh` which does git pull on remote, then docker build. So I needed to commit+push first, then run the deploy script. Did that successfully.
+
+6. **"erstelle eine richtige österreich karte. die zeichnung sieht fürchterlich aus. vorlage?"**: User said the hand-drawn paths look terrible, asked for a template. I searched the web, found MapSVG's geo-calibrated Austria SVG (CC BY 4.0), downloaded it to `/tmp/austria.svg`, and rewrote `AustriaMap.tsx` with real geographic paths. The SVG has AT-1 through AT-9 IDs mapping to: AT-1=Burgenland(OE4), AT-2=Kärnten(OE8), AT-3=NÖ(OE3), AT-4=OÖ(OE5), AT-5=Salzburg(OE2), AT-6=Steiermark(OE6), AT-7=Tirol(OE7), AT-8=Vorarlberg(OE9), AT-9=Wien(OE1). Deployed to production.
+
+7. **"beschriftungsalignment gehört etwas verbessert"**: User wanted label alignment improvements. I adjusted label positions, added Wien leader line, text stroke outlines, smaller font for Vorarlberg. Deployed to production.
+
+8. **"revert back"**: User wanted to revert. I incorrectly reverted ALL 3 map commits instead of just the last one.
+
+9. **"die karte ist weg. füge sie hinzu"**: User said the map is gone, add it back.
+
+10. **"ich wollte nur, dass du den letzten karten commit revertest nicht alle!!!"**: User clarified they only wanted the last label alignment commit reverted, not all. I fixed by reverting the revert and then reverting just the label commit. This restored the map to the state after `f882e53` (geo-calibrated paths) without `e4b97d5` (label alignment). Deployed.
+
+11. **"oe7 etwas mehr runter und oe2 etwas mehr runter von der höhe positionieren"**: User wanted OE7 and OE2 labels moved down. Changed OE7 labelY from 195→210, OE2 labelY from 185→195. Deployed.
+
+12. **Current request (before summary)**: User asked to add neighboring countries to the map and extend the statistics to include them. Callsigns should be automatically assigned to countries. I entered plan mode and launched two explore agents:
+    - Agent 1 found: bundeslaender table already has codes 10-18 for neighboring countries (Slowenien, Tschechien, Deutschland, Italien, Slowakei, Kroatien, Liechtenstein, Schweiz, Ungarn). The blStats SQL query uses callsign character 3 to determine bundesland_code. The frontend mapping `OE${parseInt(bl.bundesland_code, 10)}` silently drops international codes.
+    - Agent 2 researched SVG path sources for neighboring countries, recommending Natural Earth GeoJSON or mapshaper.org approach.
+
+I was in the middle of plan mode - had completed Phase 1 (exploration) and needed to proceed to Phase 2 (design) and write the plan.
+
+Key files:
+- `/home/achildrenmile/bosarsalog/client/src/components/AustriaMap.tsx` - The map component with geo-calibrated SVG paths
+- `/home/achildrenmile/bosarsalog/client/src/pages/ReportsPage.tsx` - Reports page integrating the map
+- `/home/achildrenmile/bosarsalog/server/src/routes/exercises.ts` - Stats endpoint with blStats SQL
+- `/home/achildrenmile/bosarsalog/server/src/db/seed.ts` - Seed data with bundeslaender including international codes 10-18
+- `/home/achildrenmile/bosarsalog/server/src/db/schema.ts` - Database schema
+- `/tmp/austria.svg` - Downloaded geo-calibrated Austria SVG from MapSVG
+- `/home/achildrenmile/bosarsalog/deploy-production.sh` - Production deploy script
+- `/home/achildrenmile/bosarsalog/.env.production` - Production env with JWT_SECRET
+
+Important patterns:
+- Deploy to production: `bash deploy-production.sh` (git push first, it does git pull on remote)
+- Never deploy locally - always production
+- NixOS: use `nix-shell -p nodejs --run "..."` for npm commands
+- bundesland_code format: "01"-"09" for Austrian states, "10"-"18" for international
+- The callsign-to-country mapping currently only handles OE callsigns well (extracts char 3). Foreign callsigns like S55UJE would get wrong mapping.
+
+Current state: Plan mode active, exploration complete, need to design implementation plan for adding neighboring countries.
+
+Summary:
+1. Primary Request and Intent:
+   - **Original request**: Implement an Austria choropleth map on the ReportsPage showing per-Bundesland participant statistics with color coding, tooltips, and PNG export support.
+   - **Subsequent requests**: Replace hand-drawn SVG paths with geo-calibrated real paths, fix label alignment, adjust specific label positions (OE7 and OE2 down).
+   - **Current active request**: Add neighboring countries (DE, CZ, SK, HU, SI, IT, CH, LI, HR) to the map, extend statistics/reports to include them, and automatically assign callsigns to their country based on callsign prefix. User said: "da auch nachbarländer bei den übungen mitmachen. füge die nachbarländer in die karte hinzu und erweitere auch die auswertungen nach nachbarland. die rufzeichen sollen natürlich automatisch zugeordnet werden"
+   - **Critical user preferences**: Always deploy to PRODUCTION (via `deploy-production.sh`), never locally. When reverting, only revert what's explicitly asked for.
+
+2. Key Technical Concepts:
+   - NixOS environment: `nix-shell -p nodejs --run "..."` for npm/node commands
+   - Monorepo: `/client` (React/Vite) + `/server` (Express/TypeScript)
+   - SQLite database with `bundeslaender` table (codes "01"-"09" for Austrian states, "10"-"18" for international neighbors)
+   - Geo-calibrated SVG from MapSVG (CC BY 4.0) with `geoViewBox="9.500931 49.015279 17.163182 46.371323"`
+   - AT-1 through AT-9 ID mapping: AT-1=Burgenland(OE4), AT-2=Kärnten(OE8), AT-3=NÖ(OE3), AT-4=OÖ(OE5), AT-5=Salzburg(OE2), AT-6=Steiermark(OE6), AT-7=Tirol(OE7), AT-8=Vorarlberg(OE9), AT-9=Wien(OE1)
+   - Callsign-to-bundesland mapping via SQL: `COALESCE(o.bundesland_code, '0' || SUBSTR(o.callsign, 3, 1))`
+   - Production deploy: commit → push → `bash deploy-production.sh` (does git pull on remote host, docker build, docker compose up)
+   - `html-to-image` (toPng) for PNG export
+
+3. Files and Code Sections:
+   - **`/home/achildrenmile/bosarsalog/client/src/components/AustriaMap.tsx`** (created)
+     - Core map component with geo-calibrated SVG paths from MapSVG for all 9 Austrian Bundesländer
+     - Current label positions: OE7 labelY=210, OE2 labelY=195 (adjusted per user request)
+     - Props: `data: { code: string; participants: number; reports: number }[]`
+     - Color scale: `#f3f4f6` (no data) → `#c2d5ec` to `#1e3a5f` (linear interpolation)
+     - viewBox: `-5 -5 623 324`
+     - Hover tooltips with SVG coordinate→screen coordinate conversion
+     - Gradient legend bar at bottom
+
+   - **`/home/achildrenmile/bosarsalog/client/src/pages/ReportsPage.tsx`** (modified)
+     - Added `import AustriaMap from '../components/AustriaMap'`
+     - Added `mapCardRef` for PNG export
+     - Map section inserted between summary cards (line ~226) and charts (line ~228)
+     - Data mapping: `code: \`OE${parseInt(bl.bundesland_code, 10)}\`` — this currently drops international codes (10-18) silently
+     - Condition: `stats.blStats.length > 0`
+
+   - **`/home/achildrenmile/bosarsalog/server/src/routes/exercises.ts`** (not modified yet, but critical)
+     - blStats SQL query at lines 128-141 uses `SUBSTR(o.callsign, 3, 1)` for callsign→bundesland mapping
+     - This ONLY works for OE callsigns (extracts digit after "OE"). Foreign callsigns like S55UJE get wrong mapping (extracts "5" → code "05" = OE5 Oberösterreich, which is wrong)
+
+   - **`/home/achildrenmile/bosarsalog/server/src/db/seed.ts`** (not modified, but important context)
+     - bundeslaender seeded with codes "10"-"18" for: Slowenien, Tschechien, Deutschland, Italien, Slowakei, Kroatien, Liechtenstein, Schweiz, Ungarn
+     - `is_international` flag distinguishes Austrian states (0) from neighbors (1)
+     - 2 Slovenian repeaters already exist (Struška, Hochstuhl with callsign S55UJE)
+
+   - **`/home/achildrenmile/bosarsalog/server/src/db/schema.ts`**
+     - bundeslaender table: `code TEXT PRIMARY KEY, name TEXT, sort_order INTEGER, is_international INTEGER DEFAULT 0`
+     - operators table has `bundesland_code TEXT REFERENCES bundeslaender(code)`
+
+   - **`/tmp/austria.svg`** — Downloaded geo-calibrated Austria SVG from mapsvg.com, viewBox 612.94×313.55, with geoViewBox for coordinate mapping
+
+   - **`/home/achildrenmile/bosarsalog/deploy-production.sh`** — Deploy script that: git pulls on remote, copies .env, docker builds, docker compose up, verifies health
+
+4. Errors and fixes:
+   - **bundesland_code format mismatch**: API returns "01", "02" but map expected "OE1", "OE2". Fixed with `OE${parseInt(bl.bundesland_code, 10)}` in ReportsPage data mapping.
+   - **Server crash (JWT_SECRET)**: Container logs showed `Error: JWT_SECRET must be set in production`. This was because local docker-compose wasn't loading `.env.production`. User clarified to always deploy to production, not locally.
+   - **Hand-drawn SVG paths looked terrible**: User said "die zeichnung sieht fürchterlich aus". Replaced with real geo-calibrated paths from MapSVG (CC BY 4.0).
+   - **Over-reverted**: User asked to "revert back" meaning only the last label alignment commit, but I reverted all 3 map commits. User corrected: "ich wollte nur, dass du den letzten karten commit revertest nicht alle!!!" Fixed by reverting the revert, then reverting just the label commit.
+   - **viewBox typo**: Initially wrote `viewBox="0 700 120 500"` which was completely wrong for the path coordinates. Fixed to `viewBox="15 75 700 310"` for hand-drawn paths, then `viewBox="-5 -5 623 324"` for geo-calibrated paths.
+
+5. Problem Solving:
+   - Solved SVG path quality by sourcing real geographic data from MapSVG
+   - Solved AT→OE ID mapping (AT-1=OE4 Burgenland, not OE1)
+   - Discovered that international callsign mapping is broken: `SUBSTR(o.callsign, 3, 1)` extracts wrong character for non-OE callsigns
+   - Identified that frontend currently silently drops international bundesland codes in the map data mapping
+
+6. All user messages:
+   - "Implement the following plan: # Austria Map Feature — Bundesland Statistics [detailed plan]"
+   - "deploy"
+   - "feature nicht sichtbar"
+   - "finde das feature nicht"
+   - "[Request interrupted] do not deploy locally! deploy on production"
+   - "erstelle eine richtige österreich karte. die zeichnung sieht fürchterlich aus. vorlage?"
+   - "beschriftungsalignment gehört etwas verbessert"
+   - "revert back"
+   - "die karte ist weg. füge sie hinzu"
+   - "[Request interrupted] ich wollte nur, dass du den letzten karten commit revertest nicht alle!!!"
+   - "oe7 etwas mehr runter und oe2 etwas mehr runter von der höhe positionieren"
+   - "da auch nachbarländer bei den übungen mitmachen. füge die nachbarländer in die karte hinzu und erweitere auch die auswertungen nach nachbarland. die rufzeichen sollen natürlich automatisch zugeordnet werden"
+
+7. Pending Tasks:
+   - **Add neighboring countries to the Austria map** as background/context shapes
+   - **Extend statistics to include neighboring countries** in blStats and display them
+   - **Implement automatic callsign-to-country assignment** based on callsign prefix (e.g., S5=Slovenia, DL/DK/DJ/DO=Germany, OK=Czech Republic, HA/HG=Hungary, I=Italy, HB=Switzerland, HB0=Liechtenstein, 9A=Croatia, OM=Slovakia)
+   - **Fix the server-side callsign→bundesland_code mapping** which currently only works for OE callsigns
+   - Write the implementation plan, get approval, then implement
+
+8. Current Work:
+   I am in **plan mode** for the neighboring countries feature. I completed Phase 1 (exploration) with two parallel explore agents:
+   - Agent 1 found the database already has international codes 10-18 seeded, and identified the broken callsign mapping for foreign callsigns
+   - Agent 2 researched SVG sources for neighboring country paths, recommending Natural Earth GeoJSON or mapshaper.org
+   
+   I need to proceed to Phase 2 (design), write the plan to `/home/achildrenmile/.claude/plans/synchronous-enchanting-island.md`, and call ExitPlanMode.
+
+9. Optional Next Step:
+   Continue in plan mode: Launch a Plan agent to design the implementation, then write the final plan and call ExitPlanMode. The plan needs to cover:
+   1. How to get SVG paths for neighboring countries (aligned to Austria's coordinate system)
+   2. Server-side callsign prefix → country code mapping logic
+   3. Frontend changes to display international stats on the map and in tables
+   
+   Direct quote of the task: "da auch nachbarländer bei den übungen mitmachen. füge die nachbarländer in die karte hinzu und erweitere auch die auswertungen nach nachbarland. die rufzeichen sollen natürlich automatisch zugeordnet werden"
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+Please continue the conversation from where we left it off without asking the user any further questions. Continue with the last task that you were asked to work on.
+
+---
+
+[Request interrupted by user for tool use]
