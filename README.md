@@ -111,8 +111,10 @@ Part of the [oeradio.at](https://oeradio.at) ecosystem.
 
 - Searchable operator database (callsign, name, QTH)
 - Quick-add during live entry when callsign not found
-- Inline editing of operator details
+- Inline editing of operator details (Name, QTH) directly from report entry forms
+- Operator Name and QTH displayed alongside callsign in all report lists
 - Paginated browsing (50 per page)
+- Bulk import from official Fernmeldebehörde Rufzeichenliste PDF (see below)
 
 ### Security
 
@@ -262,6 +264,22 @@ Server -> Client (broadcast):
   report_deleted     { report_id, entered_by }
   attendance_updated { attendance, entered_by }
 ```
+
+## Rufzeichen Import (Fernmeldebehörde PDF)
+
+Import operators from the official Austrian Rufzeichenliste PDF published by the Fernmeldebüro:
+
+```bash
+# Update mode (default) — insert new, update existing name/qth
+RUFZEICHEN_MODE=update npm run import:rufzeichen -- /path/to/Rufzeichenliste.pdf
+
+# Skip mode — insert new only, leave existing untouched
+RUFZEICHEN_MODE=skip npm run import:rufzeichen -- /path/to/Rufzeichenliste.pdf
+```
+
+Requires `pdftotext` (poppler-utils). On NixOS: `nix-shell -p nodejs poppler-utils --run "..."`.
+
+The script parses callsign, name, and Standort (QTH) from the PDF table. Bundesland is auto-derived from the callsign prefix. Redacted entries (`*-*-*`) are skipped. The import is idempotent.
 
 ## Seed Data
 

@@ -280,8 +280,31 @@ export default function HilfePage() {
         </p>
       </Section>
 
+      {/* ── Rufzeichen-Import ── */}
+      <Section title="8. Rufzeichen-Import (Fernmeldebehörde)">
+        <p>
+          Rufzeichen können aus der offiziellen <b>Rufzeichenliste der Fernmeldebehörde</b> (PDF) automatisch
+          importiert werden. Das Skript liest die PDF-Datei, extrahiert Rufzeichen, Name und Standort (QTH)
+          und aktualisiert die Operator-Datenbank.
+        </p>
+        <h4 className="font-semibold text-[#1e3a5f] mt-3">Importmodus</h4>
+        <ul className="list-disc ml-5 space-y-1">
+          <li><b>RUFZEICHEN_MODE=update</b> — Neue Rufzeichen einfügen, bestehende mit Name/QTH aktualisieren (Standard)</li>
+          <li><b>RUFZEICHEN_MODE=skip</b> — Nur neue Rufzeichen einfügen, bestehende nicht verändern</li>
+        </ul>
+        <h4 className="font-semibold text-[#1e3a5f] mt-3">Ausführung</h4>
+        <p>
+          Das Bundesland wird automatisch aus dem Rufzeichen-Präfix abgeleitet (OE1 = Wien, OE8 = Kärnten, usw.).
+          Gesperrte Rufzeichen (<code>*-*-*</code>) werden übersprungen.
+          Der Import ist idempotent — bei unverändertem Datenbestand werden keine Änderungen vorgenommen.
+        </p>
+        <p>
+          Voraussetzung: <code>pdftotext</code> (poppler-utils) muss installiert sein.
+        </p>
+      </Section>
+
       {/* ── Rollen ── */}
-      <Section title="8. Benutzerrollen">
+      <Section title="9. Benutzerrollen">
         <div className="overflow-x-auto">
           <table className="w-full text-sm border border-gray-200 mt-2">
             <thead className="bg-gray-50">
@@ -308,7 +331,7 @@ export default function HilfePage() {
       </Section>
 
       {/* ── Tipps ── */}
-      <Section title="9. Tipps für die Praxis">
+      <Section title="10. Tipps für die Praxis">
         <ul className="list-disc ml-5 space-y-2">
           <li>
             <b>Vor der Übung:</b> Admin erstellt die Übung, wählt die Bundesländer und aktiviert die benötigten Umsetzer.
