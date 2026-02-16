@@ -8,6 +8,7 @@ import {
   Title, Tooltip, Legend,
 } from 'chart.js';
 import { Bar, Pie } from 'react-chartjs-2';
+import { toPng } from 'html-to-image';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, PointElement, LineElement, Title, Tooltip, Legend);
 
@@ -59,6 +60,8 @@ export default function ReportsPage() {
   const [showParticipants, setShowParticipants] = useState(true);
   const barChartRef = useRef<any>(null);
   const pieChartRef = useRef<any>(null);
+  const pageRef = useRef<HTMLDivElement>(null);
+  const [exporting, setExporting] = useState(false);
 
   const downloadChart = (chartRef: React.RefObject<any>, filename: string) => {
     const chart = chartRef.current;
@@ -68,6 +71,28 @@ export default function ReportsPage() {
     link.download = filename;
     link.href = url;
     link.click();
+  };
+
+  const downloadFullPage = async () => {
+    if (!pageRef.current || !exercise) return;
+    setExporting(true);
+    try {
+      const url = await toPng(pageRef.current, {
+        backgroundColor: '#f3f4f6',
+        pixelRatio: 2,
+        filter: (node) => {
+          // Hide download/navigation buttons in export
+          if (node instanceof HTMLElement && node.dataset.noExport === 'true') return false;
+          return true;
+        },
+      });
+      const link = document.createElement('a');
+      link.download = `BOS-ARSA_Auswertung_${exercise.date}.png`;
+      link.href = url;
+      link.click();
+    } catch {} finally {
+      setExporting(false);
+    }
   };
 
   useEffect(() => {
@@ -103,15 +128,24 @@ export default function ReportsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div ref={pageRef} className="space-y-6">
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
           <h1 className="text-base sm:text-xl font-bold text-[#1e3a5f]">Auswertung</h1>
           <p className="text-xs sm:text-sm text-gray-500 truncate">{exercise.name} — {formatDate(exercise.date)}</p>
         </div>
-        <Link to={`/exercises/${id}`} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 sm:px-3 py-1.5 rounded text-xs sm:text-sm flex-shrink-0">
-          Zurück
-        </Link>
+        <div className="flex items-center gap-2 flex-shrink-0" data-no-export="true">
+          <button
+            onClick={downloadFullPage}
+            disabled={exporting}
+            className="bg-[#1e3a5f] hover:bg-[#2a4a7f] text-white px-2 sm:px-3 py-1.5 rounded text-xs sm:text-sm disabled:opacity-50"
+          >
+            {exporting ? 'Exportieren...' : 'Seite als Bild'}
+          </button>
+          <Link to={`/exercises/${id}`} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 sm:px-3 py-1.5 rounded text-xs sm:text-sm">
+            Zurück
+          </Link>
+        </div>
       </div>
 
       {stats && (
@@ -153,9 +187,10 @@ export default function ReportsPage() {
                   <button
                     onClick={() => downloadChart(barChartRef, `BOS-ARSA_Stationen_${exercise.date}.png`)}
                     className="text-xs text-gray-400 hover:text-blue-600 flex-shrink-0 ml-2"
-                    title="Als PNG herunterladen"
+                    title="Grafik als PNG herunterladen"
+                    data-no-export="true"
                   >
-                    PNG
+                    Download
                   </button>
                 </div>
                 <div className="h-48 sm:h-[350px]">
@@ -198,9 +233,10 @@ export default function ReportsPage() {
                   <button
                     onClick={() => downloadChart(pieChartRef, `BOS-ARSA_Verteilung_${exercise.date}.png`)}
                     className="text-xs text-gray-400 hover:text-blue-600 flex-shrink-0 ml-2"
-                    title="Als PNG herunterladen"
+                    title="Grafik als PNG herunterladen"
+                    data-no-export="true"
                   >
-                    PNG
+                    Download
                   </button>
                 </div>
                 <div className="h-48 sm:h-[350px] flex items-center justify-center">
@@ -359,9 +395,16 @@ export default function ReportsPage() {
           </div>
 
           {/* Export buttons */}
-          <div className="bg-white rounded-xl shadow p-4">
+          <div className="bg-white rounded-xl shadow p-4" data-no-export="true">
             <h2 className="text-sm font-semibold text-[#1e3a5f] mb-3">Export</h2>
             <div className="flex flex-wrap gap-3">
+              <button
+                onClick={downloadFullPage}
+                disabled={exporting}
+                className="bg-[#1e3a5f] hover:bg-[#2a4a7f] text-white px-4 py-2 rounded text-sm font-medium disabled:opacity-50"
+              >
+                {exporting ? 'Exportieren...' : 'PNG — Gesamte Auswertung'}
+              </button>
               <a
                 href={`/api/v1/export/exercises/${id}/bund`}
                 className="bg-red-100 hover:bg-red-200 text-red-800 px-4 py-2 rounded text-sm font-medium"
