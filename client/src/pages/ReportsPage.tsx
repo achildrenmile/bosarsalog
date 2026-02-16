@@ -9,6 +9,7 @@ import {
 } from 'chart.js';
 import { Bar, Pie } from 'react-chartjs-2';
 import { toPng } from 'html-to-image';
+import AustriaMap from '../components/AustriaMap';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, PointElement, LineElement, Title, Tooltip, Legend);
 
@@ -62,6 +63,7 @@ export default function ReportsPage() {
   const pieChartRef = useRef<any>(null);
   const barCardRef = useRef<HTMLDivElement>(null);
   const pieCardRef = useRef<HTMLDivElement>(null);
+  const mapCardRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
   const [exporting, setExporting] = useState(false);
 
@@ -224,6 +226,32 @@ export default function ReportsPage() {
               </div>
             ))}
           </div>
+
+          {/* Austria Map */}
+          {stats.blStats.length > 0 && (
+            <div ref={mapCardRef} className="bg-white rounded-xl shadow p-3 sm:p-4">
+              <div className="flex items-center justify-between mb-2 sm:mb-3">
+                <h2 className="text-xs sm:text-sm font-semibold text-[#1e3a5f]">
+                  Teilnehmer nach Bundesland
+                </h2>
+                <button
+                  onClick={() => downloadChart(mapCardRef, `BOS-ARSA_Karte_${exercise.date}.png`)}
+                  className="text-xs text-gray-400 hover:text-blue-600 flex-shrink-0 ml-2"
+                  title="Karte als PNG herunterladen"
+                  data-no-export="true"
+                >
+                  Download
+                </button>
+              </div>
+              <AustriaMap
+                data={stats.blStats.map((bl) => ({
+                  code: `OE${parseInt(bl.bundesland_code, 10)}`,
+                  participants: bl.participants,
+                  reports: bl.reports,
+                }))}
+              />
+            </div>
+          )}
 
           {/* Charts */}
           {(() => {
