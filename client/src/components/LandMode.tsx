@@ -50,10 +50,11 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
     }).catch(() => {});
   }, [exerciseId]);
 
-  // Group repeaters by Bundesland
+  // Group repeaters by Bundesland — exclude linked repeaters (those belong to BundMode)
   const repeatersByBl: Record<string, any[]> = {};
   const simplexRepeaters: any[] = [];
   for (const r of repeaters) {
+    if (r.is_linked) continue;
     if (r.type === 'simplex') {
       simplexRepeaters.push(r);
     } else {
