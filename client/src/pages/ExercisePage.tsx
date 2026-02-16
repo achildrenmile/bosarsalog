@@ -16,6 +16,7 @@ export default function ExercisePage() {
   const { id } = useParams<{ id: string }>();
   const [exercise, setExercise] = useState<any>(null);
   const [mode, setMode] = useState<'land' | 'bund'>('land');
+  const oeLinkEnabled = exercise?.oe_link_enabled !== 0;
   const [stats, setStats] = useState<Stats>({ totalParticipants: 0, totalReports: 0, perRepeater: [] });
   const [reports, setReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -139,22 +140,24 @@ export default function ExercisePage() {
 
       <RunningTotals stats={stats} />
 
-      <div className="flex gap-1 bg-white rounded-lg p-1 shadow-sm w-full sm:w-fit">
-        <button
-          onClick={() => setMode('land')}
-          className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 rounded text-xs sm:text-sm font-medium ${mode === 'land' ? 'bg-[#1e3a5f] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
-        >
-          Frequenzen
-        </button>
-        <button
-          onClick={() => setMode('bund')}
-          className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 rounded text-xs sm:text-sm font-medium ${mode === 'bund' ? 'bg-[#1e3a5f] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
-        >
-          OE-Link
-        </button>
-      </div>
+      {oeLinkEnabled && (
+        <div className="flex gap-1 bg-white rounded-lg p-1 shadow-sm w-full sm:w-fit">
+          <button
+            onClick={() => setMode('land')}
+            className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 rounded text-xs sm:text-sm font-medium ${mode === 'land' ? 'bg-[#1e3a5f] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+          >
+            Frequenzen
+          </button>
+          <button
+            onClick={() => setMode('bund')}
+            className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 rounded text-xs sm:text-sm font-medium ${mode === 'bund' ? 'bg-[#1e3a5f] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+          >
+            OE-Link
+          </button>
+        </div>
+      )}
 
-      {mode === 'land' ? (
+      {mode === 'land' || !oeLinkEnabled ? (
         <LandMode
           exerciseId={id!}
           repeaters={exercise.repeaters || []}

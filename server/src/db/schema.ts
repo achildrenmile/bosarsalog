@@ -198,6 +198,9 @@ export function runMigrations(db: Database.Database): void {
   if (!cols.some((c: any) => c.name === 'name')) {
     db.exec("ALTER TABLE exercises ADD COLUMN name TEXT");
   }
+  if (!cols.some((c: any) => c.name === 'oe_link_enabled')) {
+    db.exec("ALTER TABLE exercises ADD COLUMN oe_link_enabled INTEGER DEFAULT 1");
+  }
 
   const repCols = db.prepare("PRAGMA table_info(repeaters)").all() as any[];
   if (!repCols.some((c: any) => c.name === 'bundesland_code')) {
