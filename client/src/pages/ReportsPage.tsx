@@ -67,7 +67,8 @@ export default function ReportsPage() {
 
   const createExportHeader = () => {
     const header = document.createElement('div');
-    header.style.cssText = 'display:flex;align-items:center;gap:12px;padding:16px 24px;background:#1e3a5f;border-radius:8px 8px 0 0;';
+    header.setAttribute('data-export-inject', 'true');
+    header.style.cssText = 'display:flex;align-items:center;gap:12px;padding:16px 24px;background:#1e3a5f;border-radius:8px;margin-bottom:16px;';
     const img = document.createElement('img');
     img.src = '/bosarsa.jpeg';
     img.style.cssText = 'height:36px;border-radius:4px;';
@@ -87,41 +88,36 @@ export default function ReportsPage() {
 
   const createExportFooter = () => {
     const footer = document.createElement('div');
+    footer.setAttribute('data-export-inject', 'true');
     footer.style.cssText = 'text-align:center;padding:12px 0;margin-top:16px;border-top:1px solid #e5e7eb;font-size:12px;color:#6b7280;';
     footer.textContent = 'oeradio.at  \u00B7  bos-arsa.at';
     return footer;
   };
 
-  const exportWithBranding = async (sourceEl: HTMLElement, filename: string) => {
+  const downloadChart = async (cardRef: React.RefObject<HTMLDivElement | null>, filename: string) => {
+    if (!cardRef.current || !exercise) return;
+    setExporting(true);
+    const header = createExportHeader();
+    const footer = createExportFooter();
+    // Wrap the card temporarily
     const wrapper = document.createElement('div');
-    wrapper.style.cssText = 'position:absolute;left:-9999px;top:0;background:#f3f4f6;padding:24px;min-width:800px;';
-    wrapper.appendChild(createExportHeader());
-    const content = document.createElement('div');
-    content.style.cssText = 'padding:16px 0;';
-    const clone = sourceEl.cloneNode(true) as HTMLElement;
-    // Remove no-export elements from clone
-    clone.querySelectorAll('[data-no-export="true"]').forEach(el => el.remove());
-    content.appendChild(clone);
-    wrapper.appendChild(content);
-    wrapper.appendChild(createExportFooter());
-    document.body.appendChild(wrapper);
+    wrapper.style.cssText = 'padding:24px;background:#f3f4f6;';
+    const parent = cardRef.current.parentNode!;
+    const next = cardRef.current.nextSibling;
+    parent.insertBefore(wrapper, cardRef.current);
+    wrapper.appendChild(header);
+    wrapper.appendChild(cardRef.current);
+    wrapper.appendChild(footer);
     try {
       const url = await toPng(wrapper, { backgroundColor: '#f3f4f6', pixelRatio: 2 });
       const link = document.createElement('a');
       link.download = filename;
       link.href = url;
       link.click();
-    } finally {
-      document.body.removeChild(wrapper);
-    }
-  };
-
-  const downloadChart = async (cardRef: React.RefObject<HTMLDivElement | null>, filename: string) => {
-    if (!cardRef.current || !exercise) return;
-    setExporting(true);
-    try {
-      await exportWithBranding(cardRef.current, filename);
     } catch {} finally {
+      // Move card back to original position
+      if (next) parent.insertBefore(cardRef.current, next); else parent.appendChild(cardRef.current);
+      wrapper.remove();
       setExporting(false);
     }
   };
@@ -129,9 +125,29 @@ export default function ReportsPage() {
   const downloadFullPage = async () => {
     if (!pageRef.current || !exercise) return;
     setExporting(true);
+    const header = createExportHeader();
+    const footer = createExportFooter();
+    // Inject header/footer into actual DOM
+    pageRef.current.style.padding = '24px';
+    pageRef.current.insertBefore(header, pageRef.current.firstChild);
+    pageRef.current.appendChild(footer);
     try {
-      await exportWithBranding(pageRef.current, `BOS-ARSA_Auswertung_${exercise.date}.png`);
+      const url = await toPng(pageRef.current, {
+        backgroundColor: '#f3f4f6',
+        pixelRatio: 2,
+        filter: (node) => {
+          if (node instanceof HTMLElement && node.dataset.noExport === 'true') return false;
+          return true;
+        },
+      });
+      const link = document.createElement('a');
+      link.download = `BOS-ARSA_Auswertung_${exercise.date}.png`;
+      link.href = url;
+      link.click();
     } catch {} finally {
+      header.remove();
+      footer.remove();
+      if (pageRef.current) pageRef.current.style.padding = '';
       setExporting(false);
     }
   };
