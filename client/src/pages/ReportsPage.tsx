@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { apiFetch } from '../services/api';
 import {
@@ -57,6 +57,18 @@ export default function ReportsPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [showParticipants, setShowParticipants] = useState(true);
+  const barChartRef = useRef<any>(null);
+  const pieChartRef = useRef<any>(null);
+
+  const downloadChart = (chartRef: React.RefObject<any>, filename: string) => {
+    const chart = chartRef.current;
+    if (!chart) return;
+    const url = chart.toBase64Image('image/png', 1);
+    const link = document.createElement('a');
+    link.download = filename;
+    link.href = url;
+    link.click();
+  };
 
   useEffect(() => {
     if (!id) return;
@@ -134,11 +146,21 @@ export default function ReportsPage() {
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Bar chart: Stationen + Rapporte */}
               <div className="bg-white rounded-xl shadow p-3 sm:p-4">
-                <h2 className="text-xs sm:text-sm font-semibold text-[#1e3a5f] mb-2 sm:mb-3">
-                  BOS-ARSA Krisenkommunikationsübung am {new Date(exercise.date + 'T00:00:00').toLocaleDateString('de-AT')}
-                </h2>
+                <div className="flex items-center justify-between mb-2 sm:mb-3">
+                  <h2 className="text-xs sm:text-sm font-semibold text-[#1e3a5f]">
+                    BOS-ARSA Krisenkommunikationsübung am {new Date(exercise.date + 'T00:00:00').toLocaleDateString('de-AT')}
+                  </h2>
+                  <button
+                    onClick={() => downloadChart(barChartRef, `BOS-ARSA_Stationen_${exercise.date}.png`)}
+                    className="text-xs text-gray-400 hover:text-blue-600 flex-shrink-0 ml-2"
+                    title="Als PNG herunterladen"
+                  >
+                    PNG
+                  </button>
+                </div>
                 <div className="h-48 sm:h-[350px]">
                   <Bar
+                    ref={barChartRef}
                     data={{
                       labels: chartData.map(d => d.label),
                       datasets: [
@@ -169,11 +191,21 @@ export default function ReportsPage() {
 
               {/* Pie chart: Rapporte distribution */}
               <div className="bg-white rounded-xl shadow p-3 sm:p-4">
-                <h2 className="text-xs sm:text-sm font-semibold text-[#1e3a5f] mb-2 sm:mb-3">
-                  Rapporte-Verteilung nach {chartLevel}
-                </h2>
+                <div className="flex items-center justify-between mb-2 sm:mb-3">
+                  <h2 className="text-xs sm:text-sm font-semibold text-[#1e3a5f]">
+                    Rapporte-Verteilung nach {chartLevel}
+                  </h2>
+                  <button
+                    onClick={() => downloadChart(pieChartRef, `BOS-ARSA_Verteilung_${exercise.date}.png`)}
+                    className="text-xs text-gray-400 hover:text-blue-600 flex-shrink-0 ml-2"
+                    title="Als PNG herunterladen"
+                  >
+                    PNG
+                  </button>
+                </div>
                 <div className="h-48 sm:h-[350px] flex items-center justify-center">
                   <Pie
+                    ref={pieChartRef}
                     data={{
                       labels: chartData.filter(d => d.reports > 0).map(d => d.label),
                       datasets: [{
