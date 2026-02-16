@@ -77,12 +77,13 @@ exercisesRouter.get('/:id', (req, res) => {
 // Update exercise notes/name (admin only)
 exercisesRouter.patch('/:id', requireRole('admin'), (req, res) => {
   const db = getDb();
-  const { notes, name, oe_link_enabled } = req.body;
+  const { notes, name, oe_link_enabled, organisator } = req.body;
   const updates: string[] = [];
   const params: any[] = [];
   if (notes !== undefined) { updates.push('notes = ?'); params.push(notes); }
   if (name !== undefined) { updates.push('name = ?'); params.push(name); }
   if (oe_link_enabled !== undefined) { updates.push('oe_link_enabled = ?'); params.push(oe_link_enabled ? 1 : 0); }
+  if (organisator !== undefined) { updates.push('organisator = ?'); params.push(organisator || null); }
   if (updates.length === 0) {
     res.status(400).json({ error: 'Keine Änderungen' });
     return;

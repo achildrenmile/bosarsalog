@@ -20,7 +20,7 @@ export default function ExercisePage() {
   const [stats, setStats] = useState<Stats>({ totalParticipants: 0, totalReports: 0, perRepeater: [] });
   const [reports, setReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [opCallsign, setOpCallsign] = useState('');
+  const [organisator, setOrganisator] = useState('');
   const socketRef = useRef(getSocket());
 
   const refreshStats = useCallback(async () => {
@@ -38,8 +38,7 @@ export default function ExercisePage() {
       .then(data => {
         setExercise(data);
         setReports(data.reports || []);
-        const firstOp = (data.repeaters || []).find((r: any) => r.operator_callsign);
-        if (firstOp) setOpCallsign(firstOp.operator_callsign);
+        if (data.organisator) setOrganisator(data.organisator);
       })
       .catch(() => {})
       .finally(() => setLoading(false));
@@ -90,18 +89,12 @@ export default function ExercisePage() {
     refreshStats();
   }, [id, refreshStats]);
 
-  const updateOpCallsign = async (val: string) => {
-    const reps = exercise?.repeaters || [];
-    for (const r of reps) {
-      await apiFetch(`/api/v1/exercises/${id}/repeaters/${r.repeater_id}`, {
-        method: 'PATCH',
-        body: JSON.stringify({ operator_callsign: val || null }),
-      });
-    }
-    setExercise((prev: any) => prev ? {
-      ...prev,
-      repeaters: prev.repeaters?.map((r: any) => ({ ...r, operator_callsign: val || null })),
-    } : null);
+  const updateOrganisator = async (val: string) => {
+    await apiFetch(`/api/v1/exercises/${id}`, {
+      method: 'PATCH',
+      body: JSON.stringify({ organisator: val || null }),
+    });
+    setExercise((prev: any) => prev ? { ...prev, organisator: val || null } : null);
   };
 
   if (loading) return <p className="text-gray-500 p-4">Laden...</p>;
@@ -116,19 +109,17 @@ export default function ExercisePage() {
           <span className="block sm:inline text-sm sm:text-xl">{new Date(exercise.date + 'T00:00:00').toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
         </h1>
         <div className="flex items-center gap-2 flex-wrap">
-          {mode === 'land' && (
-            <div className="flex items-center gap-1.5">
-              <label className={`text-xs ${opCallsign ? 'text-gray-500' : 'text-[#c8102e] font-semibold'}`}>OP:</label>
-              <input
-                type="text"
-                value={opCallsign}
-                onChange={e => setOpCallsign(e.target.value.toUpperCase())}
-                onBlur={e => updateOpCallsign(e.target.value.toUpperCase())}
-                placeholder="Rufzeichen"
-                className={`border rounded px-2 py-1 text-sm font-mono uppercase w-24 sm:w-28 focus:outline-none focus:ring-2 focus:ring-blue-500 ${opCallsign ? 'border-gray-300' : 'border-[#c8102e] placeholder-[#c8102e]/60'}`}
-              />
-            </div>
-          )}
+          <div className="flex items-center gap-1.5">
+            <label className={`text-xs ${organisator ? 'text-gray-500' : 'text-[#c8102e] font-semibold'}`}>Organisator:</label>
+            <input
+              type="text"
+              value={organisator}
+              onChange={e => setOrganisator(e.target.value.toUpperCase())}
+              onBlur={e => updateOrganisator(e.target.value.toUpperCase())}
+              placeholder="Rufzeichen"
+              className={`border rounded px-2 py-1 text-sm font-mono uppercase w-24 sm:w-28 focus:outline-none focus:ring-2 focus:ring-blue-500 ${organisator ? 'border-gray-300' : 'border-[#c8102e] placeholder-[#c8102e]/60'}`}
+            />
+          </div>
           <Link to={`/exercises/${id}/setup`} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 sm:px-3 py-1 rounded text-xs sm:text-sm">
             Einrichten
           </Link>
