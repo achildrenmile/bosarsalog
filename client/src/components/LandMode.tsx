@@ -272,7 +272,11 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
                               ) : (
                                 <>
                                   <td className="py-0.5 text-gray-400 w-4">{idx + 1}</td>
-                                  <td className="py-0.5 font-mono font-medium cursor-pointer" onClick={() => handleEdit(r)}>{r.callsign}</td>
+                                  <td className="py-0.5 cursor-pointer" onClick={() => handleEdit(r)}>
+                                    <span className="font-mono font-medium">{r.callsign}</span>
+                                    {r.operator_name && <span className="ml-1 text-gray-500 text-xs">{r.operator_name}</span>}
+                                    {r.operator_qth && <span className="ml-1 text-gray-400 text-xs hidden sm:inline">{r.operator_qth}</span>}
+                                  </td>
                                   <td className="py-0.5 font-mono text-gray-500 w-24 cursor-pointer" onClick={() => handleEdit(r)}>
                                     {r.readability && r.strength ? `${r.readability}/${r.strength}${r.db_over_s9 || ''}` : '—'}
                                   </td>
@@ -410,7 +414,11 @@ function BezirkRow({ bezirk, reports, repeaterId, onSubmit, onEdit, onDelete, ed
                 ) : (
                   <>
                     <td className="py-0.5 text-gray-400 w-4">{idx + 1}</td>
-                    <td className="py-0.5 font-mono font-medium cursor-pointer" onClick={() => onEdit(r)}>{r.callsign}</td>
+                    <td className="py-0.5 cursor-pointer" onClick={() => onEdit(r)}>
+                      <span className="font-mono font-medium">{r.callsign}</span>
+                      {r.operator_name && <span className="ml-1 text-gray-500 text-xs">{r.operator_name}</span>}
+                      {r.operator_qth && <span className="ml-1 text-gray-400 text-xs hidden sm:inline">{r.operator_qth}</span>}
+                    </td>
                     <td className="py-0.5 font-mono text-gray-500 w-16 sm:w-24 cursor-pointer" onClick={() => onEdit(r)}>
                       {r.readability && r.strength ? `${r.readability}/${r.strength}${r.db_over_s9 || ''}` : '—'}
                     </td>
@@ -535,7 +543,11 @@ function FlatReportRow({ reports, repeaterId, onSubmit, onEdit, onDelete, editin
                 ) : (
                   <>
                     <td className="py-0.5 text-gray-400 w-4">{idx + 1}</td>
-                    <td className="py-0.5 font-mono font-medium cursor-pointer" onClick={() => onEdit(r)}>{r.callsign}</td>
+                    <td className="py-0.5 cursor-pointer" onClick={() => onEdit(r)}>
+                      <span className="font-mono font-medium">{r.callsign}</span>
+                      {r.operator_name && <span className="ml-1 text-gray-500 text-xs">{r.operator_name}</span>}
+                      {r.operator_qth && <span className="ml-1 text-gray-400 text-xs hidden sm:inline">{r.operator_qth}</span>}
+                    </td>
                     <td className="py-0.5 font-mono text-gray-500 w-16 sm:w-24 cursor-pointer" onClick={() => onEdit(r)}>
                       {r.readability && r.strength ? `${r.readability}/${r.strength}${r.db_over_s9 || ''}` : '—'}
                     </td>

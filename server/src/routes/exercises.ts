@@ -52,7 +52,7 @@ exercisesRouter.get('/:id', (req, res) => {
   `).all(req.params.id);
 
   const reports = db.prepare(`
-    SELECT sr.*, o.callsign, o.name as operator_name, o.bezirk_code, o.bundesland_code,
+    SELECT sr.*, o.callsign, o.name as operator_name, o.qth as operator_qth, o.bezirk_code, o.bundesland_code,
       r.short_name as repeater_name, r.bundesland_code as repeater_bundesland_code,
       ep.abbreviation as einstiegspunkt_abbr, ep.site_name as einstiegspunkt_name
     FROM signal_reports sr
@@ -205,7 +205,7 @@ exercisesRouter.delete('/:id/repeaters/:rid', requireRole('admin'), (req, res) =
 exercisesRouter.get('/:id/reports', (req, res) => {
   const db = getDb();
   const reports = db.prepare(`
-    SELECT sr.*, o.callsign, o.name as operator_name, o.bezirk_code, o.bundesland_code,
+    SELECT sr.*, o.callsign, o.name as operator_name, o.qth as operator_qth, o.bezirk_code, o.bundesland_code,
       r.short_name as repeater_name, r.bundesland_code as repeater_bundesland_code,
       ep.abbreviation as einstiegspunkt_abbr, ep.site_name as einstiegspunkt_name
     FROM signal_reports sr
@@ -276,7 +276,7 @@ exercisesRouter.patch('/:id/reports/:rid', (req, res) => {
   params.push(req.params.rid);
   db.prepare(`UPDATE signal_reports SET ${updates.join(', ')} WHERE id = ?`).run(...params);
   const report = db.prepare(`
-    SELECT sr.*, o.callsign, o.name as operator_name, o.bezirk_code, o.bundesland_code,
+    SELECT sr.*, o.callsign, o.name as operator_name, o.qth as operator_qth, o.bezirk_code, o.bundesland_code,
       r.short_name as repeater_name, r.bundesland_code as repeater_bundesland_code,
       ep.abbreviation as einstiegspunkt_abbr, ep.site_name as einstiegspunkt_name
     FROM signal_reports sr
