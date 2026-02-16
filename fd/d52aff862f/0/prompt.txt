@@ -1,0 +1,266 @@
+Implement the following plan:
+
+# Nachbarländer auf der Karte + automatische Rufzeichen-Zuordnung
+
+## Context
+Nachbarländer nehmen an BOS-ARSA-Übungen teil (z.B. S55UJE aus Slowenien). Die Karte zeigt derzeit nur Österreichs 9 Bundesländer. Ausländische Teilnehmer werden falsch zugeordnet (z.B. S55UJE → "05" OÖ statt "10" Slowenien), weil der Server `SUBSTR(o.callsign, 3, 1)` verwendet, was nur für OE-Rufzeichen funktioniert.
+
+Ziel: Nachbarländer als Hintergrund auf der Karte zeigen, Statistiken erweitern, Rufzeichen automatisch korrekt zuordnen.
+
+## Changes
+
+### 1. Server: Callsign-to-Country Utility (NEW FILE)
+**`server/src/utils/callsignCountry.ts`**
+
+```typescript
+export function callsignToCountryCode(callsign: string): string | null
+```
+
+Mapping (longest prefix first):
+- `OE1`-`OE9` → `"01"`-`"09"` (Austrian states)
+- `HB0` → `"16"` (Liechtenstein — before HB!)
+- `HB` → `"17"` (Schweiz)
+- `S5` → `"10"` (Slowenien)
+- `OK`/`OL` → `"11"` (Tschechien)
+- `D[A-R]` → `"12"` (Deutschland)
+- `I` → `"13"` (Italien)
+- `OM` → `"14"` (Slowakei)
+- `9A` → `"15"` (Kroatien)
+- `HA`/`HG` → `"18"` (Ungarn)
+
+Strip `/P`, `/M`, `/OE8` suffixes before matching.
+
+### 2. Server: Migration to backfill bundesland_code
+**`server/src/db/schema.ts`** — add after existing migrations
+
+- SELECT all operators WHERE `bundesland_code IS NULL`
+- For each, compute code via `callsignToCountryCode()` and UPDATE
+- Also used for OE callsigns that were stored with null bundesland_code
+
+### 3. Server: Use utility in operator creation
+**`server/src/routes/operators.ts`** — POST handler
+
+- If `bundesland_code` not provided, auto-derive from callsign
+- `const derivedBl = bundesland_code || callsignToCountryCode(callsign)`
+
+### 4. Server: Simplify stats SQL
+**`server/src/routes/exercises.ts`** — lines 128-155
+
+Remove broken `'0' || SUBSTR(o.callsign, 3, 1)` fallback. After migration, all operators have `bundesland_code`, so queries simplify to:
+
+```sql
+-- blStats: just use o.bundesland_code directly
+LEFT JOIN bundeslaender bl ON bl.code = o.bundesland_code
+GROUP BY o.bundesland_code
+
+-- participants: remove the bl2 double-join hack
+LEFT JOIN bundeslaender bl ON bl.code = o.bundesland_code
+```
+
+### 5. Frontend: Neighbor country SVG paths
+**`client/src/components/AustriaMap.tsx`**
+
+- Use the known geo-projection: `svgX = (lon - 9.5009) / 7.6623 * 612.94`, `svgY = (49.0153 - lat) / 2.6440 * 313.55`
+- Get GeoJSON from Natural Earth (110m simplified), project to SVG, clip to expanded area
+- Hardcode resulting paths as `NEIGHBOR_PATHS` (codes `"10"`-`"18"`)
+- Expand viewBox from `"-5 -5 623 324"` to ~`"-100 -100 900 550"` to show neighbor borders
+- Render neighbors as background layer: light gray fill (`#e5e7eb`), thin gray stroke, 0.6 opacity
+- Countries with data: fill with blue scale (same as Austrian states)
+- Change internal key scheme from `"OE1"`-`"OE9"` to `"01"`-`"09"` (DB codes)
+- Add `BL_SHORT` map for display labels: `"01"→"OE1"`, `"10"→"SI"`, `"12"→"DE"`, etc.
+
+### 6. Frontend: Fix ReportsPage data mapping
+**`client/src/pages/ReportsPage.tsx`** — line 248
+
+Change from:
+```tsx
+code: `OE${parseInt(bl.bundesland_code, 10)}`
+```
+To:
+```tsx
+code: bl.bundesland_code
+```
+
+Update heading: "Teilnehmer nach Bundesland / Land"
+
+## Files Modified
+1. `server/src/utils/callsignCountry.ts` (NEW)
+2. `server/src/db/schema.ts` (migration)
+3. `server/src/routes/operators.ts` (auto-derive bundesland_code)
+4. `server/src/routes/exercises.ts` (simplify SQL)
+5. `client/src/components/AustriaMap.tsx` (add neighbors, change keys)
+6. `client/src/pages/ReportsPage.tsx` (fix data mapping)
+
+## Verification
+1. `nix-shell -p nodejs --run "npm run build"` compiles
+2. Server starts, migration backfills existing operators
+3. Creating operator with foreign callsign auto-assigns correct country
+4. ReportsPage shows neighbor countries on map with correct stats
+5. Austrian Bundesländer still display correctly
+6. Deploy to production via `bash deploy-production.sh`
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+
+---
+
+deploy to production
+
+---
+
+❯ use real map data. this looks ugly!!
+
+---
+
+move oe4 a bit more left
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me chronologically analyze the conversation:
+
+1. **Initial Plan Implementation Request**: The user provided a detailed plan for adding neighbor countries to the Austria map and fixing callsign-to-country assignment. The plan had 6 main changes across server and client code.
+
+2. **Implementation Phase**:
+   - Created `server/src/utils/callsignCountry.ts` - new utility file mapping callsign prefixes to country codes
+   - Modified `server/src/db/schema.ts` - added migration to backfill null bundesland_code
+   - Modified `server/src/routes/operators.ts` - auto-derive bundesland_code on operator creation, removed broken SUBSTR fallback from GET search
+   - Modified `server/src/routes/exercises.ts` - simplified blStats and participants SQL queries
+   - Modified `client/src/components/AustriaMap.tsx` - major rewrite with neighbor countries, new key scheme
+   - Modified `client/src/pages/ReportsPage.tsx` - fixed data mapping, updated heading
+
+3. **First Deploy**: User asked to deploy. Committed, pushed, ran `bash deploy-production.sh` successfully.
+
+4. **User Feedback - "use real map data. this looks ugly!!"**: The 110m Natural Earth data looked terrible - blocky borders that didn't align with detailed Austrian paths.
+
+5. **Fix Attempt 1 - 10m data**: Generated paths from 10m Natural Earth data. Output was 148KB - too large for React component.
+
+6. **Fix Attempt 2 - Simplified 10m data**: Applied Douglas-Peucker simplification (tolerance 2.0 SVG units for visible, 5.0 for off-screen) bringing total to ~24KB. Dropped tiny islands. This produced good quality paths.
+
+7. **Second Deploy**: Updated AustriaMap.tsx with simplified 10m paths, built, committed, pushed, deployed successfully.
+
+8. **Latest User Request**: "move oe4 a bit more left" - This refers to moving the OE4 (Burgenland) label position on the map. The label is at `labelX: 570, labelY: 190` in the BL_PATHS['04'] entry. The user wants it shifted left (lower labelX value). This was the last request before the summary request.
+
+Key files:
+- `server/src/utils/callsignCountry.ts` (NEW)
+- `server/src/db/schema.ts` (modified)
+- `server/src/routes/operators.ts` (modified)
+- `server/src/routes/exercises.ts` (modified)
+- `client/src/components/AustriaMap.tsx` (major rewrite)
+- `client/src/pages/ReportsPage.tsx` (modified)
+
+The current state: Everything is deployed. The user's last request to "move oe4 a bit more left" has NOT been implemented yet.
+
+Summary:
+1. Primary Request and Intent:
+   The user requested implementation of a detailed plan to add neighbor countries (Germany, Czech Republic, Slovakia, Hungary, Slovenia, Italy, Switzerland, Liechtenstein, Croatia) to the Austria map in BOS-ARSA Log, fix automatic callsign-to-country assignment for foreign operators (e.g., S55UJE from Slovenia was being incorrectly assigned to OE5 Oberösterreich), and simplify broken SQL queries. After initial deployment, the user demanded higher quality map data ("use real map data. this looks ugly!!"). After fixing with 10m Natural Earth data, the user requested moving the OE4 (Burgenland) label position to the left.
+
+2. Key Technical Concepts:
+   - Callsign prefix mapping (OE1-OE9 for Austrian states, S5 for Slovenia, DA-DR for Germany, etc.)
+   - Natural Earth GeoJSON data (110m vs 10m resolution)
+   - Geo-projection formula: `svgX = (lon - 9.5009) / 7.6623 * 612.94`, `svgY = (49.0153 - lat) / 2.6440 * 313.55`
+   - Douglas-Peucker line simplification algorithm (tolerance 2.0 SVG units visible, 5.0 off-screen)
+   - SVG path data, viewBox expansion, clipPath for clipping
+   - SQLite migration pattern using PRAGMA table_info checks
+   - DB codes: Austrian Bundesländer "01"-"09", neighbor countries "10"-"18"
+   - Key scheme change: map keys went from "OE1"-"OE9" to DB codes "01"-"09"
+
+3. Files and Code Sections:
+   - **`server/src/utils/callsignCountry.ts`** (NEW FILE)
+     - Core utility for mapping callsign prefixes to bundesland/country codes
+     - Strips `/P`, `/M`, `/OE8` suffixes before matching
+     - Longest prefix first matching (HB0 before HB)
+     ```typescript
+     const PREFIX_MAP: [RegExp, string][] = [
+       [/^OE1/, '01'], [/^OE2/, '02'], ..., [/^OE9/, '09'],
+       [/^HB0/, '16'], [/^HB/, '17'], [/^S5/, '10'],
+       [/^OK/, '11'], [/^OL/, '11'], [/^D[A-R]/, '12'],
+       [/^I/, '13'], [/^OM/, '14'], [/^9A/, '15'],
+       [/^HA/, '18'], [/^HG/, '18'],
+     ];
+     export function callsignToCountryCode(callsign: string): string | null {
+       const base = callsign.toUpperCase().replace(/\/.*$/, '');
+       for (const [re, code] of PREFIX_MAP) {
+         if (re.test(base)) return code;
+       }
+       return null;
+     }
+     ```
+
+   - **`server/src/db/schema.ts`** (MODIFIED)
+     - Added import for callsignToCountryCode
+     - Added migration at end of `runMigrations()` to backfill operators with null bundesland_code
+     ```typescript
+     import { callsignToCountryCode } from '../utils/callsignCountry.js';
+     // ... at end of runMigrations():
+     const nullBlOps = db.prepare("SELECT id, callsign FROM operators WHERE bundesland_code IS NULL").all() as { id: number; callsign: string }[];
+     if (nullBlOps.length > 0) {
+       const updateBl = db.prepare("UPDATE operators SET bundesland_code = ? WHERE id = ?");
+       const backfill = db.transaction(() => {
+         for (const op of nullBlOps) {
+           const code = callsignToCountryCode(op.callsign);
+           if (code) updateBl.run(code, op.id);
+         }
+       });
+       backfill();
+     }
+     ```
+
+   - **`server/src/routes/operators.ts`** (MODIFIED)
+     - Added import for callsignToCountryCode
+     - POST handler: auto-derives bundesland_code from callsign when not provided: `const derivedBl = bundesland_code || callsignToCountryCode(callsign) || null;`
+     - GET search: removed broken `OR (o.bundesland_code IS NULL AND bl.code = '0' || SUBSTR(o.callsign, 3, 1))` fallback from JOIN
+
+   - **`server/src/routes/exercises.ts`** (MODIFIED)
+     - blStats query simplified: removed `COALESCE(...SUBSTR...)` fallbacks, now uses `o.bundesland_code` directly with simple `LEFT JOIN bundeslaender bl ON bl.code = o.bundesland_code`
+     - participants query simplified: removed double-join hack (`bl2`), now single join on `o.bundesland_code`
+
+   - **`client/src/components/AustriaMap.tsx`** (MAJOR REWRITE)
+     - Changed key scheme from "OE1"-"OE9" to DB codes "01"-"09"
+     - Added `BL_SHORT` map for display labels: `"01"→"OE1"`, `"10"→"SI"`, etc.
+     - Added `BL_NAMES` expanded with neighbor country names
+     - Added `NEIGHBOR_PATHS` with 10m Natural Earth data (Douglas-Peucker simplified, ~24KB total)
+     - Expanded viewBox from `"-5 -5 623 324"` to `"-300 -120 1100 560"`
+     - Added SVG `<clipPath>` for clipping
+     - Neighbors rendered as background layer (gray when empty, blue-scale with data)
+     - Extracted `showTooltip` helper function shared between Austrian and neighbor paths
+     - OE4 Burgenland label: `labelX: 570, labelY: 190`
+
+   - **`client/src/pages/ReportsPage.tsx`** (MODIFIED)
+     - Changed `code: \`OE${parseInt(bl.bundesland_code, 10)}\`` to `code: bl.bundesland_code`
+     - Updated heading from "Teilnehmer nach Bundesland" to "Teilnehmer nach Bundesland / Land"
+
+4. Errors and fixes:
+   - **110m Natural Earth data looked ugly**: User said "use real map data. this looks ugly!!" - blocky borders didn't align with detailed Austrian paths. Fixed by switching to 10m data.
+   - **10m data too large (148KB)**: Full 10m paths were too big for React component. Fixed by applying Douglas-Peucker simplification (tolerance 2.0 SVG units for visible areas, 5.0 for off-screen), dropping tiny island polygons (bbox < 15 SVG units), reducing to ~24KB.
+
+5. Problem Solving:
+   - Solved foreign callsign misassignment (S55UJE → "05" OÖ) with proper prefix-based mapping utility
+   - Solved broken SQL SUBSTR fallback by backfilling all operators and simplifying queries
+   - Solved map data quality by progressing from 110m → 10m → simplified 10m Natural Earth data
+   - Scripts for generating/simplifying paths saved at `/tmp/gen_neighbors_10m.mjs` and `/tmp/simplify_neighbors.mjs`
+
+6. All user messages:
+   - "Implement the following plan: [detailed plan for Nachbarländer auf der Karte + automatische Rufzeichen-Zuordnung]"
+   - "deploy to production"
+   - "use real map data. this looks ugly!!"
+   - "move oe4 a bit more left"
+
+7. Pending Tasks:
+   - Move OE4 (Burgenland) label position to the left on the map (reduce `labelX` from 570 to something smaller like 555-560)
+   - Deploy the label change to production
+
+8. Current Work:
+   The user's most recent request was: **"move oe4 a bit more left"**. This refers to the OE4 Burgenland label in `client/src/components/AustriaMap.tsx` in the `BL_PATHS['04']` entry, currently at `labelX: 570, labelY: 190`. This has NOT been implemented yet - the summary request interrupted this work.
+
+9. Optional Next Step:
+   Edit `client/src/components/AustriaMap.tsx`, changing the OE4 entry's `labelX` from `570` to approximately `555` (moving it left), then build, commit, push, and deploy. The user said: **"move oe4 a bit more left"**.
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+Please continue the conversation from where we left it off without asking the user any further questions. Continue with the last task that you were asked to work on.
+
+---
+
+deploy to production
