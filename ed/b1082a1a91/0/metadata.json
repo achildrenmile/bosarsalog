@@ -1,0 +1,52 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "edb1082a1a91",
+  "session_id": "461ccc04-e951-4f15-b21f-f1c732dd3667",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-16T07:29:10.777231345Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "client/index.html",
+    "client/src/App.tsx",
+    "client/src/components/BundMode.tsx",
+    "client/src/components/LandMode.tsx",
+    "client/src/components/Layout.tsx",
+    "client/src/hooks/useAuth.tsx",
+    "client/src/pages/DashboardPage.tsx",
+    "client/src/pages/DatenschutzPage.tsx",
+    "client/src/pages/ExercisePage.tsx",
+    "client/src/pages/ExerciseSetupPage.tsx",
+    "client/src/pages/ImpressumPage.tsx",
+    "client/src/pages/LoginPage.tsx",
+    "client/src/pages/ReportsPage.tsx",
+    "client/src/services/api.ts",
+    "server/src/db/schema.ts",
+    "server/src/db/seed.ts",
+    "server/src/index.ts",
+    "server/src/middleware/auth.ts",
+    "server/src/routes/auth.ts",
+    "server/src/routes/exercises.ts",
+    "server/src/services/socket.ts"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "11c6f5b8-8752-4feb-87e7-92b3a84cafc4",
+  "checkpoint_transcript_start": 2879,
+  "transcript_lines_at_start": 2879,
+  "token_usage": {
+    "input_tokens": 22,
+    "cache_creation_tokens": 11023,
+    "cache_read_tokens": 2622390,
+    "output_tokens": 2435,
+    "api_call_count": 18
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-16T07:29:09.794385543Z",
+    "agent_lines": 0,
+    "human_added": 168,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 168,
+    "agent_percentage": 0
+  }
+}
