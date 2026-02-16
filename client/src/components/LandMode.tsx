@@ -300,12 +300,7 @@ function RepeaterRow({ repeater, reports, exerciseId, onSubmit, onEdit, onDelete
                 ) : (
                   <>
                     <td className="py-0.5 text-gray-400 w-4">{idx + 1}</td>
-                    <td className="py-0.5 font-mono font-medium cursor-pointer" onClick={() => onEdit(r)}>
-                      {r.callsign}
-                      {r.bezirk_code && (
-                        <span className="ml-1 text-xs bg-gray-200 rounded px-1">{r.bezirk_code}</span>
-                      )}
-                    </td>
+                    <td className="py-0.5 font-mono font-medium cursor-pointer" onClick={() => onEdit(r)}>{r.callsign}</td>
                     <td className="py-0.5 font-mono text-gray-500 w-24 cursor-pointer" onClick={() => onEdit(r)}>
                       {r.readability && r.strength ? `${r.readability}/${r.strength}${r.db_over_s9 || ''}` : '—'}
                     </td>
