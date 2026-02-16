@@ -1,0 +1,1188 @@
+Implement the following plan:
+
+# LandMode Refactoring: Repeater-Grid wie BundMode
+
+## Context
+LandMode (Umsetzer-Ansicht) nutzt aktuell ein Tab-basiertes Layout mit einem einzigen Eingabeformular oben und einer Liste aller Repeater mit ihren Reports darunter. Der User möchte, dass LandMode exakt wie BundMode funktioniert — aber statt Bundesländer als Hauptkategorien werden **Repeater** als Hauptkategorien verwendet. Jede Repeater-Karte hat ein eigenes OP-Feld im Header und ein eigenes Eingabeformular für Rapporte direkt in der Karte.
+
+## Änderungen
+
+### 1. LandMode komplett umschreiben
+**Datei:** `client/src/components/LandMode.tsx`
+
+**Struktur (analog zu BundMode):**
+- Repeaters gruppiert nach Bundesland (wie jetzt in den Tabs), aber jeder Repeater wird eine eigene **collapsible card** (wie Bundesland-Karten in BundMode)
+- Pro Repeater-Card:
+  - **Header**: Repeater-Name, OP-Rufzeichen-Input, Report-Count-Badge, Frequenz-Info, Collapse-Toggle
+  - **Body**: Report-Liste (Tabelle) + Eingabeformular am Ende
+- **Eingabeformular pro Repeater** (wie `BezirkRow` in BundMode):
+  - CallsignInput + Rapport (vorausgefüllt "5/9") + Notes + Submit-Button
+  - Enter zum Eintragen, Auto-Focus zurück auf Callsign nach Submit
+- **Cross-Repeater-Sync entfernen**: Keine Placeholder-Einträge mehr auf anderen Repeatern
+
+**Reuse von BundMode-Patterns:**
+- `parseRapport()` — identische Funktion
+- `CallsignInput` mit ref für Auto-Focus — selbes Pattern wie in `BezirkRow`
+- `EntryForm` interface — identisch
+- Collapsible-State via `Set<number>` (Repeater-IDs statt BL-Codes)
+- OP-Callsign speichern via `saveOpCallsign()` — selbes API-Pattern
+
+**Neues Sub-Component `RepeaterRow`** (analog zu `BezirkRow`):
+- Props: repeater, reports, exerciseId, onReportCreated, onReportUpdated, onReportDeleted, editingId, editForm, onEditChange, onEditSave, onEditCancel
+- Eigenes `form` State mit `{ callsign, operator, rapport: '5/9', notes: '' }`
+- Submit erstellt Report direkt auf diesem Repeater
+- Report-Liste als Tabelle (Zeilen: Index, Callsign, Bezirk-Badge, Rapport, Notes, Delete)
+
+**Layout-Änderungen:**
+- Entferne Tab-Navigation komplett
+- Entferne globales Eingabeformular
+- Repeater als Cards gruppiert nach BL-Header (kleine Überschriften wie "OE1 Wien", "OE2 Salzburg")
+- Jede Card: Header klickbar zum Collapse/Expand
+
+### Keine Server-Änderungen nötig
+Die API bleibt unverändert — LandMode nutzt dieselben Endpoints wie bisher.
+
+## Verifizierung
+1. `nix-shell -p nodejs --run "npm run build"` kompiliert
+2. LandMode zeigt Repeater als Cards gruppiert nach Bundesland
+3. Jede Card hat OP-Feld, Report-Liste, Eingabeformular
+4. Rapport vorausgefüllt mit "5/9", Enter submitted, Auto-Focus auf Callsign
+5. Kein Cross-Repeater-Sync (nur der eine Repeater bekommt den Report)
+6. Deploy auf host-node-01
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+
+---
+
+in Land Umsetzer you should only show the land(s) which are configured. so if on bund oe1 are entered, but oe1 is not defined, ignore.
+
+---
+
+change display of entered callsigns in land(umsetzer) to do it in the same way then bund ... after entered the data
+
+---
+
+in land(umseter) it shall be grouped to all repeaters and then  bezirke in kärnten started with shortname of bezirk like he, fk, ...
+
+---
+
+[Request interrupted by user]
+
+---
+
+no... the selected repeaters in land mode shall be used in all cases. foreach repeater in landmode there should be all bezirke listed. and within these bezirke one can enter data. so e.g. i am in vl... so the operator will add me in this category, without entering the bezirk, just by adding in the correct bezirk. and this for all repeaters...
+
+---
+
+for both, show the entires directly under the bezirk it is added and not at the end. e.g. entered in ha, means show the entires before JO. same applies in land (umsetzer)
+
+---
+
+does not work
+
+---
+
+callsing shall be listed below the bezirk in both lists. cleanup also the data in the übung, so that i can start testing from zero.
+
+---
+
+add link to bos arsa next to oeradio.at to footer
+
+---
+
+der logan "Im Sinne der Sicherheit" sollte irgendwo sinnvoll platziert werden
+
+---
+
+check if all is mobile and tablet ready. if needed optimize
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me chronologically analyze the conversation:
+
+1. **Initial Plan Implementation - LandMode Refactoring**
+   - User provided a detailed plan to rewrite LandMode from tab-based to repeater-card grid layout (like BundMode)
+   - I read both LandMode.tsx and BundMode.tsx to understand patterns
+   - Wrote new LandMode with collapsible repeater cards, per-card OP field, per-card entry form via RepeaterRow component
+   - Built, committed, pushed, deployed to host-node-01
+
+2. **Filter linked repeaters from LandMode**
+   - User said: "in Land Umsetzer you should only show the land(s) which are configured. so if on bund oe1 are entered, but oe1 is not defined, ignore."
+   - Added `if (r.is_linked) continue;` to skip linked repeaters (BundMode artifacts) in LandMode grouping
+   - Built, committed, pushed, deployed
+
+3. **Match LandMode display to BundMode**
+   - User said: "change display of entered callsigns in land(umsetzer) to do it in the same way then bund ... after entered the data"
+   - Removed bezirk badge from callsign column in LandMode report rows
+   - Built, committed, pushed, deployed
+
+4. **Group by Bezirk within repeater cards**
+   - User initially said: "it shall be grouped to all repeaters and then bezirke in kärnten started with shortname of bezirk like he, fk, ..."
+   - I started implementing, but user interrupted and clarified: "no... the selected repeaters in land mode shall be used in all cases. foreach repeater in landmode there should be all bezirke listed. and within these bezirke one can enter data."
+   - Rewrote LandMode: each repeater card now shows all bezirke for its Bundesland as sub-sections, each with its own entry form (BezirkRow component)
+   - Fetches bezirke from `/api/v1/reference/bezirke`
+   - Built, committed, pushed, deployed
+
+5. **Show entries under correct bezirk**
+   - User said: "for both, show the entires directly under the bezirk it is added and not at the end. e.g. entered in ha, means show the entires before JO. same applies in land (umsetzer)"
+   - First attempt: Added operator PATCH to set bezirk_code before report creation, awaited it
+   - User said: "does not work" and "neiter in land nor in bund"
+   - Second attempt: Changed approach - fire-and-forget operator PATCH + force `report.bezirk_code = bezirkCode` client-side before calling `onReportCreated`
+   - Applied to both BundMode and LandMode
+   - Built, committed, pushed, deployed
+   - User hasn't confirmed if this fix works yet
+
+6. **Clean up exercise data**
+   - User said: "callsing shall be listed below the bezirk in both lists. cleanup also the data in the übung, so that i can start testing from zero."
+   - Cleared all signal_reports and exercise_attendance for exercise 41f97cd2-fede-4a9d-b498-f142bdec9b64
+   - Removed stale linked repeater (Hermannskogel, id 205) from exercise_repeaters
+
+7. **Add bos-arsa.at link to footer**
+   - User said: "add link to bos arsa next to oeradio.at to footer"
+   - Added `bos-arsa.at` link in Layout.tsx footer
+   - Built, committed, pushed, deployed
+
+8. **Add slogan to navbar**
+   - User said: "der logan 'Im Sinne der Sicherheit' sollte irgendwo sinnvoll platziert werden"
+   - Added as subtitle under "BOS-ARSA Log" in navbar
+   - Built, committed, pushed, deployed
+
+9. **Mobile/tablet optimization (IN PROGRESS)**
+   - User said: "check if all is mobile and tablet ready. if needed optimize"
+   - Spawned Explore agent to audit all components
+   - Got comprehensive list of issues
+   - Started applying fixes to multiple files:
+     - Layout.tsx: responsive navbar with mobile nav row, reduced padding
+     - CallsignInput.tsx: constrained dropdown width
+     - RunningTotals.tsx: reduced gaps/padding on mobile
+     - ExercisePage.tsx: responsive header, mode toggle buttons
+     - DashboardPage.tsx: responsive cards, chart height, table with hidden columns on mobile
+     - OperatorsPage.tsx: responsive table with hidden columns, smaller button text
+     - LandMode.tsx: was about to fix repeater card headers when summary was requested
+
+I was in the middle of editing LandMode.tsx for mobile optimization when the summary was requested. I had also not yet touched BundMode.tsx or ExerciseSetupPage.tsx for mobile fixes.
+
+The build has NOT been run after these mobile changes. Nothing has been committed or deployed yet for mobile optimization.
+
+Summary:
+1. Primary Request and Intent:
+   The user requested a series of changes to the BOS-ARSA Log app, a real-time ham radio crisis communication exercise logging tool:
+   - Rewrite LandMode from tab-based to repeater-card grid layout (like BundMode), with per-card OP fields, report lists, and entry forms
+   - Filter out linked repeaters (BundMode artifacts) from LandMode
+   - Match LandMode report display to BundMode style
+   - Group reports by Bezirk within each repeater card, with per-bezirk entry forms
+   - Show entered callsigns directly under the correct Bezirk (not at bottom/unassigned section)
+   - Clean up exercise test data
+   - Add bos-arsa.at link to footer
+   - Add slogan "Im Sinne der Sicherheit" to navbar
+   - Check and optimize all views for mobile and tablet
+
+2. Key Technical Concepts:
+   - React 18 + TypeScript + Vite + Tailwind CSS monorepo (client + server)
+   - SQLite via better-sqlite3, Express backend
+   - NixOS environment — use `nix-shell -p nodejs --run "..."` for npm/node commands
+   - Deployment: `ssh host-node-01`, git pull, `docker compose up -d --build` at `/home/achildrenmile/apps/bosarsalog`
+   - Exercise repeaters stored in `exercise_repeaters` table, joined with `repeaters` table
+   - Reports' `bezirk_code` comes from operator JOIN (`o.bezirk_code`), not stored on signal_report
+   - `is_linked` flag on repeaters distinguishes BundMode linked repeaters from physical LandMode repeaters
+   - Client-side `report.bezirk_code` override pattern to ensure immediate correct display
+   - Fire-and-forget operator PATCH for persisting bezirk_code
+
+3. Files and Code Sections:
+   - **`client/src/components/LandMode.tsx`** — Core file, completely rewritten multiple times
+     - Removed tab navigation, global entry form, cross-repeater sync
+     - Added collapsible repeater cards grouped by Bundesland
+     - Added `is_linked` filter: `if (r.is_linked) continue;`
+     - Fetches bezirke: `apiFetch('/api/v1/reference/bezirke')`
+     - Each repeater card renders BezirkRow components for its Bundesland's bezirke
+     - `handleBezirkSubmit` fires operator PATCH and forces `report.bezirk_code = bezirkCode` client-side
+     - BezirkRow sub-component with own form state, callsign input, rapport pre-filled "5/9", auto-focus
+   
+   - **`client/src/components/BundMode.tsx`** — Updated for bezirk_code fix
+     - `handleBezirkSubmit` updated: fire-and-forget operator PATCH + client-side `report.bezirk_code` override
+     - Same pattern applied to both new report creation and existing report update paths
+   
+   - **`client/src/components/Layout.tsx`** — Navbar and footer changes
+     - Added `bos-arsa.at` link to footer
+     - Added "Im Sinne der Sicherheit" subtitle under "BOS-ARSA Log"
+     - Mobile optimization: responsive padding, hidden nav links on small screens with mobile nav row, responsive logo size
+   
+   - **`client/src/components/CallsignInput.tsx`** — Mobile fix
+     - Added `max-w-[calc(100vw-2rem)]` to suggestions dropdown to prevent overflow on phones
+   
+   - **`client/src/components/RunningTotals.tsx`** — Mobile fix
+     - Reduced gaps/padding with responsive classes `px-2 sm:px-4`, `gap-2 sm:gap-4`, `text-xs sm:text-sm`
+   
+   - **`client/src/pages/ExercisePage.tsx`** — Mobile fix
+     - Responsive header: title stacks on mobile with `block sm:inline`
+     - Mode toggle: `w-full sm:w-fit` with `flex-1 sm:flex-none` buttons
+     - Smaller text/padding on mobile for buttons and inputs
+   
+   - **`client/src/pages/DashboardPage.tsx`** — Mobile fix
+     - Summary cards: responsive padding/font sizes `p-2 sm:p-4`, `text-2xl sm:text-3xl`
+     - Chart: `h-48 sm:h-[300px]` instead of fixed `style={{ height: 300 }}`
+     - Table: Name column hidden on mobile `hidden sm:table-cell`, shortened headers, Auswertung link hidden on mobile
+     - Quarter/year rows updated with responsive padding, colspan adjusted for hidden columns
+   
+   - **`client/src/pages/OperatorsPage.tsx`** — Mobile fix
+     - Table: QTH, BL columns hidden on mobile, Ausstattung hidden until md, overflow-x-auto
+     - Shorter button text, responsive padding
+
+4. Errors and fixes:
+   - **Bezirk assignment not working (first attempt)**: Awaited operator PATCH before creating report, but user reported "does not work" in both Land and Bund modes
+     - Fix: Changed to fire-and-forget operator PATCH + forced `report.bezirk_code = bezirkCode` directly on the report object client-side before calling `onReportCreated(report)`. This ensures immediate correct display regardless of server response timing.
+   - **Deployment path wrong**: First tried `ssh host-node-01 "cd /opt/bosarsalog && ..."` which failed
+     - Fix: Found correct path at `/home/achildrenmile/apps/bosarsalog`
+   - **User clarification on LandMode bezirk structure**: Initially started implementing differently, user interrupted with: "no... the selected repeaters in land mode shall be used in all cases. foreach repeater in landmode there should be all bezirke listed."
+     - Fix: Rewrote to show ALL bezirke per repeater's Bundesland within each repeater card
+
+5. Problem Solving:
+   - **Linked repeaters appearing in LandMode**: BundMode's `saveOpCallsign` was adding linked repeaters to `exercise_repeaters`, causing them to appear in LandMode. Fixed by filtering `is_linked` repeaters.
+   - **Reports showing in wrong bezirk/unassigned section**: Root cause was `report.bezirk_code` comes from operator table JOIN, but operator might not have bezirk_code set. Fixed with dual approach: operator PATCH + client-side override.
+   - **Stale data in exercise**: Cleaned exercise data via docker exec node commands on host-node-01.
+
+6. All user messages:
+   - "Implement the following plan: # LandMode Refactoring: Repeater-Grid wie BundMode [detailed plan]"
+   - "in Land Umsetzer you should only show the land(s) which are configured. so if on bund oe1 are entered, but oe1 is not defined, ignore."
+   - "change display of entered callsigns in land(umsetzer) to do it in the same way then bund ... after entered the data"
+   - "in land(umseter) it shall be grouped to all repeaters and then bezirke in kärnten started with shortname of bezirk like he, fk, ..."
+   - "no... the selected repeaters in land mode shall be used in all cases. foreach repeater in landmode there should be all bezirke listed. and within these bezirke one can enter data. so e.g. i am in vl... so the operator will add me in this category, without entering the bezirk, just by adding in the correct bezirk. and this for all repeaters..."
+   - "for both, show the entires directly under the bezirk it is added and not at the end. e.g. entered in ha, means show the entires before JO. same applies in land (umsetzer)"
+   - "does not work"
+   - "neiter in land nor in bund"
+   - "callsing shall be listed below the bezirk in both lists. cleanup also the data in the übung, so that i can start testing from zero."
+   - "add link to bos arsa next to oeradio.at to footer"
+   - "der logan 'Im Sinne der Sicherheit' sollte irgendwo sinnvoll platziert werden"
+   - "check if all is mobile and tablet ready. if needed optimize"
+
+7. Pending Tasks:
+   - Complete mobile/tablet optimization — still need to finish LandMode.tsx card headers and BundMode.tsx mobile fixes
+   - Build, commit, push, and deploy mobile optimization changes
+   - User has not yet confirmed whether the bezirk_code fix (client-side override) actually works after data cleanup
+
+8. Current Work:
+   Mobile/tablet responsive optimization across all components. I had completed edits to Layout.tsx, CallsignInput.tsx, RunningTotals.tsx, ExercisePage.tsx, DashboardPage.tsx, and OperatorsPage.tsx. I was about to edit LandMode.tsx repeater card headers for mobile when the summary was requested. I had just read LandMode.tsx lines 186-225 showing the card header layout. BundMode.tsx and ExerciseSetupPage.tsx have not been touched yet for mobile. No build/commit/deploy has been done for the mobile changes.
+
+9. Optional Next Step:
+   Continue mobile optimization for LandMode.tsx (repeater card headers — reduce padding, hide frequency details on small screens), then apply similar responsive fixes to BundMode.tsx card headers and BezirkRow forms. Then build, commit, push, and deploy all mobile changes. The user's request was: "check if all is mobile and tablet ready. if needed optimize"
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+Please continue the conversation from where we left it off without asking the user any further questions. Continue with the last task that you were asked to work on.
+
+---
+
+auswertungen sollen auch als grafik gedownloaded werden können
+
+---
+
+[Request interrupted by user]
+
+---
+
+auswertung download!
+
+---
+
+use Downlaod instead of png as name. add a possibility to download the whole screen as picture as nice auswertung
+
+---
+
+seite als bild => Download Auswertung. and ensure that the page has a bit of padding to look better as bild
+
+---
+
+[Request interrupted by user]
+
+---
+
+padding on picture only!
+
+---
+
+on all downloads ensure that the header with logo and name BOS-ARSA Log and subitle is displayed. in footer of the pictures add oeradio.at and bos arsa (style like in footer of the page)
+
+---
+
+picture is empty Download Auswertung!
+
+---
+
+empty the rapports
+
+---
+
+create up front data for Österreich Notfunk Runde auf 3646 kHz. here the only the simpley frequency for 80m 3646 Khz shall be configured. create all upfront for this year. happens all 1. wednesday in a month at 19.15h.
+
+---
+
+what is the admin passwort?
+
+---
+
+the notfunk runden before 16.02.2026 shall be named *Testdaten* followed by the actual name
+
+---
+
+add also 2 Krisenkommunikationsübungen with same prefix before this date
+
+---
+
+ned to rename Land(Umsetzer) and Bund(Bundesland). make suggestions. have the follwing problem. Land(Umsetzer) can basically have all configured frequencies in, not only local umsetzer and bund(bundesland) is oe link only.
+
+---
+
+A
+
+---
+
+also rename in the TXT exports
+
+---
+
+also rename Auswertung link label on the dashboard
+
+---
+
+lass es so.
+
+---
+
+es soll die möglichkeit geben OE-Link nicht zu aktivieren (auszublenden) bei Übungen, die nicht am OE-Link stattfinden, wie die 80m notfunk runde
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me chronologically analyze the conversation:
+
+1. **Context from previous session**: The summary at the start provides extensive context about prior work including LandMode refactoring, bezirk grouping, mobile optimization, and various UI changes.
+
+2. **Continuing mobile optimization**: I was continuing mobile/tablet optimization work from a previous session. I read LandMode.tsx, BundMode.tsx, ExerciseSetupPage.tsx, LoginPage.tsx, ReportsPage.tsx, and Layout.tsx to apply responsive fixes.
+
+3. **Mobile fixes applied to**:
+   - LandMode.tsx: Repeater card headers (hide frequency details on small screens, responsive padding, truncated names)
+   - BundMode.tsx: Card headers (responsive, hide "+ Umsetzer" on mobile, smaller OP input)
+   - ExerciseSetupPage.tsx: Responsive header, section padding, hidden frequency details on mobile
+   - ReportsPage.tsx: Responsive cards, chart heights, participant table with hidden columns
+   - Built, committed, pushed, deployed successfully.
+
+4. **Chart download feature**: User asked "auswertungen sollen auch als grafik gedownloaded werden können" then "auswertung download!"
+   - Installed `html-to-image` library
+   - Added refs to Bar and Pie charts
+   - Added "PNG" download buttons using `chart.toBase64Image()`
+   - Added full-page download using `toPng()` from html-to-image
+   - Built, committed, deployed.
+
+5. **Rename PNG to Download + full page download**: User asked to use "Download" instead of "PNG" and add full page screenshot capability
+   - Renamed button labels
+   - Added "Seite als Bild" button in header and "PNG — Gesamte Auswertung" in Export section
+   - Added padding only during export (24px)
+   - Built, committed, deployed.
+
+6. **Rename to "Download Auswertung" + padding on picture only**: User requested rename and padding only in exported image
+   - Changed "Seite als Bild" to "Download Auswertung"
+   - Added `pageRef.current.style.padding = '24px'` before capture and reset after
+   - Built, committed, deployed.
+
+7. **Add branded header/footer to all downloads**: User asked for logo + "BOS-ARSA Log" + subtitle in header, and "oeradio.at · bos-arsa.at" in footer of all exported images.
+   - Created `createExportHeader()` and `createExportFooter()` helper functions
+   - Created `exportWithBranding()` that clones content into an offscreen wrapper with header/footer
+   - Added `barCardRef` and `pieCardRef` for individual chart card downloads
+   - Changed chart download from `toBase64Image()` to `exportWithBranding()` using card refs
+   - Built, committed, deployed.
+
+8. **Empty image bug**: User reported "picture is empty Download Auswertung!"
+   - Root cause: `cloneNode(true)` doesn't preserve canvas content (Chart.js renders to `<canvas>`)
+   - Fix: Instead of cloning, temporarily inject header/footer into the actual DOM, capture with toPng, then remove injected elements
+   - For full page: inject header/footer as children of pageRef
+   - For chart: temporarily wrap the card in a container with header/footer, then move it back
+   - User also said "others too" confirming all downloads were broken
+   - Built, committed, deployed.
+
+9. **Clear reports**: User asked "empty the rapports"
+   - Found exercise 41f97cd2 had 3 reports
+   - Deleted from signal_reports and exercise_attendance
+   - Done via docker exec on host-node-01
+
+10. **Create Notfunk Runde exercises**: User asked to create "Österreich Notfunk Runde auf 3646 kHz" for all 1st Wednesdays of 2026
+    - Created simplex repeater "80m Notfunk 3646 kHz" (3.646 MHz, 80m band)
+    - Calculated 12 dates (1st Wednesday of each month)
+    - Created 12 exercises with the frequency pre-configured
+    - All via docker exec
+
+11. **Admin password**: User asked, I provided from memory: admin/BosArsa2024! and operator/Funk73!ops
+
+12. **Rename past exercises with Testdaten prefix**: User asked to prefix Notfunk Runden before Feb 16 2026 with "Testdaten"
+    - Updated 2 exercises: Jan 7 and Feb 4
+
+13. **Create 2 test Krisenkommunikationsübungen**: User asked for 2 more with same Testdaten prefix before Feb 16
+    - Created Jan 18 and Feb 8 exercises
+
+14. **Rename mode tabs**: User had a problem - "Land(Umsetzer)" can have ALL frequencies not just local repeaters, and "Bund(Bundesland)" is OE-Link only
+    - I suggested options: A) Frequenzen/OE-Link, B) Pro Frequenz/Pro Bundesland, C) Einzelfrequenz/OE-Link, D) Stationen/OE-Link
+    - User chose A
+    - Renamed in ExercisePage.tsx tabs
+    - Built, committed, deployed
+
+15. **Rename TXT exports**: User asked to also rename in TXT exports
+    - Updated server/src/routes/export.ts: headings, filenames
+    - Updated ReportsPage.tsx: button labels
+    - "Auswertung nach Bundesland" → "Auswertung OE-Link", "Auswertung nach Umsetzer" → "Auswertung Frequenzen"
+    - "Pro Umsetzer" → "Pro Frequenz"
+    - Filenames: bos-arsa-bund → bos-arsa-oelink, bos-arsa-land → bos-arsa-frequenzen
+    - Button labels: TXT — Bund → TXT — OE-Link, TXT — Land → TXT — Frequenzen
+    - Built, committed, deployed
+
+16. **Dashboard "Auswertung" link**: User asked to rename, I asked what to, user said "lass es so" (leave it as is)
+
+17. **OE-Link toggle**: User's last request - ability to hide OE-Link tab for exercises that don't use it (like 80m Notfunk Runde)
+    - I read schema.ts to understand the database structure
+    - Was about to implement adding `oe_link_enabled` column to exercises table
+
+Now for the current work: I had just read schema.ts and was about to implement the OE-Link toggle feature when the summary was requested.
+
+Summary:
+1. Primary Request and Intent:
+   The user is building a real-time ham radio crisis communication exercise logging tool (BOS-ARSA Log). In this session, the following requests were made:
+   - Complete mobile/tablet responsive optimization across all UI components (continuing from previous session)
+   - Add chart and full-page image download capability on the Auswertung (Reports) page
+   - Rename download buttons from "PNG" to "Download", rename full-page button to "Download Auswertung"
+   - Add padding to exported images only (not the page itself)
+   - Add branded header (logo + "BOS-ARSA Log" + "Im Sinne der Sicherheit") and footer ("oeradio.at · bos-arsa.at") to ALL image exports
+   - Fix empty image exports (canvas cloning issue)
+   - Clear all reports from the test exercise
+   - Create "Österreich Notfunk Runde" exercises for all 1st Wednesdays of 2026 on 80m 3646 kHz simplex
+   - Prefix past exercises (before Feb 16, 2026) with "Testdaten"
+   - Create 2 additional test Krisenkommunikationsübungen before Feb 16
+   - Rename mode tabs from "Land (Umsetzer)" / "Bund (Bundesland)" to "Frequenzen" / "OE-Link"
+   - Rename TXT export headings, filenames, and button labels to match new naming
+   - Add ability to hide/disable OE-Link tab for exercises that don't use OE-Link (like 80m Notfunk Runde)
+
+2. Key Technical Concepts:
+   - NixOS environment — use `nix-shell -p nodejs --run "..."` for npm/node
+   - Monorepo: `/client` (React/Vite/Tailwind) + `/server` (Express/TypeScript)
+   - SQLite via better-sqlite3 at `/data/bosarsalog.db`
+   - Chart.js with react-chartjs-2 for charts (Bar, Pie)
+   - `html-to-image` library (`toPng`) for DOM-to-PNG export
+   - Canvas elements (`<canvas>`) lose content when cloned via `cloneNode(true)` — must inject into live DOM instead
+   - `data-no-export="true"` attribute used to filter out buttons during image export
+   - Deployment: `ssh host-node-01`, `cd /home/achildrenmile/apps/bosarsalog`, `git pull && docker compose up -d --build`
+   - Exercise IDs are TEXT UUIDs (crypto.randomUUID())
+   - `is_linked` flag on repeaters distinguishes OE-Link repeaters from regular/simplex ones
+   - Responsive Tailwind patterns: `sm:`, `md:` breakpoints, `hidden sm:inline`, `hidden sm:table-cell`
+
+3. Files and Code Sections:
+   - **`client/src/pages/ReportsPage.tsx`** — Most heavily modified file. Contains chart rendering, image export logic, and export buttons.
+     - Added `html-to-image` import (`toPng`)
+     - Added refs: `barChartRef`, `pieChartRef`, `barCardRef`, `pieCardRef`, `pageRef`
+     - `createExportHeader()` — creates branded header DOM element with logo, title, subtitle (dark blue bar)
+     - `createExportFooter()` — creates footer DOM element with "oeradio.at · bos-arsa.at"
+     - `downloadChart()` — temporarily wraps chart card in branded container, captures with toPng, restores DOM
+     - `downloadFullPage()` — injects header/footer into pageRef, captures, removes injected elements
+     - Renamed buttons: "PNG" → "Download", "Seite als Bild" → "Download Auswertung", "TXT — Bund" → "TXT — OE-Link", "TXT — Land" → "TXT — Frequenzen"
+     - Key export function pattern:
+     ```typescript
+     const downloadFullPage = async () => {
+       if (!pageRef.current || !exercise) return;
+       setExporting(true);
+       const header = createExportHeader();
+       const footer = createExportFooter();
+       pageRef.current.style.padding = '24px';
+       pageRef.current.insertBefore(header, pageRef.current.firstChild);
+       pageRef.current.appendChild(footer);
+       try {
+         const url = await toPng(pageRef.current, {
+           backgroundColor: '#f3f4f6',
+           pixelRatio: 2,
+           filter: (node) => {
+             if (node instanceof HTMLElement && node.dataset.noExport === 'true') return false;
+             return true;
+           },
+         });
+         // ... download link
+       } catch {} finally {
+         header.remove();
+         footer.remove();
+         if (pageRef.current) pageRef.current.style.padding = '';
+         setExporting(false);
+       }
+     };
+     ```
+
+   - **`client/src/pages/ExercisePage.tsx`** — Mode tab labels renamed
+     - "Land (Umsetzer)" → "Frequenzen"
+     - "Bund (Bundesland)" → "OE-Link"
+
+   - **`server/src/routes/export.ts`** — TXT export routes
+     - "Auswertung nach Bundesland" → "Auswertung OE-Link"
+     - "Auswertung nach Umsetzer" → "Auswertung Frequenzen"
+     - "Pro Umsetzer" → "Pro Frequenz"
+     - Filenames: `bos-arsa-bund-` → `bos-arsa-oelink-`, `bos-arsa-land-` → `bos-arsa-frequenzen-`
+
+   - **`client/src/components/LandMode.tsx`** — Mobile responsive fixes
+     - Repeater card headers: hidden frequency/offset/CTCSS on small screens, truncated names
+     - BezirkRow: responsive padding, smaller inputs, hidden notes column on mobile
+
+   - **`client/src/components/BundMode.tsx`** — Mobile responsive fixes
+     - Card headers: responsive, hidden "+ Umsetzer" on mobile, smaller OP input
+     - BezirkRow: same responsive pattern as LandMode
+
+   - **`client/src/pages/ExerciseSetupPage.tsx`** — Mobile responsive fixes
+     - Stacking header, responsive padding, hidden frequency details on mobile
+
+   - **`client/src/pages/DashboardPage.tsx`** — Mobile fixes (from previous session, confirmed in this session)
+
+   - **`client/src/pages/OperatorsPage.tsx`** — Mobile fixes (from previous session)
+
+   - **`client/src/components/Layout.tsx`** — Already had mobile fixes from previous session
+
+   - **`client/src/components/RunningTotals.tsx`** — Responsive gaps/padding
+
+   - **`client/src/components/CallsignInput.tsx`** — Dropdown max-width constraint
+
+   - **`server/src/db/schema.ts`** — Read to understand database structure for OE-Link toggle feature (pending)
+     - `exercises` table has: id (TEXT), name, date, notes, created_at
+     - No `oe_link_enabled` column exists yet
+
+   - **`client/package.json`** — Added `html-to-image` dependency
+
+4. Errors and fixes:
+   - **Empty image export**: User reported "picture is empty Download Auswertung!" and "others too"
+     - Root cause: `cloneNode(true)` does not preserve `<canvas>` content — Chart.js renders to canvas elements which lose their pixel data when cloned
+     - Initial approach: Created offscreen wrapper, cloned content into it, captured with toPng
+     - Fix: Temporarily inject header/footer into the actual live DOM, capture the real DOM with toPng (which preserves canvas content), then remove injected elements. For chart downloads, temporarily wrap the actual card element in a branded container, capture, then restore DOM position.
+   - **Wrong working directory for git**: `git add client/src/...` failed because shell was in `/home/achildrenmile/bosarsalog/client/` instead of project root
+     - Fix: Used absolute path `cd /home/achildrenmile/bosarsalog && git add ...`
+
+5. Problem Solving:
+   - Solved canvas cloning issue by switching from clone-based export to DOM injection pattern
+   - Created comprehensive mobile responsive design across 10+ files using Tailwind breakpoints
+   - Created 12 Notfunk Runde exercises with correct 1st-Wednesday-of-month date calculation
+   - Solved naming confusion between Land/Bund modes by renaming to Frequenzen/OE-Link
+
+6. All user messages:
+   - "auswertungen sollen auch als grafik gedownloaded werden können" (interrupted)
+   - "auswertung download!"
+   - "use Downlaod instead of png as name. add a possibility to download the whole screen as picture as nice auswertung"
+   - "padding on picture only!"
+   - "on all downloads ensure that the header with logo and name BOS-ARSA Log and subitle is displayed. in footer of the pictures add oeradio.at and bos arsa (style like in footer of the page)"
+   - "picture is empty Download Auswertung!"
+   - "others too"
+   - "empty the rapports"
+   - "create up front data for Österreich Notfunk Runde auf 3646 kHz. here the only the simpley frequency for 80m 3646 Khz shall be configured. create all upfront for this year. happens all 1. wednesday in a month at 19.15h."
+   - "what is the admin passwort?"
+   - "the notfunk runden before 16.02.2026 shall be named *Testdaten* followed by the actual name"
+   - "add also 2 Krisenkommunikationsübungen with same prefix before this date"
+   - "ned to rename Land(Umsetzer) and Bund(Bundesland). make suggestions. have the follwing problem. Land(Umsetzer) can basically have all configured frequencies in, not only local umsetzer and bund(bundesland) is oe link only."
+   - "A" (choosing option A: Frequenzen/OE-Link)
+   - "also rename in the TXT exports"
+   - "also rename Auswertung link label on the dashboard"
+   - "lass es so." (leave it as is)
+   - "es soll die möglichkeit geben OE-Link nicht zu aktivieren (auszublenden) bei Übungen, die nicht am OE-Link stattfinden, wie die 80m notfunk runde"
+
+7. Pending Tasks:
+   - **Add OE-Link toggle to exercises**: The user wants the ability to hide/disable the OE-Link tab for exercises that don't use OE-Link (like the 80m Notfunk Runde). This requires:
+     - Adding `oe_link_enabled` column to exercises table (default 1/true)
+     - Schema migration in `server/src/db/schema.ts`
+     - Toggle in ExerciseSetupPage (admin only)
+     - Conditional rendering of OE-Link tab in ExercisePage
+     - API support to read/update the flag
+     - Set `oe_link_enabled = 0` for all Notfunk Runde exercises
+
+8. Current Work:
+   I was implementing the OE-Link toggle feature. I had just read `server/src/db/schema.ts` to understand the database structure and was about to:
+   1. Add `oe_link_enabled INTEGER DEFAULT 1` column to the exercises table via migration
+   2. Update the exercises API to include and accept this field
+   3. Add a toggle in ExerciseSetupPage
+   4. Conditionally show/hide the OE-Link tab in ExercisePage
+   5. Set existing Notfunk Runde exercises to have OE-Link disabled
+
+9. Optional Next Step:
+   Continue implementing the OE-Link toggle feature. The user's exact request was: "es soll die möglichkeit geben OE-Link nicht zu aktivieren (auszublenden) bei Übungen, die nicht am OE-Link stattfinden, wie die 80m notfunk runde"
+   
+   I had read `schema.ts` and need to:
+   1. Add migration for `oe_link_enabled` column in `server/src/db/schema.ts`
+   2. Update exercise GET/PATCH endpoints in `server/src/routes/exercises.ts` to handle `oe_link_enabled`
+   3. Add toggle UI in `client/src/pages/ExerciseSetupPage.tsx`
+   4. Conditionally render OE-Link tab in `client/src/pages/ExercisePage.tsx` based on the flag
+   5. Set `oe_link_enabled = 0` for all Notfunk Runde exercises via database update
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+Please continue the conversation from where we left it off without asking the user any further questions. Continue with the last task that you were asked to work on.
+
+---
+
+if no bundesländer activiated for übung just list the frequencies and data without bezirke.
+
+---
+
+highlight OP field if not entered with the police red. also placeholder in that color
+
+---
+
+not working... in e.g. notfunkrunde not applied. do it for all OP fields
+
+---
+
+the op field which is the main op field in each übung. shall be labeled as ORGANISATOR and also stored as such
+
+---
+
+empty the rapport data of the übungen. for all test data, add qsos in all TestÜbungen. the qso data shall have real callsigns. take also a look at the bosarsa.xlsx - there are valid cases in. do it. do not forget to also add /P /M callsigns. and various rapporte 5/9 3/3... 5/9+60 whatever fits best or is in the xlsx sheet. make it thourghly
+
+---
+
+<task-notification>
+<task-id>b3ba72d</task-id>
+<output-file>/tmp/claude-1000/-home-achildrenmile-bosarsalog/tasks/b3ba72d.output</output-file>
+<status>completed</status>
+<summary>Background command "Read Excel contents" completed (exit code 0)</summary>
+</task-notification>
+Read the output file to retrieve the result: /tmp/claude-1000/-home-achildrenmile-bosarsalog/tasks/b3ba72d.output
+
+---
+
+remove all names and bezirkdata from rufzeichen register. as the rufzeichen exsits, but the data does not match real world
+
+---
+
+in the oe link... there a some bezirke red, why?
+
+---
+
+krems stadt is not a landeshauptstadt. in burgenland. eisenstadt is completely missing. check the whole bezirke in all bundelsänder and fix this. the bezirke have to be complete and the landeshauptstadt hast to be red!
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me chronologically analyze the conversation:
+
+1. **OE-Link toggle feature (continuing from previous session)**:
+   - Added `oe_link_enabled` column to exercises table
+   - Updated API endpoints (list, GET, POST, PATCH)
+   - Added toggle in ExerciseSetupPage (admin only)
+   - Conditionally rendered OE-Link tab in ExercisePage
+   - Hidden OE-Link export in ReportsPage
+   - Set Notfunk Runde exercises to oe_link_enabled=0
+   - Built, committed, pushed, deployed
+
+2. **Flat report list for exercises without Bundesländer**:
+   - User: "if no bundesländer activiated for übung just list the frequencies and data without bezirke"
+   - Added `FlatReportRow` component to LandMode.tsx
+   - When `repBezirke.length === 0`, render flat list with input form instead of bezirk-grouped rows
+   - Built, committed, pushed, deployed
+
+3. **OP field red highlight**:
+   - User: "highlight OP field if not entered with the police red. also placeholder in that color"
+   - Modified LandMode.tsx OP field with conditional red border/placeholder/label
+   - Built, committed, pushed, deployed
+   - User: "not working... in e.g. notfunkrunde not applied. do it for all OP fields"
+   - Found OP fields in 3 places: LandMode (already done), BundMode, ExercisePage
+   - Applied same red highlight pattern to BundMode.tsx and ExercisePage.tsx
+   - Built, committed, pushed, deployed
+
+4. **Rename OP to Organisator**:
+   - User: "the op field which is the main op field in each übung. shall be labeled as ORGANISATOR and also stored as such"
+   - Added `organisator` TEXT column to exercises table via migration in schema.ts
+   - Updated exercises PATCH endpoint to handle `organisator`
+   - Refactored ExercisePage: renamed state from `opCallsign` to `organisator`, changed `updateOpCallsign` to `updateOrganisator` (single PATCH to exercise instead of per-repeater updates), label changed to "Organisator:", visible in all modes
+   - Built, committed, pushed, deployed
+
+5. **Populate test data with QSOs**:
+   - User: "empty the rapport data of the übungen. for all test data, add qsos in all TestÜbungen. the qso data shall have real callsigns. take also a look at the bosarsa.xlsx... do not forget to also add /P /M callsigns. and various rapporte 5/9 3/3... 5/9+60 whatever fits best or is in the xlsx sheet. make it thourghly"
+   - Read xlsx file (2026 BOS-ARSA - Krisenkommunikationsübung.xlsx) using openpyxl
+   - Extracted 88 operators with reports from sheet 20260104
+   - Found repeater columns: Gerlitze 2m, Gerlitze 70cm, Magdalensberg/HK/Schöckl/Gaisberg linked, Buschberg, Direkte 145.300, Goldeck, Dobratsch 23cm, Struška, Hochstuhl, Zirbitzkogel, Direkte 145.525
+   - Found 64 unique rapport values including 5/9, 5/9+20, 5/9+60, 5/7, 3/5, etc.
+   - Wrote populate_test_data.js script that:
+     - Cleared all existing reports/attendance from test exercises
+     - Configured 11 repeaters for Krisenkommunikationsübungen
+     - Populated 4 test exercises with realistic data
+   - Had to fix FK constraint issue (bezirk_code/bundesland_code validation)
+   - Had to handle ESM vs CJS module format (.cjs extension)
+   - Results: Notfunk 1: 25 ops/25 reports, Krisen 1: 99 ops/117 reports, Notfunk 2: 20 ops/20 reports, Krisen 2: 55 ops/64 reports
+
+6. **Remove names and bezirk data from operators**:
+   - User: "remove all names and bezirkdata from rufzeichen register. as the rufzeichen exsits, but the data does not match real world"
+   - Cleared name, bezirk_code, bundesland_code, qth from all 109 operators
+
+7. **Fix bezirke data**:
+   - User: "in the oe link... there a some bezirke red, why?"
+   - Explained: red = is_capital (Landeshauptstadt), grey = regular district
+   - User: "krems stadt is not a landeshauptstadt. in burgenland. eisenstadt is completely missing. check the whole bezirke in all bundelsänder and fix this. the bezirke have to be complete and the landeshauptstadt hast to be red!"
+   - Listed all 84 bezirke from DB, found issues:
+     - KS (Krems Stadt) incorrectly marked as capital
+     - SE (Steyr Stadt) incorrectly marked as capital
+     - WE (Wels) incorrectly marked as capital
+     - VI (Villach Stadt) incorrectly marked as capital
+     - Missing Landeshauptstädte: Eisenstadt (Burgenland), Linz (OÖ), Graz (Steiermark), Innsbruck (Tirol)
+     - Missing bezirke: Bludenz (Vorarlberg), Kitzbühel & Landeck (Tirol)
+   - Launched background research agent to get complete Austrian bezirke list
+   - Agent still running when summary was requested
+
+Now let me trace through all files modified and key patterns:
+
+**Files modified:**
+- server/src/db/schema.ts - added oe_link_enabled and organisator migrations
+- server/src/routes/exercises.ts - added oe_link_enabled and organisator to API
+- client/src/pages/ExercisePage.tsx - OE-Link conditional rendering, Organisator field, red highlight
+- client/src/pages/ExerciseSetupPage.tsx - OE-Link toggle checkbox
+- client/src/pages/ReportsPage.tsx - conditional OE-Link export button
+- client/src/components/LandMode.tsx - FlatReportRow, OP red highlight
+- client/src/components/BundMode.tsx - OP red highlight
+
+**Key code patterns:**
+- Red highlight: `className={...${value ? 'border-gray-300' : 'border-[#c8102e] placeholder-[#c8102e]/60'}}`
+- Schema migration pattern: check PRAGMA table_info, ALTER TABLE ADD COLUMN if missing
+- Bezirk is_capital flag controls red vs grey badge color in BundMode and ReportsPage
+
+Summary:
+1. Primary Request and Intent:
+   - **OE-Link toggle**: Add ability to hide OE-Link tab for exercises that don't use OE-Link (like 80m Notfunk Runde). Includes schema change, API, UI toggle, conditional rendering.
+   - **Flat report list**: When no Bundesländer are activated for an exercise, show frequencies and data without bezirk grouping.
+   - **OP field red highlight**: Highlight empty OP fields with red border (#c8102e), red placeholder text, and bold red label across ALL views (LandMode, BundMode, ExercisePage).
+   - **Rename OP to Organisator**: The main OP field per exercise should be labeled "ORGANISATOR" and stored as its own column on the exercises table (not redundantly on each repeater).
+   - **Populate test data**: Clear existing rapport data, add realistic QSOs to all Testdaten exercises using real callsigns from the bosarsa.xlsx file, including /P and /M suffixes and various rapport values.
+   - **Remove personal data from operators**: Clear name, bezirk_code, bundesland_code, qth from all operators since the data doesn't match real world.
+   - **Fix bezirke**: Check and fix all Austrian bezirke — ensure completeness across all Bundesländer and correct Landeshauptstadt flags. Krems Stadt is NOT a Landeshauptstadt; Eisenstadt is missing entirely.
+
+2. Key Technical Concepts:
+   - NixOS environment: `nix-shell -p nodejs --run "..."` for npm/node
+   - Monorepo: `/client` (React/Vite/Tailwind) + `/server` (Express/TypeScript)
+   - SQLite via better-sqlite3 at `/data/bosarsalog.db`
+   - Schema migrations via PRAGMA table_info checks in `server/src/db/schema.ts`
+   - Docker deployment: `ssh host-node-01`, `cd /home/achildrenmile/apps/bosarsalog`, `git pull && docker compose up -d --build`
+   - Docker exec for DB operations: `docker exec bosarsalog node -e "..."`
+   - ESM module issue: Docker container uses `"type": "module"` in package.json, so scripts must use `.cjs` extension
+   - `is_capital` flag in bezirke table controls red (#dc3545) vs grey (#6c757d) badge styling
+   - Austrian Bezirke system: Landeshauptstädte (Wien, St. Pölten, Eisenstadt, Linz, Salzburg, Graz, Klagenfurt, Innsbruck, Bregenz) vs Statutarstädte (Wels, Steyr, Villach, Krems, etc.)
+   - Exercise IDs are TEXT UUIDs
+   - `apiFetch()` wrapper from `client/src/services/api.ts`
+   - Signal reports have UNIQUE constraint on (exercise_id, operator_id, repeater_id)
+
+3. Files and Code Sections:
+
+   - **`server/src/db/schema.ts`** — Schema migrations
+     - Added `oe_link_enabled` and `organisator` columns to exercises table
+     ```
+     if (!cols.some((c: any) => c.name === 'oe_link_enabled')) {
+       db.exec("ALTER TABLE exercises ADD COLUMN oe_link_enabled INTEGER DEFAULT 1");
+     }
+     if (!cols.some((c: any) => c.name === 'organisator')) {
+       db.exec("ALTER TABLE exercises ADD COLUMN organisator TEXT");
+     }
+     ```
+
+   - **`server/src/routes/exercises.ts`** — API endpoints
+     - List query now includes `e.oe_link_enabled`
+     - POST includes `oe_link_enabled` in INSERT
+     - PATCH handles `notes`, `name`, `oe_link_enabled`, and `organisator`
+     ```
+     const { notes, name, oe_link_enabled, organisator } = req.body;
+     ...
+     if (oe_link_enabled !== undefined) { updates.push('oe_link_enabled = ?'); params.push(oe_link_enabled ? 1 : 0); }
+     if (organisator !== undefined) { updates.push('organisator = ?'); params.push(organisator || null); }
+     ```
+
+   - **`client/src/pages/ExercisePage.tsx`** — Main exercise view
+     - `oeLinkEnabled` derived from `exercise?.oe_link_enabled !== 0`
+     - Tab bar wrapped in `{oeLinkEnabled && (...)}`
+     - Mode rendering: `{mode === 'land' || !oeLinkEnabled ? <LandMode.../> : <BundMode.../>}`
+     - Organisator field (was opCallsign, now organisator): stores on exercise table via single PATCH, visible in all modes
+     - Red highlight pattern on Organisator field:
+     ```
+     <label className={`text-xs ${organisator ? 'text-gray-500' : 'text-[#c8102e] font-semibold'}`}>Organisator:</label>
+     <input ... className={`border rounded ... ${organisator ? 'border-gray-300' : 'border-[#c8102e] placeholder-[#c8102e]/60'}`} />
+     ```
+     - `updateOrganisator` function: single PATCH to `/api/v1/exercises/${id}` with `{ organisator: val || null }`
+
+   - **`client/src/pages/ExerciseSetupPage.tsx`** — Exercise setup
+     - OE-Link toggle (admin only) added before Bundesländer selection:
+     ```
+     <input type="checkbox" checked={exercise.oe_link_enabled !== 0}
+       onChange={async (e) => {
+         await apiFetch(`/api/v1/exercises/${id}`, { method: 'PATCH', body: JSON.stringify({ oe_link_enabled: e.target.checked }) });
+         setExercise(prev => prev ? { ...prev, oe_link_enabled: e.target.checked ? 1 : 0 } : null);
+       }} />
+     <span>OE-Link aktivieren</span>
+     <p>OE-Link-Tab und Auswertung anzeigen (deaktivieren für Übungen ohne OE-Link, z.B. 80m Notfunk Runde)</p>
+     ```
+
+   - **`client/src/pages/ReportsPage.tsx`** — Reports/Auswertung page
+     - OE-Link TXT export button conditionally rendered: `{exercise.oe_link_enabled !== 0 && (<a href={...}>TXT — OE-Link</a>)}`
+
+   - **`client/src/components/LandMode.tsx`** — Frequency-mode view
+     - Added `FlatReportRow` component for repeaters without bezirke (no bundesland_code)
+     - Conditional rendering: `{repBezirke.length > 0 ? <BezirkRows.../> : <FlatReportRow.../>}`
+     - FlatReportRow: simple list with callsign input, rapport, notes, submit button — no bezirk grouping
+     - OP field red highlight (per-repeater):
+     ```
+     <label className={`text-xs ${opCallsigns[rep.repeater_id] ? 'text-gray-500' : 'text-[#c8102e] font-semibold'}`}>OP:</label>
+     <input ... className={`border rounded ... ${opCallsigns[rep.repeater_id] ? 'border-gray-300' : 'border-[#c8102e] placeholder-[#c8102e]/60'}`} />
+     ```
+
+   - **`client/src/components/BundMode.tsx`** — OE-Link mode view
+     - OP field red highlight (per-Bundesland):
+     ```
+     <label className={`text-xs ${blOpCallsigns[bl.code] ? 'text-gray-500' : 'text-[#c8102e] font-semibold'}`}>OP:</label>
+     <input ... className={`border rounded ... ${blOpCallsigns[bl.code] ? 'border-gray-300' : 'border-[#c8102e] placeholder-[#c8102e]/60'}`} />
+     ```
+     - Bezirk badge coloring (the source of the red bezirke question): `className={...${bezirk.is_capital ? 'bg-[#dc3545]' : 'bg-[#6c757d]'}}`
+
+   - **`/tmp/populate_test_data.js`** — Test data population script (run on server as .cjs)
+     - Clears all reports/attendance from Testdaten exercises
+     - Configures 11 repeaters for Krisenkommunikationsübungen
+     - Sets organisator for all 4 exercises
+     - Inserts ~200 QSOs with real callsigns, /P and /M suffixes, varied rapports
+     - Handles FK validation for bezirk_code/bundesland_code
+
+4. Errors and fixes:
+   - **OP red highlight not working in Notfunk Runde**: User reported it wasn't applied. Root cause: Only modified LandMode.tsx initially, but OP fields also exist in ExercisePage.tsx and BundMode.tsx. Fix: Applied same pattern to all 3 locations.
+   - **FK constraint on operator insert**: `SqliteError: FOREIGN KEY constraint failed` when inserting operators with invalid bezirk_code or bundesland_code. Fix: Added validation that checks if bezirk/bundesland exists in reference tables before inserting, sets to null if not found.
+   - **ESM module error in Docker**: `ReferenceError: require is not defined in ES module scope` because package.json has `"type": "module"`. Fix: Renamed script to `.cjs` extension.
+   - **Docker cp stdin issue**: `Could not find the file /proc/self/fd in container` when trying to pipe via stdin. Fix: Used `scp` to host first, then `docker cp`.
+   - **better-sqlite3 not found**: Script placed in `/tmp/` but node_modules are in `/app/`. Fix: Copied script to `/app/` directory.
+
+5. Problem Solving:
+   - Extracted real QSO data from xlsx using openpyxl via nix-shell, identified 88 operators with reports, 64 unique rapport values, and repeater column mappings
+   - Mapped xlsx repeater columns to database repeater records
+   - Created comprehensive test data covering all 9 Austrian Bundesländer plus international (Slovenia, Germany, Switzerland)
+   - Identified bezirke data issues: incorrect is_capital flags and missing districts/Landeshauptstädte
+
+6. All user messages:
+   - "if no bundesländer activiated for übung just list the frequencies and data without bezirke."
+   - "highlight OP field if not entered with the police red. also placeholder in that color"
+   - "not working... in e.g. notfunkrunde not applied. do it for all OP fields"
+   - "the op field which is the main op field in each übung. shall be labeled as ORGANISATOR and also stored as such"
+   - "empty the rapport data of the übungen. for all test data, add qsos in all TestÜbungen. the qso data shall have real callsigns. take also a look at the bosarsa.xlsx - there are valid cases in. do it. do not forget to also add /P /M callsigns. and various rapporte 5/9 3/3... 5/9+60 whatever fits best or is in the xlsx sheet. make it thourghly"
+   - "remove all names and bezirkdata from rufzeichen register. as the rufzeichen exsits, but the data does not match real world"
+   - "in the oe link... there a some bezirke red, why?"
+   - "krems stadt is not a landeshauptstadt. in burgenland. eisenstadt is completely missing. check the whole bezirke in all bundelsänder and fix this. the bezirke have to be complete and the landeshauptstadt hast to be red!"
+
+7. Pending Tasks:
+   - **Fix bezirke data across all Bundesländer**: This is the active task. Need to:
+     - Fix incorrect is_capital flags: KS (Krems Stadt), SE (Steyr Stadt), WE (Wels), VI (Villach Stadt) should be 0
+     - Add missing Landeshauptstädte with is_capital=1: Eisenstadt (Burgenland/04), Linz Stadt (OÖ/05), Graz Stadt (Steiermark/06), Innsbruck Stadt (Tirol/07)
+     - Add other missing bezirke: Bludenz (Vorarlberg), Kitzbühel & Landeck (Tirol), possibly Waidhofen/Ybbs (NÖ)
+     - A background research agent was launched to get the complete Austrian bezirke list but hasn't completed yet
+
+8. Current Work:
+   Was actively working on fixing the bezirke data. Had:
+   - Listed all 84 current bezirke from the production database
+   - Identified specific issues (wrong capitals, missing districts)
+   - Launched a background research agent (agentId: ab83582) to get the complete official Austrian bezirke list for verification
+   - The agent was still running when the summary was requested
+
+   The user's exact request: "krems stadt is not a landeshauptstadt. in burgenland. eisenstadt is completely missing. check the whole bezirke in all bundelsänder and fix this. the bezirke have to be complete and the landeshauptstadt hast to be red!"
+
+9. Optional Next Step:
+   Continue fixing the bezirke data. Check the background research agent output, then write and execute a database script to:
+   1. Set is_capital=0 for KS, SE, WE, VI
+   2. Add missing Landeshauptstädte: E (Eisenstadt, BL 04, is_capital=1), L (Linz, BL 05, is_capital=1), G (Graz, BL 06, is_capital=1), I (Innsbruck, BL 07, is_capital=1)
+   3. Add other missing bezirke: BZ (Bludenz, BL 09), KB (Kitzbühel, BL 07), LA (Landeck, BL 07)
+   4. Verify completeness against the official list
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+Please continue the conversation from where we left it off without asking the user any further questions. Continue with the last task that you were asked to work on.
+
+---
+
+<task-notification>
+<task-id>ab83582</task-id>
+<status>completed</status>
+<summary>Agent "Research Austrian bezirke list" completed</summary>
+<result>I now have all the information needed. Let me compile the complete list.
+
+Here is the comprehensive list of all Austrian political districts (Bezirke) and statutory cities (Statutarstaedte) organized by Bundesland, with their Kfz-Kennzeichen codes:
+
+---
+
+## OE1 - Wien (W)
+
+```
+W  | Wien                        | is_capital: 1
+```
+
+Wien is simultaneously a Bundesland, a political district, and a statutory city. It uses a single Kfz code "W". The 23 Gemeindebezirke (1. Innere Stadt through 23. Liesing) are internal subdivisions, not separate political districts.
+
+---
+
+## OE2 - Niederösterreich
+
+**Landeshauptstadt (Statutarstadt):**
+```
+P  | St. Pölten (Stadt)          | is_capital: 1
+```
+
+**Other Statutarstaedte:**
+```
+KS | Krems an der Donau (Stadt)  | is_capital: 0
+WY | Waidhofen an der Ybbs       | is_capital: 0
+WN | Wiener Neustadt (Stadt)     | is_capital: 0
+```
+
+**Bezirke (Landbezirke):**
+```
+AM | Amstetten                   | is_capital: 0
+BN | Baden                       | is_capital: 0
+BL | Bruck an der Leitha         | is_capital: 0
+GF | Gänserndorf                 | is_capital: 0
+GD | Gmünd                       | is_capital: 0
+HL | Hollabrunn                  | is_capital: 0
+HO | Horn                        | is_capital: 0
+KO | Korneuburg                  | is_capital: 0
+KR | Krems (Land)                | is_capital: 0
+LF | Lilienfeld                  | is_capital: 0
+ME | Melk                        | is_capital: 0
+MI | Mistelbach                  | is_capital: 0
+MD | Mödling                     | is_capital: 0
+NK | Neunkirchen                 | is_capital: 0
+PL | St. Pölten (Land)           | is_capital: 0
+SB | Scheibbs                    | is_capital: 0
+TU | Tulln                       | is_capital: 0
+WT | Waidhofen an der Thaya      | is_capital: 0
+WB | Wiener Neustadt (Land)      | is_capital: 0
+ZT | Zwettl                      | is_capital: 0
+```
+
+**Note:** Schwechat has a separate Kfz code (SW) but is NOT a separate political district -- it is part of Bezirk Bruck an der Leitha (BL). SW is only a separate registration authority due to having its own police station.
+
+Total for Niederösterreich: 4 Statutarstaedte + 20 Bezirke = 24 political districts.
+
+---
+
+## OE3 - Burgenland
+
+**Landeshauptstadt (Freistadt/Statutarstadt):**
+```
+E  | Eisenstadt (Freistadt)      | is_capital: 1
+```
+
+**Other Freistadt (equivalent to Statutarstadt):**
+```
+E  | Rust (Freistadt)            | is_capital: 0
+```
+
+Note: Rust shares the "E" Kfz code with Eisenstadt because both use the same registration authority (Landespolizeidirektion Burgenland). Rust is a separate political district (Freistadt) despite sharing the code. If you need a distinct code for Rust for database purposes, there is no official separate Kfz code -- some sources list it under E.
+
+**Bezirke:**
+```
+EU | Eisenstadt-Umgebung         | is_capital: 0
+GS | Güssing                     | is_capital: 0
+JE | Jennersdorf                 | is_capital: 0
+MA | Mattersburg                 | is_capital: 0
+ND | Neusiedl am See             | is_capital: 0
+OP | Oberpullendorf              | is_capital: 0
+OW | Oberwart                    | is_capital: 0
+```
+
+Total for Burgenland: 2 Freistaedte + 7 Bezirke = 9 political districts.
+
+---
+
+## OE4 - Oberösterreich
+
+**Landeshauptstadt (Statutarstadt):**
+```
+L  | Linz (Stadt)                | is_capital: 1
+```
+
+**Other Statutarstaedte:**
+```
+SR | Steyr (Stadt)               | is_capital: 0
+WE | Wels (Stadt)                | is_capital: 0
+```
+
+**Bezirke:**
+```
+BR | Braunau am Inn              | is_capital: 0
+EF | Eferding                    | is_capital: 0
+FR | Freistadt                   | is_capital: 0
+GM | Gmunden                     | is_capital: 0
+GR | Grieskirchen                | is_capital: 0
+KI | Kirchdorf an der Krems      | is_capital: 0
+LL | Linz-Land                   | is_capital: 0
+PE | Perg                        | is_capital: 0
+RI | Ried im Innkreis            | is_capital: 0
+RO | Rohrbach                    | is_capital: 0
+SD | Schärding                   | is_capital: 0
+SE | Steyr-Land                  | is_capital: 0
+UU | Urfahr-Umgebung             | is_capital: 0
+VB | Vöcklabruck                 | is_capital: 0
+WL | Wels-Land                   | is_capital: 0
+```
+
+Total for Oberösterreich: 3 Statutarstaedte + 15 Bezirke = 18 political districts.
+
+---
+
+## OE5 - Salzburg
+
+**Landeshauptstadt (Statutarstadt):**
+```
+S  | Salzburg (Stadt)            | is_capital: 1
+```
+
+**Bezirke:**
+```
+HA | Hallein                     | is_capital: 0
+SL | Salzburg-Umgebung           | is_capital: 0
+JO | St. Johann im Pongau        | is_capital: 0
+TA | Tamsweg                     | is_capital: 0
+ZE | Zell am See                 | is_capital: 0
+```
+
+Total for Salzburg: 1 Statutarstadt + 5 Bezirke = 6 political districts.
+
+---
+
+## OE6 - Steiermark
+
+**Landeshauptstadt (Statutarstadt):**
+```
+G  | Graz (Stadt)                | is_capital: 1
+```
+
+**Bezirke (after 2012/2013 district reform):**
+```
+BM | Bruck-Mürzzuschlag          | is_capital: 0
+DL | Deutschlandsberg            | is_capital: 0
+GU | Graz-Umgebung               | is_capital: 0
+HF | Hartberg-Fürstenfeld        | is_capital: 0
+LB | Leibnitz                    | is_capital: 0
+LN | Leoben                      | is_capital: 0
+LI | Liezen                      | is_capital: 0
+MU | Murau                       | is_capital: 0
+MT | Murtal                      | is_capital: 0
+SO | Südoststeiermark            | is_capital: 0
+VO | Voitsberg                   | is_capital: 0
+WZ | Weiz                        | is_capital: 0
+```
+
+**Note on Leoben:** The political district Leoben uses the code LN. The code LE exists as a separate registration code for the city of Leoben (due to its own police station), but Leoben city is NOT a Statutarstadt and NOT a separate political district. For political district purposes, there is only one Bezirk Leoben (LN).
+
+Total for Steiermark: 1 Statutarstadt + 12 Bezirke = 13 political districts.
+
+---
+
+## OE7 - Kärnten
+
+**Landeshauptstadt (Statutarstadt):**
+```
+K  | Klagenfurt am Wörthersee    | is_capital: 1
+```
+
+**Other Statutarstadt:**
+```
+VI | Villach (Stadt)             | is_capital: 0
+```
+
+**Bezirke:**
+```
+FE | Feldkirchen                 | is_capital: 0
+HE | Hermagor                    | is_capital: 0
+KL | Klagenfurt-Land             | is_capital: 0
+SP | Spittal an der Drau         | is_capital: 0
+SV | St. Veit an der Glan        | is_capital: 0
+VL | Villach-Land                | is_capital: 0
+VK | Völkermarkt                 | is_capital: 0
+WO | Wolfsberg                   | is_capital: 0
+```
+
+Total for Kärnten: 2 Statutarstaedte + 8 Bezirke = 10 political districts.
+
+---
+
+## OE8 - Tirol
+
+**Landeshauptstadt (Statutarstadt):**
+```
+I  | Innsbruck (Stadt)           | is_capital: 1
+```
+
+**Bezirke:**
+```
+IL | Innsbruck-Land              | is_capital: 0
+IM | Imst                        | is_capital: 0
+KB | Kitzbühel                   | is_capital: 0
+KU | Kufstein                    | is_capital: 0
+LA | Landeck                     | is_capital: 0
+LZ | Lienz                       | is_capital: 0
+RE | Reutte                      | is_capital: 0
+SZ | Schwaz                      | is_capital: 0
+```
+
+Total for Tirol: 1 Statutarstadt + 8 Bezirke = 9 political districts.
+
+---
+
+## OE9 - Vorarlberg
+
+Vorarlberg has NO Statutarstaedte. The Landeshauptstadt Bregenz is the seat of the Bezirk Bregenz, but it is not a Statutarstadt.
+
+**Bezirke (Verwaltungsbezirke):**
+```
+B  | Bregenz                     | is_capital: 1
+BZ | Bludenz                     | is_capital: 0
+DO | Dornbirn                    | is_capital: 0
+FK | Feldkirch                   | is_capital: 0
+```
+
+Total for Vorarlberg: 4 Bezirke = 4 political districts.
+
+---
+
+## Summary
+
+| Bundesland | Statutarstaedte | Bezirke | Total |
+|---|---|---|---|
+| Wien (OE1) | 1 | 0 | 1 |
+| Niederösterreich (OE2) | 4 | 20 | 24 |
+| Burgenland (OE3) | 2 | 7 | 9 |
+| Oberösterreich (OE4) | 3 | 15 | 18 |
+| Salzburg (OE5) | 1 | 5 | 6 |
+| Steiermark (OE6) | 1 | 12 | 13 |
+| Kärnten (OE7) | 2 | 8 | 10 |
+| Tirol (OE8) | 1 | 8 | 9 |
+| Vorarlberg (OE9) | 0 | 4 | 4 |
+| **Total** | **15** | **79** | **94** |
+
+This gives 94 political districts total (15 Statutarstaedte/Freistaedte + 79 Landbezirke), which matches the official Statistik Austria count.
+
+## Important notes for database use:
+
+1. **Rust (Burgenland)** shares the Kfz code "E" with Eisenstadt but IS a separate political district (Freistadt). You may need a synthetic code like "RU" if the database requires unique codes per district.
+
+2. **Leoben (Steiermark)**: The political district code is LN. The code LE is only a separate registration authority for the city, not a separate political Bezirk.
+
+3. **Schwechat (Niederösterreich)**: Has Kfz code SW but is NOT a separate political district -- it belongs to Bezirk Bruck an der Leitha (BL).
+
+4. **Single-letter codes** are used for Landeshauptstaedte and some capitals: W (Wien), P (St. Pölten), E (Eisenstadt + Rust), L (Linz), S (Salzburg), G (Graz), K (Klagenfurt), I (Innsbruck), B (Bregenz).
+
+Sources:
+- [Kfz-Kennzeichen (Österreich) -- Wikipedia](https://de.wikipedia.org/wiki/Kfz-Kennzeichen_(%C3%96sterreich))
+- [Liste der Bezirke und Statutarstaedte in Österreich -- Wikipedia](https://de.wikipedia.org/wiki/Liste_der_Bezirke_und_Statutarst%C3%A4dte_in_%C3%96sterreich)
+- [Vehicle registration plates of Austria -- Wikipedia](https://en.wikipedia.org/wiki/Vehicle_registration_plates_of_Austria)
+- [oesterreich.gv.at -- Kennzeichentafeln Niederösterreich](https://www.oesterreich.gv.at/de/themen/mobilitaet/kfz/5/1/Seite.061404)
+- [oesterreich.gv.at -- Kennzeichentafeln Oberösterreich](https://www.oesterreich.gv.at/de/themen/mobilitaet/kfz/5/1/Seite.061405)
+- [oesterreich.gv.at -- Kennzeichentafeln Steiermark](https://www.oesterreich.gv.at/de/themen/mobilitaet/kfz/5/1/Seite.061407)
+- [oesterreich.gv.at -- Kennzeichentafeln Kärnten](https://www.oesterreich.gv.at/de/themen/mobilitaet/kfz/5/1/Seite.061403)
+- [check24.at -- Autokennzeichen Österreich](https://www.check24.at/ratgeber/versicherungsratgeber/autokennzeichen-in-oesterreich)
+- [GRAWE -- Autokennzeichen Liste](https://www.grawe.at/blog/liste-der-autokennzeichen-in-oesterreich/)
+- [Statistik Austria -- Politische Bezirke](https://www.statistik.at/web_de/klassifikationen/regionale_gliederungen/politische_bezirke/index.html)</result>
+<usage>total_tokens: 45864
+tool_uses: 35
+duration_ms: 207763</usage>
+</task-notification>
+Full transcript available at: /tmp/claude-1000/-home-achildrenmile-bosarsalog/tasks/ab83582.output
+
+---
+
+wien shall also be wc. the bundesländer shall have the präfix also mentioned, like oberösterreich oe5

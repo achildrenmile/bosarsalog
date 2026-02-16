@@ -1,0 +1,32 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "7e3e1358c807",
+  "session_id": "e0ab8722-350a-4e36-83d7-22c437ec33cd",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-16T13:47:14.727920727Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "server/src/db/seed.ts"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "90b9eeb0-4601-48cd-9dbb-820099e963f8",
+  "checkpoint_transcript_start": 2309,
+  "transcript_lines_at_start": 2309,
+  "token_usage": {
+    "input_tokens": 13,
+    "cache_creation_tokens": 7314,
+    "cache_read_tokens": 610552,
+    "output_tokens": 593,
+    "api_call_count": 9
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-16T13:47:13.778494611Z",
+    "agent_lines": 10,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 10,
+    "agent_percentage": 100
+  }
+}
