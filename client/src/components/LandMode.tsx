@@ -157,11 +157,11 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
     setEditingId(report.id);
     setEditForm({
       callsign: report.callsign,
-      operator: { id: report.operator_id, callsign: report.callsign },
+      operator: { id: report.operator_id, callsign: report.callsign, name: report.operator_name || null, qth: report.operator_qth || null },
       rapport: report.readability && report.strength ? `${report.readability}/${report.strength}${report.db_over_s9 || ''}` : '',
       notes: report.notes || '',
       opName: report.operator_name || '',
-      opQth: '',
+      opQth: report.operator_qth || '',
     });
   };
 
@@ -169,10 +169,27 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
     if (!editingId) return;
     const parsed = parseRapport(editForm.rapport);
     try {
+      // Save operator name/qth if changed
+      if (editForm.operator?.id) {
+        const nameChanged = (editForm.opName || '') !== (editForm.operator.name || '');
+        const qthChanged = (editForm.opQth || '') !== (editForm.operator.qth || '');
+        if (nameChanged || qthChanged) {
+          const patch: any = {};
+          if (nameChanged) patch.name = editForm.opName || null;
+          if (qthChanged) patch.qth = editForm.opQth || null;
+          await apiFetch(`/api/v1/operators/${editForm.operator.id}`, {
+            method: 'PATCH',
+            body: JSON.stringify(patch),
+          });
+        }
+      }
       const updated = await apiFetch(`/api/v1/exercises/${exerciseId}/reports/${editingId}`, {
         method: 'PATCH',
         body: JSON.stringify({ ...parsed, notes: editForm.notes || null }),
       });
+      // Update the returned report with new name/qth so display refreshes
+      if (editForm.opName !== undefined) updated.operator_name = editForm.opName || null;
+      if (editForm.opQth !== undefined) updated.operator_qth = editForm.opQth || null;
       onReportUpdated(updated);
       setEditingId(null);
     } catch {}
@@ -261,8 +278,10 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
                             <tr key={r.id} className="hover:bg-blue-50 group">
                               {editingId === r.id ? (
                                 <td colSpan={5} className="py-0.5">
-                                  <div className="flex items-center gap-1 bg-blue-50 rounded p-1">
+                                  <div className="flex items-center gap-1 bg-blue-50 rounded p-1 flex-wrap">
                                     <span className="font-mono font-medium">{r.callsign}</span>
+                                    <input value={editForm.opName} onChange={e => setEditForm({ ...editForm, opName: e.target.value })} placeholder="Name" className="border rounded px-1 py-0.5 text-xs w-20 hidden sm:block" />
+                                    <input value={editForm.opQth} onChange={e => setEditForm({ ...editForm, opQth: e.target.value })} placeholder="QTH" className="border rounded px-1 py-0.5 text-xs w-16 hidden sm:block" />
                                     <input value={editForm.rapport} onChange={e => setEditForm({ ...editForm, rapport: e.target.value.toUpperCase() })} className="border rounded px-1 py-0.5 font-mono text-xs w-20" autoFocus />
                                     <input value={editForm.notes} onChange={e => setEditForm({ ...editForm, notes: e.target.value })} placeholder="Sonst." className="border rounded px-1 py-0.5 text-xs w-20" />
                                     <button onClick={handleUpdate} className="text-green-600 text-xs font-bold">OK</button>
@@ -405,6 +424,8 @@ function BezirkRow({ bezirk, reports, repeaterId, onSubmit, onEdit, onDelete, ed
                   <td colSpan={5} className="py-0.5">
                     <div className="flex items-center gap-1 bg-blue-50 rounded p-1 flex-wrap">
                       <span className="font-mono font-medium">{r.callsign}</span>
+                      <input value={editForm.opName} onChange={e => onEditChange({ ...editForm, opName: e.target.value })} placeholder="Name" className="border rounded px-1 py-0.5 text-xs w-16 sm:w-20 hidden sm:block" />
+                      <input value={editForm.opQth} onChange={e => onEditChange({ ...editForm, opQth: e.target.value })} placeholder="QTH" className="border rounded px-1 py-0.5 text-xs w-14 sm:w-16 hidden sm:block" />
                       <input value={editForm.rapport} onChange={e => onEditChange({ ...editForm, rapport: e.target.value.toUpperCase() })} className="border rounded px-1 py-0.5 font-mono text-xs w-16 sm:w-20" autoFocus />
                       <input value={editForm.notes} onChange={e => onEditChange({ ...editForm, notes: e.target.value })} placeholder="Sonst." className="border rounded px-1 py-0.5 text-xs w-16 sm:w-20" />
                       <button onClick={onEditSave} className="text-green-600 text-xs font-bold">OK</button>
@@ -534,6 +555,8 @@ function FlatReportRow({ reports, repeaterId, onSubmit, onEdit, onDelete, editin
                   <td colSpan={5} className="py-0.5">
                     <div className="flex items-center gap-1 bg-blue-50 rounded p-1 flex-wrap">
                       <span className="font-mono font-medium">{r.callsign}</span>
+                      <input value={editForm.opName} onChange={e => onEditChange({ ...editForm, opName: e.target.value })} placeholder="Name" className="border rounded px-1 py-0.5 text-xs w-16 sm:w-20 hidden sm:block" />
+                      <input value={editForm.opQth} onChange={e => onEditChange({ ...editForm, opQth: e.target.value })} placeholder="QTH" className="border rounded px-1 py-0.5 text-xs w-14 sm:w-16 hidden sm:block" />
                       <input value={editForm.rapport} onChange={e => onEditChange({ ...editForm, rapport: e.target.value.toUpperCase() })} className="border rounded px-1 py-0.5 font-mono text-xs w-16 sm:w-20" autoFocus />
                       <input value={editForm.notes} onChange={e => onEditChange({ ...editForm, notes: e.target.value })} placeholder="Sonst." className="border rounded px-1 py-0.5 text-xs w-16 sm:w-20" />
                       <button onClick={onEditSave} className="text-green-600 text-xs font-bold">OK</button>
