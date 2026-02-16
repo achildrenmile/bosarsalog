@@ -29,7 +29,7 @@ export default function LoginPage() {
       <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-sm">
         <img src="/bosarsa.jpeg" alt="BOS-ARSA" className="h-20 mx-auto mb-4 rounded" />
         <h1 className="text-2xl font-bold text-[#1e3a5f] text-center mb-1">BOS-ARSA Log</h1>
-        <p className="text-sm text-gray-500 text-center mb-6">Amateurfunk Notfunkübung</p>
+        <p className="text-sm text-gray-500 text-center mb-6">Im Sinne der Sicherheit</p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Benutzername</label>
