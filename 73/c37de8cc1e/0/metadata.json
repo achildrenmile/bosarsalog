@@ -1,0 +1,29 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "73c37de8cc1e",
+  "session_id": "e0ab8722-350a-4e36-83d7-22c437ec33cd",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-16T11:30:04.216698767Z",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "client/src/components/LandMode.tsx"
+  ],
+  "agent": "Claude Code",
+  "token_usage": {
+    "input_tokens": 41,
+    "cache_creation_tokens": 68663,
+    "cache_read_tokens": 1689489,
+    "output_tokens": 458,
+    "api_call_count": 37
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-16T11:30:04.138731841Z",
+    "agent_lines": 2,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 2,
+    "agent_percentage": 100
+  }
+}
