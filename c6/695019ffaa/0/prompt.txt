@@ -1,0 +1,74 @@
+Implement the following plan:
+
+# LandMode Refactoring: Repeater-Grid wie BundMode
+
+## Context
+LandMode (Umsetzer-Ansicht) nutzt aktuell ein Tab-basiertes Layout mit einem einzigen Eingabeformular oben und einer Liste aller Repeater mit ihren Reports darunter. Der User möchte, dass LandMode exakt wie BundMode funktioniert — aber statt Bundesländer als Hauptkategorien werden **Repeater** als Hauptkategorien verwendet. Jede Repeater-Karte hat ein eigenes OP-Feld im Header und ein eigenes Eingabeformular für Rapporte direkt in der Karte.
+
+## Änderungen
+
+### 1. LandMode komplett umschreiben
+**Datei:** `client/src/components/LandMode.tsx`
+
+**Struktur (analog zu BundMode):**
+- Repeaters gruppiert nach Bundesland (wie jetzt in den Tabs), aber jeder Repeater wird eine eigene **collapsible card** (wie Bundesland-Karten in BundMode)
+- Pro Repeater-Card:
+  - **Header**: Repeater-Name, OP-Rufzeichen-Input, Report-Count-Badge, Frequenz-Info, Collapse-Toggle
+  - **Body**: Report-Liste (Tabelle) + Eingabeformular am Ende
+- **Eingabeformular pro Repeater** (wie `BezirkRow` in BundMode):
+  - CallsignInput + Rapport (vorausgefüllt "5/9") + Notes + Submit-Button
+  - Enter zum Eintragen, Auto-Focus zurück auf Callsign nach Submit
+- **Cross-Repeater-Sync entfernen**: Keine Placeholder-Einträge mehr auf anderen Repeatern
+
+**Reuse von BundMode-Patterns:**
+- `parseRapport()` — identische Funktion
+- `CallsignInput` mit ref für Auto-Focus — selbes Pattern wie in `BezirkRow`
+- `EntryForm` interface — identisch
+- Collapsible-State via `Set<number>` (Repeater-IDs statt BL-Codes)
+- OP-Callsign speichern via `saveOpCallsign()` — selbes API-Pattern
+
+**Neues Sub-Component `RepeaterRow`** (analog zu `BezirkRow`):
+- Props: repeater, reports, exerciseId, onReportCreated, onReportUpdated, onReportDeleted, editingId, editForm, onEditChange, onEditSave, onEditCancel
+- Eigenes `form` State mit `{ callsign, operator, rapport: '5/9', notes: '' }`
+- Submit erstellt Report direkt auf diesem Repeater
+- Report-Liste als Tabelle (Zeilen: Index, Callsign, Bezirk-Badge, Rapport, Notes, Delete)
+
+**Layout-Änderungen:**
+- Entferne Tab-Navigation komplett
+- Entferne globales Eingabeformular
+- Repeater als Cards gruppiert nach BL-Header (kleine Überschriften wie "OE1 Wien", "OE2 Salzburg")
+- Jede Card: Header klickbar zum Collapse/Expand
+
+### Keine Server-Änderungen nötig
+Die API bleibt unverändert — LandMode nutzt dieselben Endpoints wie bisher.
+
+## Verifizierung
+1. `nix-shell -p nodejs --run "npm run build"` kompiliert
+2. LandMode zeigt Repeater als Cards gruppiert nach Bundesland
+3. Jede Card hat OP-Feld, Report-Liste, Eingabeformular
+4. Rapport vorausgefüllt mit "5/9", Enter submitted, Auto-Focus auf Callsign
+5. Kein Cross-Repeater-Sync (nur der eine Repeater bekommt den Report)
+6. Deploy auf host-node-01
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+
+---
+
+in Land Umsetzer you should only show the land(s) which are configured. so if on bund oe1 are entered, but oe1 is not defined, ignore.
+
+---
+
+change display of entered callsigns in land(umsetzer) to do it in the same way then bund ... after entered the data
+
+---
+
+in land(umseter) it shall be grouped to all repeaters and then  bezirke in kärnten started with shortname of bezirk like he, fk, ...
+
+---
+
+[Request interrupted by user]
+
+---
+
+no... the selected repeaters in land mode shall be used in all cases. foreach repeater in landmode there should be all bezirke listed. and within these bezirke one can enter data. so e.g. i am in vl... so the operator will add me in this category, without entering the bezirk, just by adding in the correct bezirk. and this for all repeaters...
