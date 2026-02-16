@@ -10,48 +10,9 @@ import {
 import { Bar, Pie } from 'react-chartjs-2';
 import { toPng } from 'html-to-image';
 import AustriaMap from '../components/AustriaMap';
+import type { BezirkStat, Stats } from '../types/stats';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, PointElement, LineElement, Title, Tooltip, Legend);
-
-interface BezirkStat {
-  bundesland: string;
-  bundesland_code: string;
-  bezirk_code: string;
-  bezirk_name: string;
-  is_capital: number;
-  participants: number;
-  reports: number;
-}
-
-interface Participant {
-  callsign: string;
-  name: string | null;
-  bezirk_code: string | null;
-  bundesland_code: string | null;
-  bundesland_name: string | null;
-  report_count: number;
-}
-
-interface RepeaterStat {
-  short_name: string;
-  count: number;
-}
-
-interface BlStat {
-  bundesland: string;
-  bundesland_code: string;
-  participants: number;
-  reports: number;
-}
-
-interface Stats {
-  totalParticipants: number;
-  totalReports: number;
-  perRepeater: RepeaterStat[];
-  bezirkStats: BezirkStat[];
-  blStats: BlStat[];
-  participants: Participant[];
-}
 
 export default function ReportsPage() {
   const { id } = useParams<{ id: string }>();

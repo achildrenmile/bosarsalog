@@ -27,6 +27,9 @@ export default function Layout() {
           <Link to="/operators" className="text-xs sm:text-sm hover:text-blue-200 hidden sm:inline">
             Rufzeichen
           </Link>
+          <Link to="/reports" className="text-xs sm:text-sm hover:text-blue-200 hidden sm:inline">
+            Auswertung
+          </Link>
           <Link to="/hilfe" className="text-xs sm:text-sm hover:text-blue-200 hidden sm:inline">
             Hilfe
           </Link>
@@ -44,6 +47,7 @@ export default function Layout() {
       <div className="sm:hidden bg-[#1e3a5f] text-white px-2 pb-2 flex gap-3 text-xs border-t border-white/10">
         <Link to="/" className="hover:text-blue-200">Dashboard</Link>
         <Link to="/operators" className="hover:text-blue-200">Rufzeichen</Link>
+        <Link to="/reports" className="hover:text-blue-200">Auswertung</Link>
         <Link to="/hilfe" className="hover:text-blue-200">Hilfe</Link>
       </div>
       <main className="p-2 sm:p-4 max-w-[1600px] mx-auto flex-1 w-full">

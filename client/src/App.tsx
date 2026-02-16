@@ -7,6 +7,7 @@ import ExercisePage from './pages/ExercisePage';
 import ExerciseSetupPage from './pages/ExerciseSetupPage';
 import OperatorsPage from './pages/OperatorsPage';
 import ReportsPage from './pages/ReportsPage';
+import AggregatedReportsPage from './pages/AggregatedReportsPage';
 import ImpressumPage from './pages/ImpressumPage';
 import DatenschutzPage from './pages/DatenschutzPage';
 import HilfePage from './pages/HilfePage';
@@ -65,6 +66,7 @@ export default function App() {
           <Route path="exercises/:id" element={<ExercisePage />} />
           <Route path="exercises/:id/setup" element={<ExerciseSetupPage />} />
           <Route path="exercises/:id/reports" element={<ReportsPage />} />
+          <Route path="reports" element={<AggregatedReportsPage />} />
           <Route path="operators" element={<OperatorsPage />} />
         </Route>
         <Route element={<FlexLayout />}>
