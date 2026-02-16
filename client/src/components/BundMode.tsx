@@ -187,7 +187,15 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
       {bundeslaender.filter(bl => !bl.is_international).map(bl => {
         const blBezirke = bezirke.filter(b => b.bundesland_code === bl.code);
         const defaultRepId = blRepSelection[bl.code] || 0;
-        const blReports = reports.filter(r => r.bundesland_code === bl.code);
+        // Match reports by bundesland_code OR by callsign prefix (OE8xxx → '08')
+        const blReports = reports.filter(r => {
+          if (r.bundesland_code === bl.code) return true;
+          if (!r.bundesland_code && r.callsign) {
+            const prefix = r.callsign.match(/^OE(\d)/);
+            if (prefix && '0' + prefix[1] === bl.code) return true;
+          }
+          return false;
+        });
         const isCollapsed = collapsedBl.has(bl.code);
         const reportCount = blReports.filter(r => !r.is_op_marker && r.readability).length;
 
@@ -202,7 +210,13 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
                 <span className="font-medium text-sm">{bl.name}</span>
                 <span className="bg-[#0d6efd] text-white text-xs px-1.5 py-0.5 rounded-full">{reportCount}</span>
               </div>
-              <div className="flex items-center gap-1" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                <button
+                  onClick={() => setAddRepBl(addRepBl === bl.code ? null : bl.code)}
+                  className="text-xs text-gray-400 hover:text-blue-600"
+                >
+                  + Umsetzer
+                </button>
                 <label className="text-xs text-gray-500">OP:</label>
                 <input
                   type="text"
@@ -217,6 +231,44 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
 
             {!isCollapsed && (
               <div>
+                {addRepBl === bl.code && (
+                  <div className="px-3 py-2 bg-blue-50 border-b flex items-center gap-1 flex-wrap">
+                    <input
+                      type="text"
+                      value={newRepName}
+                      onChange={e => setNewRepName(e.target.value)}
+                      placeholder="Name"
+                      className="border border-gray-300 rounded px-1.5 py-0.5 text-xs w-28 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                      autoFocus
+                    />
+                    <input
+                      type="text"
+                      value={newRepFreq}
+                      onChange={e => setNewRepFreq(e.target.value)}
+                      placeholder="MHz"
+                      className="border border-gray-300 rounded px-1.5 py-0.5 text-xs font-mono w-20 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                    <input
+                      type="text"
+                      value={newRepCallsign}
+                      onChange={e => setNewRepCallsign(e.target.value.toUpperCase())}
+                      placeholder="Rufz."
+                      className="border border-gray-300 rounded px-1.5 py-0.5 text-xs font-mono uppercase w-20 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    />
+                    <button
+                      onClick={() => addRepeater(bl.code)}
+                      className="bg-green-600 hover:bg-green-700 text-white px-2 py-0.5 rounded text-xs"
+                    >
+                      OK
+                    </button>
+                    <button
+                      onClick={() => { setAddRepBl(null); setNewRepName(''); setNewRepFreq(''); setNewRepCallsign(''); }}
+                      className="text-gray-400 hover:text-gray-600 text-xs"
+                    >
+                      Abbrechen
+                    </button>
+                  </div>
+                )}
                 <div className="divide-y divide-gray-100">
                   {blBezirke.map(bz => {
                     const bzReports = blReports.filter(r => r.bezirk_code === bz.code);
@@ -238,53 +290,28 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
                       />
                     );
                   })}
-                </div>
-                <div className="px-3 py-1.5 border-t border-gray-100">
-                  {addRepBl === bl.code ? (
-                    <div className="flex items-center gap-1 flex-wrap">
-                      <input
-                        type="text"
-                        value={newRepName}
-                        onChange={e => setNewRepName(e.target.value)}
-                        placeholder="Name"
-                        className="border border-gray-300 rounded px-1.5 py-0.5 text-xs w-28 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                        autoFocus
+                  {/* Reports without matching bezirk */}
+                  {(() => {
+                    const bzCodes = new Set(blBezirke.map(b => b.code));
+                    const unassigned = blReports.filter(r => !r.bezirk_code || !bzCodes.has(r.bezirk_code));
+                    if (unassigned.length === 0) return null;
+                    return (
+                      <BezirkRow
+                        bezirk={{ code: '??', name: 'Unzugeordnet', is_capital: false }}
+                        reports={unassigned}
+                        linkedRepeaters={linkedRepeaters}
+                        defaultRepeaterId={defaultRepId}
+                        onSubmit={(repeaterId, form) => handleBezirkSubmit('??', repeaterId, form)}
+                        onEdit={handleEdit}
+                        onDelete={handleDelete}
+                        editingId={editingId}
+                        editForm={editForm}
+                        onEditChange={setEditForm}
+                        onEditSave={handleUpdate}
+                        onEditCancel={() => setEditingId(null)}
                       />
-                      <input
-                        type="text"
-                        value={newRepFreq}
-                        onChange={e => setNewRepFreq(e.target.value)}
-                        placeholder="MHz"
-                        className="border border-gray-300 rounded px-1.5 py-0.5 text-xs font-mono w-20 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      />
-                      <input
-                        type="text"
-                        value={newRepCallsign}
-                        onChange={e => setNewRepCallsign(e.target.value.toUpperCase())}
-                        placeholder="Rufz."
-                        className="border border-gray-300 rounded px-1.5 py-0.5 text-xs font-mono uppercase w-20 focus:outline-none focus:ring-1 focus:ring-blue-500"
-                      />
-                      <button
-                        onClick={() => addRepeater(bl.code)}
-                        className="bg-green-600 hover:bg-green-700 text-white px-2 py-0.5 rounded text-xs"
-                      >
-                        OK
-                      </button>
-                      <button
-                        onClick={() => { setAddRepBl(null); setNewRepName(''); setNewRepFreq(''); setNewRepCallsign(''); }}
-                        className="text-gray-400 hover:text-gray-600 text-xs"
-                      >
-                        Abbrechen
-                      </button>
-                    </div>
-                  ) : (
-                    <button
-                      onClick={() => setAddRepBl(bl.code)}
-                      className="text-xs text-gray-400 hover:text-gray-600"
-                    >
-                      + Umsetzer hinzufügen
-                    </button>
-                  )}
+                    );
+                  })()}
                 </div>
               </div>
             )}
