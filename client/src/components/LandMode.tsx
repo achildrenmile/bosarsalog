@@ -278,7 +278,7 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
                             <tr key={r.id} className="hover:bg-blue-50 group">
                               {editingId === r.id ? (
                                 <td colSpan={5} className="py-0.5">
-                                  <div className="flex items-center gap-1 bg-blue-50 rounded p-1 flex-wrap">
+                                  <div className="flex items-center gap-1 bg-blue-50 rounded p-1 flex-wrap" onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleUpdate(); } }}>
                                     <span className="font-mono font-medium">{r.callsign}</span>
                                     <input value={editForm.opName} onChange={e => setEditForm({ ...editForm, opName: e.target.value })} placeholder="Name" className="border rounded px-1 py-0.5 text-xs w-20 hidden sm:block" />
                                     <input value={editForm.opQth} onChange={e => setEditForm({ ...editForm, opQth: e.target.value })} placeholder="QTH" className="border rounded px-1 py-0.5 text-xs w-16 hidden sm:block" />
@@ -422,7 +422,7 @@ function BezirkRow({ bezirk, reports, repeaterId, onSubmit, onEdit, onDelete, ed
               <tr key={r.id} className="hover:bg-blue-50 group">
                 {editingId === r.id ? (
                   <td colSpan={5} className="py-0.5">
-                    <div className="flex items-center gap-1 bg-blue-50 rounded p-1 flex-wrap">
+                    <div className="flex items-center gap-1 bg-blue-50 rounded p-1 flex-wrap" onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); onEditSave(); } }}>
                       <span className="font-mono font-medium">{r.callsign}</span>
                       <input value={editForm.opName} onChange={e => onEditChange({ ...editForm, opName: e.target.value })} placeholder="Name" className="border rounded px-1 py-0.5 text-xs w-16 sm:w-20 hidden sm:block" />
                       <input value={editForm.opQth} onChange={e => onEditChange({ ...editForm, opQth: e.target.value })} placeholder="QTH" className="border rounded px-1 py-0.5 text-xs w-14 sm:w-16 hidden sm:block" />
@@ -553,7 +553,7 @@ function FlatReportRow({ reports, repeaterId, onSubmit, onEdit, onDelete, editin
               <tr key={r.id} className="hover:bg-blue-50 group">
                 {editingId === r.id ? (
                   <td colSpan={5} className="py-0.5">
-                    <div className="flex items-center gap-1 bg-blue-50 rounded p-1 flex-wrap">
+                    <div className="flex items-center gap-1 bg-blue-50 rounded p-1 flex-wrap" onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); onEditSave(); } }}>
                       <span className="font-mono font-medium">{r.callsign}</span>
                       <input value={editForm.opName} onChange={e => onEditChange({ ...editForm, opName: e.target.value })} placeholder="Name" className="border rounded px-1 py-0.5 text-xs w-16 sm:w-20 hidden sm:block" />
                       <input value={editForm.opQth} onChange={e => onEditChange({ ...editForm, opQth: e.target.value })} placeholder="QTH" className="border rounded px-1 py-0.5 text-xs w-14 sm:w-16 hidden sm:block" />
