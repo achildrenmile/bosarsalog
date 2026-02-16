@@ -14,9 +14,6 @@ export default function Layout() {
     <div className="min-h-screen flex flex-col">
       <nav className="bg-[#5b3a1a] text-white px-4 py-2 flex items-center justify-between shadow-md">
         <div className="flex items-center gap-4">
-          <a href="https://oeradio.at" target="_blank" rel="noopener noreferrer" className="flex-shrink-0">
-            <img src="/oeradiokl.png" alt="OERadio" className="h-10" />
-          </a>
           <a href="https://bosarsa.wordpress.com/" target="_blank" rel="noopener noreferrer" className="flex-shrink-0">
             <img src="/bosarsa.jpeg" alt="BOS-ARSA" className="h-10 rounded" />
           </a>
