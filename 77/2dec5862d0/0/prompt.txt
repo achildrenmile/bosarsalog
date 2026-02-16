@@ -1,0 +1,79 @@
+Implement the following plan:
+
+# Austria Map Feature — Bundesland Statistics
+
+## Context
+The ReportsPage already shows per-Bundesland statistics (participants, reports) in tables and charts. Adding a choropleth map of Austria colored by Bundesland gives an immediate visual overview — which regions are active, which are missing.
+
+## Approach
+Create an inline SVG component `AustriaMap` with the 9 Bundesländer shapes. No external map library needed — the shapes are static and simple. Color intensity based on participant count per Bundesland. Place it in ReportsPage between the summary cards and the charts.
+
+## Changes
+
+### 1. New component: `client/src/components/AustriaMap.tsx`
+- Inline SVG with path data for all 9 Austrian Bundesländer (OE1–OE9)
+- Props: `data: { code: string; participants: number; reports: number }[]`
+- Color scale: white (0 participants) → light blue → dark blue (`#1e3a5f`) based on max value
+- Each Bundesland shape shows:
+  - Fill color based on participant count
+  - Label overlay: OE code + participant count (e.g. "OE8: 12")
+  - Hover tooltip with full details (Bundesland name, participants, reports)
+- Responsive: scales to container width via `viewBox`
+- Supports PNG export (works with existing `html-to-image` setup)
+
+### 2. Integrate into `client/src/pages/ReportsPage.tsx`
+- Import `AustriaMap` component
+- Add map card between summary cards (line ~226) and charts section (line ~228)
+- Pass `blStats` data to the map component
+- Add ref + download button for PNG export (same pattern as existing charts)
+- Full-width card with title "Teilnehmer nach Bundesland"
+- Include color legend (gradient bar with min/max labels)
+
+## SVG Path Strategy
+Use simplified SVG paths for Austria's Bundesländer. The paths represent approximate geographic shapes positioned correctly relative to each other within a ~800×500 viewBox. Each path has an `id` matching the bundesland code ("01"–"09") for data binding.
+
+## Color Scale
+```
+0 participants  → #e8eef5 (very light blue-gray)
+max participants → #1e3a5f (dark navy — matches brand)
+```
+Linear interpolation between the two. Bundesländer with 0 data get a light gray (#f3f4f6) to distinguish "no data" from "low count".
+
+## Files Modified
+- `client/src/components/AustriaMap.tsx` (new)
+- `client/src/pages/ReportsPage.tsx` (add map section)
+
+## Verification
+1. `nix-shell -p nodejs --run "npm run build"` compiles
+2. Open ReportsPage for an exercise with data — map shows colored Bundesländer
+3. Hover shows tooltip with details
+4. "Download Auswertung" PNG export includes the map
+5. Mobile responsive — map scales down properly
+6. Deploy
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+
+---
+
+deploy
+
+---
+
+feature nicht sichtbar
+
+---
+
+finde das feature nicht
+
+---
+
+[Request interrupted by user for tool use]
+
+---
+
+do not deploy locally! deploy on production
+
+---
+
+erstelle eine richtige österreich karte. die zeichnung sieht fürchterlich aus. vorlage?
