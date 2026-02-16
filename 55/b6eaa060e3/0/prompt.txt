@@ -1,0 +1,131 @@
+Implement the following plan:
+
+# Security Hardening Plan
+
+## Context
+Pentest audit revealed several vulnerabilities. The app has good fundamentals (parameterized SQL, bcrypt, JWT auth) but needs hardening on: security headers, rate limiting, CORS, JWT secret handling, error disclosure, Docker user, and input validation.
+
+## Findings Summary
+
+| Severity | Issue |
+|----------|-------|
+| CRITICAL | Weak hardcoded JWT_SECRET fallback in auth.ts |
+| CRITICAL | No security headers (helmet) |
+| CRITICAL | CORS allows all origins (`*`) |
+| HIGH | No rate limiting on login (brute force possible) |
+| HIGH | Docker container runs as root |
+| MEDIUM | No global error handler (stack traces leak) |
+| MEDIUM | No input length validation |
+| MEDIUM | Docker port exposed to all interfaces |
+| LOW | No request body size limit |
+| OK | SQL injection: all queries parameterized |
+| OK | XSS: no dangerouslySetInnerHTML |
+| OK | .env.production already in .gitignore, not tracked |
+| OK | WebSocket auth with JWT |
+
+## Changes
+
+### 1. Install security dependencies
+**File:** `server/package.json`
+- Add `helmet` (security headers)
+- Add `express-rate-limit` (rate limiting)
+
+### 2. JWT_SECRET: fail-fast if not configured in production
+**File:** `server/src/middleware/auth.ts`
+- Throw error on startup if `NODE_ENV=production` and `JWT_SECRET` is not set
+- Keep dev fallback only in development
+
+### 3. Add helmet security headers
+**File:** `server/src/index.ts`
+- Add `helmet()` middleware — sets X-Frame-Options, X-Content-Type-Options, Strict-Transport-Security, etc.
+- Configure CSP to allow self + inline styles (Tailwind needs it)
+
+### 4. Restrict CORS to actual domain
+**File:** `server/src/index.ts`
+- Replace `cors()` with `cors({ origin: process.env.CORS_ORIGIN || 'https://bosarsalog.oeradio.at' })`
+- Same for Socket.IO cors config
+- Add `CORS_ORIGIN` env var to docker-compose.yml
+
+### 5. Add rate limiting on login
+**File:** `server/src/routes/auth.ts`
+- Max 10 attempts per IP per 15 minutes
+- Return 429 Too Many Requests on excess
+
+### 6. Add global error handler
+**File:** `server/src/index.ts`
+- Catch-all error middleware: log full error server-side, return generic message to client
+- No stack traces leaked in production
+
+### 7. Request body size limit
+**File:** `server/src/index.ts`
+- `express.json({ limit: '1mb' })`
+
+### 8. Input validation on login
+**File:** `server/src/routes/auth.ts`
+- Max 50 chars username, max 128 chars password
+
+### 9. Clamp pagination params
+**File:** `server/src/routes/operators.ts`
+- Clamp limit to 1-1000, offset >= 0
+
+### 10. Docker: run as non-root user
+**File:** `Dockerfile`
+- Add app user (UID 1001), chown /data, `USER app`
+
+### 11. Docker: bind port to localhost only
+**File:** `docker-compose.yml`
+- `"127.0.0.1:3416:3000"` — only accessible via Cloudflare tunnel
+- Add `CORS_ORIGIN` env var
+
+### 12. SQLite busy_timeout
+**File:** `server/src/db/database.ts`
+- `db.pragma('busy_timeout = 5000')` to prevent lock hangs
+
+### 13. Rotate JWT_SECRET on production
+- Generate new random 64-char secret
+- Update on host-node-01
+
+## Files Modified
+- `server/package.json`
+- `server/src/index.ts`
+- `server/src/middleware/auth.ts`
+- `server/src/routes/auth.ts`
+- `server/src/routes/operators.ts`
+- `server/src/db/database.ts`
+- `Dockerfile`
+- `docker-compose.yml`
+
+## Verification
+1. `nix-shell -p nodejs --run "npm run build"` compiles
+2. Login rate limit triggers after 10 rapid attempts
+3. Response headers include helmet defaults
+4. Missing JWT_SECRET in prod crashes on startup
+5. Docker container runs as non-root
+6. Deploy on host-node-01
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+
+---
+
+add logo to login screen. and subtitle. remove krisenkommunikationsübung
+
+---
+
+deploy
+
+---
+
+subitle should be im sinne der sicherheit. like in the header
+
+---
+
+remove the placeholder in the benutzername
+
+---
+
+admin is not a good username. any suggestions
+
+---
+
+einsatzleitung an stelle von admin. erfasse an stelle von operator. passwörter mind 20 zeichen, sicher.
