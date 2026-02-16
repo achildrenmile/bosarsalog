@@ -22,15 +22,15 @@ db.exec('DELETE FROM admins');
 // ─── Bundesländer ───
 const insertBl = db.prepare('INSERT INTO bundeslaender (code, name, sort_order, is_international) VALUES (?, ?, ?, ?)');
 const bundeslaender = [
-  ['01', 'Wien', 1, 0],
-  ['02', 'Salzburg', 2, 0],
-  ['03', 'Niederösterreich', 3, 0],
-  ['04', 'Burgenland', 4, 0],
-  ['05', 'Oberösterreich', 5, 0],
-  ['06', 'Steiermark', 6, 0],
-  ['07', 'Tirol', 7, 0],
-  ['08', 'Kärnten', 8, 0],
-  ['09', 'Vorarlberg', 9, 0],
+  ['01', 'OE1 Wien', 1, 0],
+  ['02', 'OE2 Salzburg', 2, 0],
+  ['03', 'OE3 Niederösterreich', 3, 0],
+  ['04', 'OE4 Burgenland', 4, 0],
+  ['05', 'OE5 Oberösterreich', 5, 0],
+  ['06', 'OE6 Steiermark', 6, 0],
+  ['07', 'OE7 Tirol', 7, 0],
+  ['08', 'OE8 Kärnten', 8, 0],
+  ['09', 'OE9 Vorarlberg', 9, 0],
   ['10', 'Slowenien', 10, 1],
   ['11', 'Tschechien', 11, 1],
   ['12', 'Deutschland', 12, 1],
@@ -51,7 +51,7 @@ console.log(`  ✓ ${bundeslaender.length} Bundesländer`);
 const insertBez = db.prepare('INSERT INTO bezirke (code, name, bundesland_code, is_capital) VALUES (?, ?, ?, ?)');
 const bezirke = [
   // Wien (01)
-  ['W', 'Wien', '01', 1],
+  ['WC', 'Wien', '01', 1],
   // Salzburg (02)
   ['HA', 'Hallein', '02', 0],
   ['JO', 'St. Johann im Pongau', '02', 0],
