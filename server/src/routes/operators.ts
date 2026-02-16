@@ -10,9 +10,13 @@ operatorsRouter.get('/', (req, res) => {
   if (q) {
     const pattern = `%${q.toUpperCase()}%`;
     const operators = db.prepare(`
-      SELECT * FROM operators
-      WHERE callsign LIKE ? OR UPPER(name) LIKE ? OR UPPER(qth) LIKE ?
-      ORDER BY callsign LIMIT 50
+      SELECT o.*, bl.name as bundesland_name,
+        (SELECT COUNT(*) FROM signal_reports sr WHERE sr.operator_id = o.id AND sr.readability IS NOT NULL) as total_reports
+      FROM operators o
+      LEFT JOIN bundeslaender bl ON bl.code = o.bundesland_code
+        OR (o.bundesland_code IS NULL AND bl.code = '0' || SUBSTR(o.callsign, 3, 1))
+      WHERE o.callsign LIKE ? OR UPPER(o.name) LIKE ? OR UPPER(o.qth) LIKE ?
+      ORDER BY o.callsign LIMIT 50
     `).all(pattern, pattern, pattern);
     res.json(operators);
   } else {

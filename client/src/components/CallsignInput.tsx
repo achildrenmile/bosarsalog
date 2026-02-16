@@ -22,7 +22,7 @@ export default function CallsignInput({ value, onChange, onSelect, autoFocus, cl
 
   const search = (q: string) => {
     if (debounceRef.current) clearTimeout(debounceRef.current);
-    if (q.length < 2) { setSuggestions([]); setShowSuggestions(false); return; }
+    if (q.length < 1) { setSuggestions([]); setShowSuggestions(false); return; }
     debounceRef.current = setTimeout(async () => {
       try {
         const results = await apiFetch(`/api/v1/operators?q=${encodeURIComponent(q)}`);
@@ -94,6 +94,8 @@ export default function CallsignInput({ value, onChange, onSelect, autoFocus, cl
               <span className="font-mono font-bold">{op.callsign}</span>
               {op.name && <span className="ml-2 text-gray-500">{op.name}</span>}
               {op.bezirk_code && <span className="ml-1 text-xs bg-gray-200 rounded px-1">{op.bezirk_code}</span>}
+              {op.bundesland_name && <span className="ml-1 text-xs text-gray-400">{op.bundesland_name}</span>}
+              {op.total_reports > 0 && <span className="ml-auto text-xs text-blue-500">{op.total_reports} Rap.</span>}
             </div>
           ))}
         </div>
