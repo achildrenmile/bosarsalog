@@ -310,9 +310,9 @@ if (magRepId) {
 // ─── Users ───
 const adminHash = bcrypt.hashSync('Xr9$kLm2!vBn7Qw4zJpT', 10);
 const operatorHash = bcrypt.hashSync('Wf5#dNc8&hYs3Rt6mKaU', 10);
-db.prepare('INSERT INTO admins (username, password_hash, role) VALUES (?, ?, ?)').run('einsatzleitung', adminHash, 'admin');
+db.prepare('INSERT INTO admins (username, password_hash, role) VALUES (?, ?, ?)').run('bosarsa', adminHash, 'admin');
 db.prepare('INSERT INTO admins (username, password_hash, role) VALUES (?, ?, ?)').run('erfasser', operatorHash, 'operator');
-console.log('  ✓ Users: einsatzleitung, erfasser');
+console.log('  ✓ Users: bosarsa, erfasser');
 
 console.log('Seed complete!');
 db.close();
