@@ -1,0 +1,36 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "4cfe59b7ce58",
+  "session_id": "e0ab8722-350a-4e36-83d7-22c437ec33cd",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-16T12:57:44.196744869Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "client/src/pages/ExercisePage.tsx",
+    "client/src/pages/ExerciseSetupPage.tsx",
+    "client/src/pages/ReportsPage.tsx",
+    "server/src/db/schema.ts",
+    "server/src/routes/exercises.ts"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "660099e3-c1b3-4b00-bf08-947f7a347a9e",
+  "checkpoint_transcript_start": 1544,
+  "transcript_lines_at_start": 1544,
+  "token_usage": {
+    "input_tokens": 33,
+    "cache_creation_tokens": 49838,
+    "cache_read_tokens": 1888939,
+    "output_tokens": 1361,
+    "api_call_count": 25
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-16T12:57:43.50772848Z",
+    "agent_lines": 60,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 60,
+    "agent_percentage": 100
+  }
+}
