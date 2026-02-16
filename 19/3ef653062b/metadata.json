@@ -3,19 +3,24 @@
   "checkpoint_id": "193ef653062b",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 0,
+  "checkpoints_count": 2,
   "files_touched": [
+    "Dockerfile",
     "README.md",
+    "client/src/App.tsx",
     "client/src/components/AustriaMap.tsx",
     "client/src/components/Layout.tsx",
+    "client/src/pages/AggregatedReportsPage.tsx",
     "client/src/pages/DashboardPage.tsx",
     "client/src/pages/HilfePage.tsx",
     "client/src/pages/LoginPage.tsx",
     "client/src/pages/ReportsPage.tsx",
+    "client/src/types/stats.ts",
     "package.json",
     "server/src/db/schema.ts",
     "server/src/routes/exercises.ts",
     "server/src/routes/operators.ts",
+    "server/src/routes/reports.ts",
     "server/src/utils/callsignCountry.ts"
   ],
   "sessions": [
@@ -25,13 +30,20 @@
       "context": "/19/3ef653062b/0/context.md",
       "content_hash": "/19/3ef653062b/0/content_hash.txt",
       "prompt": "/19/3ef653062b/0/prompt.txt"
+    },
+    {
+      "metadata": "/19/3ef653062b/1/metadata.json",
+      "transcript": "/19/3ef653062b/1/full.jsonl",
+      "context": "/19/3ef653062b/1/context.md",
+      "content_hash": "/19/3ef653062b/1/content_hash.txt",
+      "prompt": "/19/3ef653062b/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 10,
-    "cache_creation_tokens": 16949,
-    "cache_read_tokens": 647296,
-    "output_tokens": 2976,
-    "api_call_count": 8
+    "input_tokens": 62,
+    "cache_creation_tokens": 119048,
+    "cache_read_tokens": 3146525,
+    "output_tokens": 6160,
+    "api_call_count": 56
   }
 }
