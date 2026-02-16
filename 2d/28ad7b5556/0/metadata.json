@@ -1,0 +1,53 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "2d28ad7b5556",
+  "session_id": "dc8a8949-5565-4a85-a67a-3cadf10e1936",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-16T18:13:55.572219217Z",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "Dockerfile",
+    "README.md",
+    "client/index.html",
+    "client/src/App.tsx",
+    "client/src/components/BundMode.tsx",
+    "client/src/components/LandMode.tsx",
+    "client/src/components/Layout.tsx",
+    "client/src/pages/DashboardPage.tsx",
+    "client/src/pages/HilfePage.tsx",
+    "client/src/pages/LoginPage.tsx",
+    "client/src/pages/OperatorsPage.tsx",
+    "client/src/pages/ReportsPage.tsx",
+    "docker-compose.yml",
+    "package.json",
+    "server/src/db/database.ts",
+    "server/src/db/seed.ts",
+    "server/src/index.ts",
+    "server/src/middleware/auth.ts",
+    "server/src/routes/auth.ts",
+    "server/src/routes/export.ts",
+    "server/src/routes/operators.ts",
+    "server/src/services/socket.ts"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "36d5ce66-e4db-4428-83c8-28a12ccddc4a",
+  "checkpoint_transcript_start": 1797,
+  "transcript_lines_at_start": 1797,
+  "token_usage": {
+    "input_tokens": 9,
+    "cache_creation_tokens": 70584,
+    "cache_read_tokens": 491612,
+    "output_tokens": 1483,
+    "api_call_count": 7
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-16T18:13:54.932858466Z",
+    "agent_lines": 28,
+    "human_added": 211,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 239,
+    "agent_percentage": 11.715481171548117
+  }
+}
