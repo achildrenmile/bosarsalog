@@ -1,0 +1,111 @@
+Implement the following plan:
+
+# Nachbarländer auf der Karte + automatische Rufzeichen-Zuordnung
+
+## Context
+Nachbarländer nehmen an BOS-ARSA-Übungen teil (z.B. S55UJE aus Slowenien). Die Karte zeigt derzeit nur Österreichs 9 Bundesländer. Ausländische Teilnehmer werden falsch zugeordnet (z.B. S55UJE → "05" OÖ statt "10" Slowenien), weil der Server `SUBSTR(o.callsign, 3, 1)` verwendet, was nur für OE-Rufzeichen funktioniert.
+
+Ziel: Nachbarländer als Hintergrund auf der Karte zeigen, Statistiken erweitern, Rufzeichen automatisch korrekt zuordnen.
+
+## Changes
+
+### 1. Server: Callsign-to-Country Utility (NEW FILE)
+**`server/src/utils/callsignCountry.ts`**
+
+```typescript
+export function callsignToCountryCode(callsign: string): string | null
+```
+
+Mapping (longest prefix first):
+- `OE1`-`OE9` → `"01"`-`"09"` (Austrian states)
+- `HB0` → `"16"` (Liechtenstein — before HB!)
+- `HB` → `"17"` (Schweiz)
+- `S5` → `"10"` (Slowenien)
+- `OK`/`OL` → `"11"` (Tschechien)
+- `D[A-R]` → `"12"` (Deutschland)
+- `I` → `"13"` (Italien)
+- `OM` → `"14"` (Slowakei)
+- `9A` → `"15"` (Kroatien)
+- `HA`/`HG` → `"18"` (Ungarn)
+
+Strip `/P`, `/M`, `/OE8` suffixes before matching.
+
+### 2. Server: Migration to backfill bundesland_code
+**`server/src/db/schema.ts`** — add after existing migrations
+
+- SELECT all operators WHERE `bundesland_code IS NULL`
+- For each, compute code via `callsignToCountryCode()` and UPDATE
+- Also used for OE callsigns that were stored with null bundesland_code
+
+### 3. Server: Use utility in operator creation
+**`server/src/routes/operators.ts`** — POST handler
+
+- If `bundesland_code` not provided, auto-derive from callsign
+- `const derivedBl = bundesland_code || callsignToCountryCode(callsign)`
+
+### 4. Server: Simplify stats SQL
+**`server/src/routes/exercises.ts`** — lines 128-155
+
+Remove broken `'0' || SUBSTR(o.callsign, 3, 1)` fallback. After migration, all operators have `bundesland_code`, so queries simplify to:
+
+```sql
+-- blStats: just use o.bundesland_code directly
+LEFT JOIN bundeslaender bl ON bl.code = o.bundesland_code
+GROUP BY o.bundesland_code
+
+-- participants: remove the bl2 double-join hack
+LEFT JOIN bundeslaender bl ON bl.code = o.bundesland_code
+```
+
+### 5. Frontend: Neighbor country SVG paths
+**`client/src/components/AustriaMap.tsx`**
+
+- Use the known geo-projection: `svgX = (lon - 9.5009) / 7.6623 * 612.94`, `svgY = (49.0153 - lat) / 2.6440 * 313.55`
+- Get GeoJSON from Natural Earth (110m simplified), project to SVG, clip to expanded area
+- Hardcode resulting paths as `NEIGHBOR_PATHS` (codes `"10"`-`"18"`)
+- Expand viewBox from `"-5 -5 623 324"` to ~`"-100 -100 900 550"` to show neighbor borders
+- Render neighbors as background layer: light gray fill (`#e5e7eb`), thin gray stroke, 0.6 opacity
+- Countries with data: fill with blue scale (same as Austrian states)
+- Change internal key scheme from `"OE1"`-`"OE9"` to `"01"`-`"09"` (DB codes)
+- Add `BL_SHORT` map for display labels: `"01"→"OE1"`, `"10"→"SI"`, `"12"→"DE"`, etc.
+
+### 6. Frontend: Fix ReportsPage data mapping
+**`client/src/pages/ReportsPage.tsx`** — line 248
+
+Change from:
+```tsx
+code: `OE${parseInt(bl.bundesland_code, 10)}`
+```
+To:
+```tsx
+code: bl.bundesland_code
+```
+
+Update heading: "Teilnehmer nach Bundesland / Land"
+
+## Files Modified
+1. `server/src/utils/callsignCountry.ts` (NEW)
+2. `server/src/db/schema.ts` (migration)
+3. `server/src/routes/operators.ts` (auto-derive bundesland_code)
+4. `server/src/routes/exercises.ts` (simplify SQL)
+5. `client/src/components/AustriaMap.tsx` (add neighbors, change keys)
+6. `client/src/pages/ReportsPage.tsx` (fix data mapping)
+
+## Verification
+1. `nix-shell -p nodejs --run "npm run build"` compiles
+2. Server starts, migration backfills existing operators
+3. Creating operator with foreign callsign auto-assigns correct country
+4. ReportsPage shows neighbor countries on map with correct stats
+5. Austrian Bundesländer still display correctly
+6. Deploy to production via `bash deploy-production.sh`
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+
+---
+
+deploy to production
+
+---
+
+❯ use real map data. this looks ugly!!
