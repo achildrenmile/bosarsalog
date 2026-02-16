@@ -5,22 +5,12 @@ import bcrypt from 'bcryptjs';
 const db = initDb();
 runMigrations(db);
 
-console.log('Seeding database...');
+console.log('Seeding database (idempotent)...');
 
-// Clear existing data
-db.exec('DELETE FROM signal_reports');
-db.exec('DELETE FROM exercise_attendance');
-db.exec('DELETE FROM exercise_repeaters');
-db.exec('DELETE FROM exercises');
-db.exec('DELETE FROM einstiegspunkte');
-db.exec('DELETE FROM repeaters');
-db.exec('DELETE FROM operators');
-db.exec('DELETE FROM bezirke');
-db.exec('DELETE FROM bundeslaender');
-db.exec('DELETE FROM admins');
+const count = (table: string) => (db.prepare(`SELECT COUNT(*) as c FROM ${table}`).get() as any).c;
 
 // ─── Bundesländer ───
-const insertBl = db.prepare('INSERT INTO bundeslaender (code, name, sort_order, is_international) VALUES (?, ?, ?, ?)');
+const insertBl = db.prepare('INSERT OR IGNORE INTO bundeslaender (code, name, sort_order, is_international) VALUES (?, ?, ?, ?)');
 const bundeslaender = [
   ['01', 'OE1 Wien', 1, 0],
   ['02', 'OE2 Salzburg', 2, 0],
@@ -48,7 +38,7 @@ insertBlMany();
 console.log(`  ✓ ${bundeslaender.length} Bundesländer`);
 
 // ─── Bezirke ───
-const insertBez = db.prepare('INSERT INTO bezirke (code, name, bundesland_code, is_capital) VALUES (?, ?, ?, ?)');
+const insertBez = db.prepare('INSERT OR IGNORE INTO bezirke (code, name, bundesland_code, is_capital) VALUES (?, ?, ?, ?)');
 const bezirke = [
   // Wien (01)
   ['WC', 'Wien', '01', 1],
@@ -159,7 +149,10 @@ const insertBezMany = db.transaction(() => {
 insertBezMany();
 console.log(`  ✓ ${bezirke.length} Bezirke`);
 
-// ─── Repeaters ───
+// ─── Repeaters (skip if already populated) ───
+if (count('repeaters') > 0) {
+  console.log(`  ⏭ ${count('repeaters')} Repeaters already exist, skipping`);
+} else {
 // Comprehensive Austrian repeater list from OEVSV data, organized by Bundesland
 // Format: [short_name, site_name, band, callsign, frequency_mhz, offset_mhz, ctcss_hz, burst_hz, type, is_linked, sort_order, bundesland_code]
 const insertRep = db.prepare(`INSERT INTO repeaters (short_name, site_name, band, callsign, frequency_mhz, offset_mhz, ctcss_hz, burst_hz, type, is_linked, sort_order, bundesland_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
@@ -280,11 +273,12 @@ const insertRepMany = db.transaction(() => {
 });
 insertRepMany();
 console.log(`  ✓ ${repeaters.length} Repeaters`);
+} // end repeaters skip
 
-// ─── Einstiegspunkte (for Magdalensberg linked) ───
+// ─── Einstiegspunkte (for Magdalensberg linked, skip if already populated) ───
 const magRepRow = db.prepare("SELECT id FROM repeaters WHERE short_name = 'Magdalensberg linked'").get() as any;
 const magRepId = magRepRow?.id;
-if (magRepId) {
+if (magRepId && count('einstiegspunkte') === 0) {
   const insertEp = db.prepare('INSERT INTO einstiegspunkte (repeater_id, site_name, callsign, abbreviation, bundesland_code, sort_order) VALUES (?, ?, ?, ?, ?, ?)');
   const einstiegspunkte = [
     [magRepId, 'Hermannskogel', 'OE1XAT', 'HK', '01', 1],
@@ -307,12 +301,16 @@ if (magRepId) {
   console.log(`  ✓ ${einstiegspunkte.length} Einstiegspunkte`);
 }
 
-// ─── Users ───
-const adminHash = bcrypt.hashSync('Xr9$kLm2!vBn7Qw4zJpT', 10);
-const operatorHash = bcrypt.hashSync('Wf5#dNc8&hYs3Rt6mKaU', 10);
-db.prepare('INSERT INTO admins (username, password_hash, role) VALUES (?, ?, ?)').run('bosarsa', adminHash, 'admin');
-db.prepare('INSERT INTO admins (username, password_hash, role) VALUES (?, ?, ?)').run('erfasser', operatorHash, 'operator');
-console.log('  ✓ Users: bosarsa, erfasser');
+// ─── Users (skip if already exist) ───
+if (count('admins') === 0) {
+  const adminHash = bcrypt.hashSync('Xr9$kLm2!vBn7Qw4zJpT', 10);
+  const operatorHash = bcrypt.hashSync('Wf5#dNc8&hYs3Rt6mKaU', 10);
+  db.prepare('INSERT INTO admins (username, password_hash, role) VALUES (?, ?, ?)').run('bosarsa', adminHash, 'admin');
+  db.prepare('INSERT INTO admins (username, password_hash, role) VALUES (?, ?, ?)').run('erfasser', operatorHash, 'operator');
+  console.log('  ✓ Users: bosarsa, erfasser');
+} else {
+  console.log(`  ⏭ ${count('admins')} Users already exist, skipping`);
+}
 
 console.log('Seed complete!');
 db.close();
