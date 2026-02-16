@@ -10,8 +10,8 @@ exercisesRouter.get('/', (_req, res) => {
   const db = getDb();
   const exercises = db.prepare(`
     SELECT e.id, e.date, e.name, e.notes,
-      (SELECT COUNT(DISTINCT operator_id) FROM exercise_attendance WHERE exercise_id = e.id AND is_present = 1) as participant_count,
-      (SELECT COUNT(*) FROM signal_reports WHERE exercise_id = e.id AND is_op_marker = 0) as report_count
+      (SELECT COUNT(DISTINCT operator_id) FROM signal_reports WHERE exercise_id = e.id AND is_op_marker = 0) as participant_count,
+      (SELECT COUNT(*) FROM signal_reports WHERE exercise_id = e.id AND is_op_marker = 0 AND readability IS NOT NULL) as report_count
     FROM exercises e ORDER BY e.date ASC
   `).all();
   res.json(exercises);
@@ -96,17 +96,46 @@ exercisesRouter.patch('/:id', requireRole('admin'), (req, res) => {
 exercisesRouter.get('/:id/stats', (req, res) => {
   const db = getDb();
   const eid = req.params.id;
-  const totalParticipants = (db.prepare('SELECT COUNT(DISTINCT operator_id) as c FROM exercise_attendance WHERE exercise_id = ? AND is_present = 1').get(eid) as any)?.c || 0;
-  const totalReports = (db.prepare('SELECT COUNT(*) as c FROM signal_reports WHERE exercise_id = ? AND is_op_marker = 0').get(eid) as any)?.c || 0;
+  const totalParticipants = (db.prepare('SELECT COUNT(DISTINCT operator_id) as c FROM signal_reports WHERE exercise_id = ? AND is_op_marker = 0').get(eid) as any)?.c || 0;
+  const totalReports = (db.prepare('SELECT COUNT(*) as c FROM signal_reports WHERE exercise_id = ? AND is_op_marker = 0 AND readability IS NOT NULL').get(eid) as any)?.c || 0;
   const perRepeater = db.prepare(`
     SELECT r.short_name, COUNT(*) as count
     FROM signal_reports sr
     JOIN repeaters r ON r.id = sr.repeater_id
-    WHERE sr.exercise_id = ? AND sr.is_op_marker = 0
+    WHERE sr.exercise_id = ? AND sr.is_op_marker = 0 AND sr.readability IS NOT NULL
     GROUP BY sr.repeater_id
     ORDER BY r.sort_order
   `).all(eid);
-  res.json({ totalParticipants, totalReports, perRepeater });
+
+  // Bezirk breakdown: participants + reports per bezirk, grouped by bundesland
+  const bezirkStats = db.prepare(`
+    SELECT bl.name as bundesland, bl.code as bundesland_code, bl.sort_order as bl_sort,
+      bz.code as bezirk_code, bz.name as bezirk_name, bz.is_capital,
+      COUNT(DISTINCT sr.operator_id) as participants,
+      COUNT(CASE WHEN sr.readability IS NOT NULL THEN 1 END) as reports
+    FROM signal_reports sr
+    JOIN operators o ON o.id = sr.operator_id
+    JOIN bezirke bz ON bz.code = o.bezirk_code
+    JOIN bundeslaender bl ON bl.code = bz.bundesland_code
+    WHERE sr.exercise_id = ? AND sr.is_op_marker = 0
+    GROUP BY bz.code
+    ORDER BY bl.sort_order, bz.code
+  `).all(eid);
+
+  // Participant list: all operators with their report counts
+  const participants = db.prepare(`
+    SELECT o.callsign, o.name, o.bezirk_code, o.bundesland_code,
+      bl.name as bundesland_name,
+      COUNT(CASE WHEN sr.readability IS NOT NULL THEN 1 END) as report_count
+    FROM signal_reports sr
+    JOIN operators o ON o.id = sr.operator_id
+    LEFT JOIN bundeslaender bl ON bl.code = o.bundesland_code
+    WHERE sr.exercise_id = ? AND sr.is_op_marker = 0
+    GROUP BY sr.operator_id
+    ORDER BY bl.sort_order, o.bezirk_code, o.callsign
+  `).all(eid);
+
+  res.json({ totalParticipants, totalReports, perRepeater, bezirkStats, participants });
 });
 
 // Exercise repeaters management
@@ -276,18 +305,19 @@ exercisesRouter.post('/:id/attendance', (req, res) => {
   }
 });
 
-// Nebenstationen report
+// Nebenstationen report (legacy, data now included in /stats)
 exercisesRouter.get('/:id/nebenstationen', (req, res) => {
   const db = getDb();
   const data = db.prepare(`
     SELECT bl.name as bundesland, bl.code as bundesland_code,
       bz.code as bezirk_code, bz.name as bezirk_name, bz.is_capital,
-      COUNT(DISTINCT ea.operator_id) as count
-    FROM exercise_attendance ea
-    JOIN operators o ON o.id = ea.operator_id
+      COUNT(DISTINCT sr.operator_id) as count,
+      COUNT(CASE WHEN sr.readability IS NOT NULL THEN 1 END) as reports
+    FROM signal_reports sr
+    JOIN operators o ON o.id = sr.operator_id
     JOIN bezirke bz ON bz.code = o.bezirk_code
     JOIN bundeslaender bl ON bl.code = bz.bundesland_code
-    WHERE ea.exercise_id = ? AND ea.is_present = 1
+    WHERE sr.exercise_id = ? AND sr.is_op_marker = 0
     GROUP BY bz.code
     ORDER BY bl.sort_order, bz.code
   `).all(req.params.id);

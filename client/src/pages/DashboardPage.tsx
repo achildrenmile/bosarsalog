@@ -18,6 +18,11 @@ interface ExerciseSummary {
   report_count: number;
 }
 
+function getQuarter(date: string): number {
+  const month = new Date(date + 'T00:00:00').getMonth();
+  return Math.floor(month / 3) + 1;
+}
+
 export default function DashboardPage() {
   const { admin } = useAuth();
   const navigate = useNavigate();
@@ -39,6 +44,60 @@ export default function DashboardPage() {
     const date = new Date(d + 'T00:00:00');
     return date.toLocaleDateString('de-AT', { weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric' });
   };
+
+  // Compute nearest exercise to today
+  const today = new Date().toISOString().split('T')[0];
+  const nearestId = exercises.length > 0
+    ? exercises.reduce((closest, e) => {
+        const dCur = Math.abs(new Date(e.date).getTime() - new Date(today).getTime());
+        const dBest = Math.abs(new Date(closest.date).getTime() - new Date(today).getTime());
+        return dCur < dBest ? e : closest;
+      }, exercises[0]).id
+    : null;
+
+  // Compute quarterly and yearly totals
+  const quarterTotals: Record<number, { participants: number; reports: number }> = {};
+  let yearParticipants = 0;
+  let yearReports = 0;
+
+  for (const ex of exercises) {
+    const q = getQuarter(ex.date);
+    if (!quarterTotals[q]) quarterTotals[q] = { participants: 0, reports: 0 };
+    quarterTotals[q].participants += ex.participant_count;
+    quarterTotals[q].reports += ex.report_count;
+    yearParticipants += ex.participant_count;
+    yearReports += ex.report_count;
+  }
+
+  // Build rows with quarter subtotals inserted
+  const buildRows = () => {
+    const rows: { type: 'exercise' | 'quarter' | 'year'; data?: ExerciseSummary; quarter?: number; participants?: number; reports?: number }[] = [];
+    let lastQuarter = 0;
+
+    for (let i = 0; i < exercises.length; i++) {
+      const ex = exercises[i];
+      const q = getQuarter(ex.date);
+      const nextEx = exercises[i + 1];
+      const nextQ = nextEx ? getQuarter(nextEx.date) : 0;
+
+      rows.push({ type: 'exercise', data: ex });
+
+      // Insert quarter subtotal when quarter changes or at last exercise
+      if (q !== nextQ && quarterTotals[q]) {
+        rows.push({ type: 'quarter', quarter: q, ...quarterTotals[q] });
+        lastQuarter = q;
+      }
+    }
+
+    // Yearly total
+    if (exercises.length > 0) {
+      rows.push({ type: 'year', participants: yearParticipants, reports: yearReports });
+    }
+
+    return rows;
+  };
+
+  const QUARTER_LABELS: Record<number, string> = { 1: 'Q1 (Jan-Mär)', 2: 'Q2 (Apr-Jun)', 3: 'Q3 (Jul-Sep)', 4: 'Q4 (Okt-Dez)' };
 
   return (
     <div>
@@ -124,6 +183,30 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* Summary cards */}
+      {!loading && exercises.length > 0 && (
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
+          <div className="bg-white rounded-lg shadow-sm p-4 text-center">
+            <div className="text-3xl font-bold text-[#5b3a1a]">{exercises.length}</div>
+            <div className="text-sm text-gray-500">Übungen</div>
+          </div>
+          <div className="bg-white rounded-lg shadow-sm p-4 text-center">
+            <div className="text-3xl font-bold text-[#5b3a1a]">{yearParticipants}</div>
+            <div className="text-sm text-gray-500">Teilnehmer gesamt</div>
+          </div>
+          <div className="bg-white rounded-lg shadow-sm p-4 text-center">
+            <div className="text-3xl font-bold text-[#5b3a1a]">{yearReports}</div>
+            <div className="text-sm text-gray-500">Rapporte gesamt</div>
+          </div>
+          <div className="bg-white rounded-lg shadow-sm p-4 text-center">
+            <div className="text-3xl font-bold text-gray-600">
+              {exercises.length > 0 ? Math.round(yearParticipants / exercises.filter(e => e.participant_count > 0).length || 1) : 0}
+            </div>
+            <div className="text-sm text-gray-500">Teilnehmer/Übung</div>
+          </div>
+        </div>
+      )}
+
       {loading ? (
         <p className="text-gray-500">Laden...</p>
       ) : exercises.length === 0 ? (
@@ -141,30 +224,53 @@ export default function DashboardPage() {
               </tr>
             </thead>
             <tbody>
-              {exercises.map(ex => {
-                const today = new Date().toISOString().split('T')[0];
-                const isNearest = ex.id === exercises.reduce((closest, e) => {
-                  const dCur = Math.abs(new Date(e.date).getTime() - new Date(today).getTime());
-                  const dBest = Math.abs(new Date(closest.date).getTime() - new Date(today).getTime());
-                  return dCur < dBest ? e : closest;
-                }, exercises[0]).id;
-
-                return (
-                  <tr key={ex.id} className={`border-t ${isNearest ? 'bg-amber-100 font-medium' : 'hover:bg-amber-50'}`}>
-                    <td className="px-4 py-2 font-mono">
-                      {formatDate(ex.date)}
-                      {isNearest && <span className="ml-2 text-xs bg-amber-600 text-white px-1.5 py-0.5 rounded">Aktuell</span>}
-                    </td>
-                    <td className="px-4 py-2 text-gray-700">{ex.name || '—'}</td>
-                    <td className="px-4 py-2 text-right">{ex.participant_count}</td>
-                    <td className="px-4 py-2 text-right">{ex.report_count}</td>
-                    <td className="px-4 py-2 text-right">
-                      <Link to={`/exercises/${ex.id}`} className="text-amber-700 hover:underline text-xs">
-                        Öffnen
-                      </Link>
-                    </td>
-                  </tr>
-                );
+              {buildRows().map((row, idx) => {
+                if (row.type === 'exercise') {
+                  const ex = row.data!;
+                  const isNearest = ex.id === nearestId;
+                  return (
+                    <tr key={ex.id} className={`border-t ${isNearest ? 'bg-amber-100 font-medium' : 'hover:bg-amber-50'}`}>
+                      <td className="px-4 py-2 font-mono">
+                        {formatDate(ex.date)}
+                        {isNearest && <span className="ml-2 text-xs bg-amber-600 text-white px-1.5 py-0.5 rounded">Aktuell</span>}
+                      </td>
+                      <td className="px-4 py-2 text-gray-700">{ex.name || '—'}</td>
+                      <td className="px-4 py-2 text-right">{ex.participant_count}</td>
+                      <td className="px-4 py-2 text-right">{ex.report_count}</td>
+                      <td className="px-4 py-2 text-right space-x-2">
+                        <Link to={`/exercises/${ex.id}`} className="text-amber-700 hover:underline text-xs">
+                          Öffnen
+                        </Link>
+                        <Link to={`/exercises/${ex.id}/reports`} className="text-blue-600 hover:underline text-xs">
+                          Auswertung
+                        </Link>
+                      </td>
+                    </tr>
+                  );
+                }
+                if (row.type === 'quarter') {
+                  return (
+                    <tr key={`q${row.quarter}`} className="bg-blue-50 font-semibold border-t-2 border-blue-200">
+                      <td className="px-4 py-1.5 text-blue-800 text-xs" colSpan={2}>
+                        {QUARTER_LABELS[row.quarter!]}
+                      </td>
+                      <td className="px-4 py-1.5 text-right text-blue-800">{row.participants}</td>
+                      <td className="px-4 py-1.5 text-right text-blue-800">{row.reports}</td>
+                      <td></td>
+                    </tr>
+                  );
+                }
+                if (row.type === 'year') {
+                  return (
+                    <tr key="year" className="bg-[#5b3a1a] text-white font-bold">
+                      <td className="px-4 py-2" colSpan={2}>Jahresgesamt</td>
+                      <td className="px-4 py-2 text-right">{row.participants}</td>
+                      <td className="px-4 py-2 text-right">{row.reports}</td>
+                      <td></td>
+                    </tr>
+                  );
+                }
+                return null;
               })}
             </tbody>
           </table>
