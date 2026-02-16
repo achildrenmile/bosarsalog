@@ -192,7 +192,7 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
         const reportCount = blReports.filter(r => !r.is_op_marker && r.readability).length;
 
         return (
-          <div key={bl.code} className="bg-white rounded-lg shadow-sm overflow-hidden">
+          <div key={bl.code} className="bg-white rounded-lg shadow-sm">
             <div className="bg-gray-50 px-3 py-2 flex items-center justify-between border-b">
               <div
                 onClick={() => toggleBl(bl.code)}
@@ -332,38 +332,42 @@ function BezirkRow({ bezirk, reports, linkedRepeaters, defaultRepeaterId, onSubm
           {bezirk.code}
         </span>
         <span className="text-xs text-gray-500">{bezirk.name}</span>
+        {reports.length > 0 && <span className="text-xs text-gray-400">({reports.length})</span>}
       </div>
 
-      <div className="flex flex-wrap gap-1 mb-1">
-        {reports.map(r => (
-          <div key={r.id} className="group">
-            {editingId === r.id ? (
-              <div className="flex items-center gap-1 bg-blue-50 rounded p-1">
-                <input value={editForm.rapport} onChange={e => onEditChange({ ...editForm, rapport: e.target.value.toUpperCase() })} className="border rounded px-1 py-0.5 font-mono text-xs w-20" />
-                <button onClick={onEditSave} className="text-green-600 text-xs font-bold">OK</button>
-                <button onClick={onEditCancel} className="text-gray-400 text-xs">X</button>
-              </div>
-            ) : (
-              <span
-                onClick={() => onEdit(r)}
-                className="inline-flex items-center gap-1 bg-gray-50 hover:bg-blue-50 rounded px-1.5 py-0.5 cursor-pointer text-xs"
-              >
-                <span className="font-mono font-medium">{r.callsign}</span>
-                {r.readability && r.strength && (
-                  <span className="text-gray-500">{r.readability}/{r.strength}{r.db_over_s9 || ''}</span>
+      {reports.length > 0 && (
+        <table className="w-full text-xs mb-1">
+          <tbody>
+            {reports.map((r, idx) => (
+              <tr key={r.id} className="hover:bg-blue-50 group">
+                {editingId === r.id ? (
+                  <td colSpan={5} className="py-0.5">
+                    <div className="flex items-center gap-1 bg-blue-50 rounded p-1">
+                      <span className="font-mono font-medium">{r.callsign}</span>
+                      <input value={editForm.rapport} onChange={e => onEditChange({ ...editForm, rapport: e.target.value.toUpperCase() })} className="border rounded px-1 py-0.5 font-mono text-xs w-20" autoFocus />
+                      <input value={editForm.notes} onChange={e => onEditChange({ ...editForm, notes: e.target.value })} placeholder="Sonst." className="border rounded px-1 py-0.5 text-xs w-20" />
+                      <button onClick={onEditSave} className="text-green-600 text-xs font-bold">OK</button>
+                      <button onClick={onEditCancel} className="text-gray-400 text-xs">X</button>
+                    </div>
+                  </td>
+                ) : (
+                  <>
+                    <td className="py-0.5 text-gray-400 w-4">{idx + 1}</td>
+                    <td className="py-0.5 font-mono font-medium cursor-pointer" onClick={() => onEdit(r)}>{r.callsign}</td>
+                    <td className="py-0.5 font-mono text-gray-500 w-24 cursor-pointer" onClick={() => onEdit(r)}>
+                      {r.readability && r.strength ? `${r.readability}/${r.strength}${r.db_over_s9 || ''}` : '—'}
+                    </td>
+                    <td className="py-0.5 text-gray-500 cursor-pointer" onClick={() => onEdit(r)}>{r.notes || ''}</td>
+                    <td className="py-0.5 w-4">
+                      <button onClick={() => onDelete(r.id)} className="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100">x</button>
+                    </td>
+                  </>
                 )}
-                {r.notes && <span className="text-blue-600">({r.notes})</span>}
-                <button
-                  onClick={e => { e.stopPropagation(); onDelete(r.id); }}
-                  className="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100"
-                >
-                  x
-                </button>
-              </span>
-            )}
-          </div>
-        ))}
-      </div>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
 
       <form onSubmit={handleSubmit} className="flex items-center gap-1">
         {linkedRepeaters.length > 0 && (
