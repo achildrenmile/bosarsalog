@@ -3,12 +3,13 @@
   "checkpoint_id": "2d28ad7b5556",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 0,
+  "checkpoints_count": 2,
   "files_touched": [
     "Dockerfile",
     "README.md",
     "client/index.html",
     "client/src/App.tsx",
+    "client/src/components/AustriaMap.tsx",
     "client/src/components/BundMode.tsx",
     "client/src/components/LandMode.tsx",
     "client/src/components/Layout.tsx",
@@ -35,13 +36,20 @@
       "context": "/2d/28ad7b5556/0/context.md",
       "content_hash": "/2d/28ad7b5556/0/content_hash.txt",
       "prompt": "/2d/28ad7b5556/0/prompt.txt"
+    },
+    {
+      "metadata": "/2d/28ad7b5556/1/metadata.json",
+      "transcript": "/2d/28ad7b5556/1/full.jsonl",
+      "context": "/2d/28ad7b5556/1/context.md",
+      "content_hash": "/2d/28ad7b5556/1/content_hash.txt",
+      "prompt": "/2d/28ad7b5556/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 9,
-    "cache_creation_tokens": 70584,
-    "cache_read_tokens": 491612,
-    "output_tokens": 1483,
-    "api_call_count": 7
+    "input_tokens": 51,
+    "cache_creation_tokens": 133132,
+    "cache_read_tokens": 1789866,
+    "output_tokens": 5536,
+    "api_call_count": 39
   }
 }

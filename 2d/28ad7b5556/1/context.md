@@ -1,0 +1,36 @@
+# Session Context
+
+## User Prompts
+
+### Prompt 1
+
+Implement the following plan:
+
+# Austria Map Feature — Bundesland Statistics
+
+## Context
+The ReportsPage already shows per-Bundesland statistics (participants, reports) in tables and charts. Adding a choropleth map of Austria colored by Bundesland gives an immediate visual overview — which regions are active, which are missing.
+
+## Approach
+Create an inline SVG component `AustriaMap` with the 9 Bundesländer shapes. No external map library needed — the shapes are static and simple. Color i...
+
+### Prompt 2
+
+deploy
+
+### Prompt 3
+
+feature nicht sichtbar
+
+### Prompt 4
+
+finde das feature nicht
+
+### Prompt 5
+
+[Request interrupted by user for tool use]
+
+### Prompt 6
+
+do not deploy locally! deploy on production
+
