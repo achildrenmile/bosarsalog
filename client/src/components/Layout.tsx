@@ -61,6 +61,8 @@ export default function Layout() {
         <Link to="/hilfe" className="hover:text-gray-700">Hilfe</Link>
         <span>·</span>
         <a href="https://github.com/achildrenmile/bosarsalog" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700">GitHub</a>
+        <span>·</span>
+        <a href="https://github.com/achildrenmile/bosarsalog/releases/tag/v1.0.0-beta.1" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700">v1.0.0-beta.1</a>
       </footer>
     </div>
   );
