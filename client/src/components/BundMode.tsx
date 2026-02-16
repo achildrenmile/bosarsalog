@@ -120,9 +120,9 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
   };
 
   const handleBezirkSubmit = async (bezirkCode: string, repeaterId: number, form: EntryForm) => {
-    if (!repeaterId) return;
+    if (!repeaterId) { alert('Kein Umsetzer ausgewählt'); return; }
     const operator = await getOrCreateOperator(form.callsign, form.operator);
-    if (!operator) return;
+    if (!operator) { alert('Rufzeichen ungültig (min. 3 Zeichen)'); return; }
 
     const parsed = parseRapport(form.rapport);
 
@@ -147,6 +147,9 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
           });
           onReportUpdated(updated);
         }
+      } else {
+        console.error('Report error:', err);
+        alert('Fehler: ' + (err.message || 'Unbekannt'));
       }
     }
   };
@@ -305,8 +308,8 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
                                   <td colSpan={5} className="py-0.5">
                                     <div className="flex items-center gap-1 bg-blue-50 rounded p-1">
                                       <span className="font-mono font-medium">{r.callsign}</span>
-                                      <input value={editForm.rapport} onChange={e => onEditChange({ ...editForm, rapport: e.target.value.toUpperCase() })} className="border rounded px-1 py-0.5 font-mono text-xs w-20" autoFocus />
-                                      <input value={editForm.notes} onChange={e => onEditChange({ ...editForm, notes: e.target.value })} placeholder="Sonst." className="border rounded px-1 py-0.5 text-xs w-20" />
+                                      <input value={editForm.rapport} onChange={e => setEditForm({ ...editForm, rapport: e.target.value.toUpperCase() })} className="border rounded px-1 py-0.5 font-mono text-xs w-20" autoFocus />
+                                      <input value={editForm.notes} onChange={e => setEditForm({ ...editForm, notes: e.target.value })} placeholder="Sonst." className="border rounded px-1 py-0.5 text-xs w-20" />
                                       <button onClick={handleUpdate} className="text-green-600 text-xs font-bold">OK</button>
                                       <button onClick={() => setEditingId(null)} className="text-gray-400 text-xs">X</button>
                                     </div>

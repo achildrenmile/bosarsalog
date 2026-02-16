@@ -76,9 +76,9 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!activeRepeaterId) return;
+    if (!activeRepeaterId) { alert('Kein Umsetzer ausgewählt'); return; }
     const operator = await getOrCreateOperator(callsign, selectedOperator);
-    if (!operator) return;
+    if (!operator) { alert('Rufzeichen ungültig (min. 3 Zeichen)'); return; }
     setSelectedOperator(operator);
 
     const parsed = parseRapport(rapport);
@@ -133,6 +133,9 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
             });
             onReportUpdated(updated);
           }
+        } else {
+          console.error('Report error:', err);
+          alert('Fehler: ' + (err.message || 'Unbekannt'));
         }
       }
     }

@@ -222,8 +222,10 @@ exercisesRouter.post('/:id/reports', (req, res) => {
   const db = getDb();
   const admin = (req as AuthRequest).admin!;
   const { operator_id, repeater_id, readability, strength, db_over_s9, einstiegspunkt_id, is_op_marker, notes } = req.body;
+  console.log(`[report] POST exercise=${req.params.id} op=${operator_id} rep=${repeater_id} r=${readability} s=${strength} by=${admin.username}`);
 
   if (!operator_id || !repeater_id) {
+    console.log('[report] REJECTED: missing operator_id or repeater_id');
     res.status(400).json({ error: 'operator_id und repeater_id erforderlich' });
     return;
   }
