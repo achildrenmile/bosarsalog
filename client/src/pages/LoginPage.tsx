@@ -1,5 +1,5 @@
 import { useState, type FormEvent } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 
 export default function LoginPage() {
@@ -68,6 +68,12 @@ export default function LoginPage() {
         <a href="https://oeradio.at" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700">oeradio.at</a>
         <span>·</span>
         <a href="https://bos-arsa.at" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700">bos-arsa.at</a>
+        <span>·</span>
+        <Link to="/impressum" className="hover:text-gray-700">Impressum</Link>
+        <span>·</span>
+        <Link to="/datenschutz" className="hover:text-gray-700">Datenschutz</Link>
+        <span>·</span>
+        <Link to="/hilfe" className="hover:text-gray-700">Hilfe</Link>
         <span>·</span>
         <a href="https://github.com/achildrenmile/bosarsalog/releases/tag/v1.0.0-beta.1" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700">v1.0.0-beta.1</a>
       </footer>
