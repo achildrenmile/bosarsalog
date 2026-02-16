@@ -53,14 +53,14 @@ exercisesRouter.get('/:id', (req, res) => {
 
   const reports = db.prepare(`
     SELECT sr.*, o.callsign, o.name as operator_name, o.bezirk_code, o.bundesland_code,
-      r.short_name as repeater_name,
+      r.short_name as repeater_name, r.bundesland_code as repeater_bundesland_code,
       ep.abbreviation as einstiegspunkt_abbr, ep.site_name as einstiegspunkt_name
     FROM signal_reports sr
     JOIN operators o ON o.id = sr.operator_id
     JOIN repeaters r ON r.id = sr.repeater_id
     LEFT JOIN einstiegspunkte ep ON ep.id = sr.einstiegspunkt_id
     WHERE sr.exercise_id = ?
-    ORDER BY o.bundesland_code, o.bezirk_code, o.callsign
+    ORDER BY r.bundesland_code, o.callsign
   `).all(req.params.id);
 
   const attendance = db.prepare(`
@@ -206,7 +206,7 @@ exercisesRouter.get('/:id/reports', (req, res) => {
   const db = getDb();
   const reports = db.prepare(`
     SELECT sr.*, o.callsign, o.name as operator_name, o.bezirk_code, o.bundesland_code,
-      r.short_name as repeater_name,
+      r.short_name as repeater_name, r.bundesland_code as repeater_bundesland_code,
       ep.abbreviation as einstiegspunkt_abbr, ep.site_name as einstiegspunkt_name
     FROM signal_reports sr
     JOIN operators o ON o.id = sr.operator_id
@@ -242,7 +242,7 @@ exercisesRouter.post('/:id/reports', (req, res) => {
 
     const report = db.prepare(`
       SELECT sr.*, o.callsign, o.name as operator_name, o.bezirk_code, o.bundesland_code,
-        r.short_name as repeater_name,
+        r.short_name as repeater_name, r.bundesland_code as repeater_bundesland_code,
         ep.abbreviation as einstiegspunkt_abbr, ep.site_name as einstiegspunkt_name
       FROM signal_reports sr
       JOIN operators o ON o.id = sr.operator_id
@@ -277,7 +277,7 @@ exercisesRouter.patch('/:id/reports/:rid', (req, res) => {
   db.prepare(`UPDATE signal_reports SET ${updates.join(', ')} WHERE id = ?`).run(...params);
   const report = db.prepare(`
     SELECT sr.*, o.callsign, o.name as operator_name, o.bezirk_code, o.bundesland_code,
-      r.short_name as repeater_name,
+      r.short_name as repeater_name, r.bundesland_code as repeater_bundesland_code,
       ep.abbreviation as einstiegspunkt_abbr, ep.site_name as einstiegspunkt_name
     FROM signal_reports sr
     JOIN operators o ON o.id = sr.operator_id

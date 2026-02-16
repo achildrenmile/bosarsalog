@@ -77,13 +77,10 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    alert(`Submit: cs="${callsign}" rap="${rapport}" rep=${activeRepeaterId}`);
     if (!activeRepeaterId) return;
     if (!callsign) return;
-    try {
     const operator = await getOrCreateOperator(callsign, selectedOperator);
-    if (!operator) { alert('Operator nicht gefunden/erstellt'); return; }
-    alert(`Operator OK: ${operator.callsign} id=${operator.id}`);
+    if (!operator) return;
     setSelectedOperator(operator);
 
     const parsed = parseRapport(rapport);
@@ -96,7 +93,7 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
         });
         onReportUpdated(updated);
         setEditingId(null);
-      } catch (e: any) { alert('Edit Fehler: ' + e.message); }
+      } catch {}
     } else {
       try {
         const report = await apiFetch(`/api/v1/exercises/${exerciseId}/reports`, {
@@ -108,7 +105,6 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
             notes: notes || null,
           }),
         });
-        alert('Report erstellt: ' + report.id);
         onReportCreated(report);
 
         // Cross-repeater sync: create placeholder entries on other repeaters
@@ -137,13 +133,8 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
               method: 'PATCH',
               body: JSON.stringify({ ...parsed, notes: notes || null }),
             });
-            alert('Report updated: ' + updated.id);
             onReportUpdated(updated);
-          } else {
-            alert('Existiert aber nicht in lokaler Liste');
           }
-        } else {
-          alert('API Fehler: ' + (err.message || 'Unbekannt'));
         }
       }
     }
@@ -153,9 +144,6 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
     setRapport('5/9');
     setNotes('');
     setTimeout(() => callsignRef.current?.focus(), 50);
-    } catch (outerErr: any) {
-      alert('Unerwarteter Fehler: ' + (outerErr.message || JSON.stringify(outerErr)));
-    }
   };
 
   const handleEdit = (report: any) => {

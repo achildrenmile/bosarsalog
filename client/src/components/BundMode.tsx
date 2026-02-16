@@ -121,10 +121,9 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
 
   const handleBezirkSubmit = async (bezirkCode: string, repeaterId: number, form: EntryForm) => {
     try {
-      if (!repeaterId) { alert('Kein Umsetzer'); return; }
+      if (!repeaterId) return;
       const operator = await getOrCreateOperator(form.callsign, form.operator);
-      if (!operator) { alert('Operator nicht gefunden/erstellt'); return; }
-      alert(`Operator OK: ${operator.callsign} id=${operator.id}, sending to rep=${repeaterId}`);
+      if (!operator) return;
 
       const parsed = parseRapport(form.rapport);
 
@@ -138,7 +137,6 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
             notes: form.notes || null,
           }),
         });
-        alert('Report erstellt: ' + report.id);
         onReportCreated(report);
       } catch (err: any) {
         if (err.message?.includes('existiert')) {
@@ -148,17 +146,11 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
               method: 'PATCH',
               body: JSON.stringify({ ...parsed, notes: form.notes || null }),
             });
-            alert('Report updated: ' + updated.id);
             onReportUpdated(updated);
-          } else {
-            alert('Existiert aber nicht in lokaler Liste gefunden');
           }
-        } else {
-          alert('API Fehler: ' + (err.message || JSON.stringify(err)));
         }
       }
-    } catch (outerErr: any) {
-      alert('Unerwarteter Fehler: ' + (outerErr.message || JSON.stringify(outerErr)));
+    } catch {
     }
   };
 
@@ -198,15 +190,8 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
       {bundeslaender.filter(bl => !bl.is_international).map(bl => {
         const blBezirke = bezirke.filter(b => b.bundesland_code === bl.code);
         const defaultRepId = blRepSelection[bl.code] || 0;
-        // Match reports by bundesland_code OR by callsign prefix (OE8xxx → '08')
-        const blReports = reports.filter(r => {
-          if (r.bundesland_code === bl.code) return true;
-          if (!r.bundesland_code && r.callsign) {
-            const prefix = r.callsign.match(/^OE(\d)/);
-            if (prefix && '0' + prefix[1] === bl.code) return true;
-          }
-          return false;
-        });
+        // Match reports by repeater's Bundesland (where the report was entered)
+        const blReports = reports.filter(r => r.repeater_bundesland_code === bl.code);
         const isCollapsed = collapsedBl.has(bl.code);
         const reportCount = blReports.filter(r => !r.is_op_marker && r.readability).length;
 
@@ -378,7 +363,6 @@ function BezirkRow({ bezirk, reports, linkedRepeaters, defaultRepeaterId, onSubm
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
-    alert(`Submit: cs="${form.callsign}" rap="${form.rapport}" rep=${repeaterId}`);
     if (!form.callsign && !form.operator) return;
     if (!repeaterId) return;
     onSubmit(repeaterId, form);
