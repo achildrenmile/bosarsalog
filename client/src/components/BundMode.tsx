@@ -370,6 +370,7 @@ function BezirkRow({ bezirk, reports, linkedRepeaters, defaultRepeaterId, onSubm
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+    alert(`Submit: cs="${form.callsign}" rap="${form.rapport}" rep=${repeaterId}`);
     if (!form.callsign && !form.operator) return;
     if (!repeaterId) return;
     onSubmit(repeaterId, form);

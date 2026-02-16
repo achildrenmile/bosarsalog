@@ -77,6 +77,7 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    alert(`Submit: cs="${callsign}" rap="${rapport}" rep=${activeRepeaterId}`);
     if (!activeRepeaterId) return;
     if (!callsign) return;
     const operator = await getOrCreateOperator(callsign, selectedOperator);
