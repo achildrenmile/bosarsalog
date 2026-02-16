@@ -148,12 +148,14 @@ export default function ExerciseSetupPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-[#1e3a5f]">
-          Übung einrichten — {new Date(exercise.date + 'T00:00:00').toLocaleDateString('de-AT')}
+      <div className="flex items-center justify-between gap-2">
+        <h1 className="text-base sm:text-xl font-bold text-[#1e3a5f] min-w-0">
+          <span className="block sm:inline">Übung einrichten</span>
+          <span className="hidden sm:inline"> — </span>
+          <span className="block sm:inline text-sm sm:text-xl">{new Date(exercise.date + 'T00:00:00').toLocaleDateString('de-AT')}</span>
         </h1>
-        <div className="flex gap-2">
-          <Link to={`/exercises/${id}`} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded text-sm">
+        <div className="flex gap-2 flex-shrink-0">
+          <Link to={`/exercises/${id}`} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 sm:px-3 py-1.5 rounded text-xs sm:text-sm">
             Zurück
           </Link>
         </div>
@@ -161,8 +163,8 @@ export default function ExerciseSetupPage() {
 
       {/* Exercise name (admin only) */}
       {isAdmin && (
-        <div className="bg-white rounded-xl shadow p-4">
-          <h2 className="text-lg font-semibold text-[#1e3a5f] mb-3">Name der Übung</h2>
+        <div className="bg-white rounded-xl shadow p-3 sm:p-4">
+          <h2 className="text-base sm:text-lg font-semibold text-[#1e3a5f] mb-2 sm:mb-3">Name der Übung</h2>
           <input
             type="text"
             defaultValue={exercise.name || ''}
@@ -179,8 +181,8 @@ export default function ExerciseSetupPage() {
       )}
 
       {/* Bundesländer selection */}
-      <div className="bg-white rounded-xl shadow p-4">
-        <h2 className="text-lg font-semibold text-[#1e3a5f] mb-3">Bundesländer auswählen</h2>
+      <div className="bg-white rounded-xl shadow p-3 sm:p-4">
+        <h2 className="text-base sm:text-lg font-semibold text-[#1e3a5f] mb-2 sm:mb-3">Bundesländer auswählen</h2>
         <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-2">
           {BUNDESLAENDER.map(bl => {
             const isActive = activeBundeslaender.has(bl.code);
@@ -240,20 +242,20 @@ export default function ExerciseSetupPage() {
                     const active = activeRepeaters.find(r => r.repeater_id === rep.id);
                     return (
                       <div key={rep.id} className="flex items-center gap-3 py-2 border-b border-gray-100">
-                        <label className={`flex items-center gap-2 flex-1 ${!active || isAdmin ? 'cursor-pointer' : 'cursor-default'}`}>
+                        <label className={`flex items-center gap-1.5 sm:gap-2 flex-1 flex-wrap ${!active || isAdmin ? 'cursor-pointer' : 'cursor-default'}`}>
                           <input
                             type="checkbox"
                             checked={!!active}
                             disabled={!!active && !isAdmin}
                             onChange={() => toggleRepeater(rep.id)}
-                            className="w-4 h-4 accent-red-600"
+                            className="w-4 h-4 accent-red-600 flex-shrink-0"
                           />
-                          <span className="font-medium text-sm">{rep.short_name}</span>
-                          <span className="text-xs text-gray-500">
+                          <span className="font-medium text-xs sm:text-sm">{rep.short_name}</span>
+                          <span className="text-xs text-gray-500 hidden sm:inline">
                             {rep.frequency_mhz && `${rep.frequency_mhz} MHz`}
                             {rep.callsign && ` (${rep.callsign})`}
                           </span>
-                          {rep.ctcss_hz && <span className="text-xs text-gray-400">CTCSS {rep.ctcss_hz}</span>}
+                          {rep.ctcss_hz && <span className="text-xs text-gray-400 hidden md:inline">CTCSS {rep.ctcss_hz}</span>}
                           {rep.is_linked ? <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">oelink</span> : null}
                           {rep.is_custom ? <span className="text-xs bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">custom</span> : null}
                         </label>

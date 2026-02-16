@@ -208,19 +208,19 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
 
         return (
           <div key={bl.code} className="bg-white rounded-lg shadow-sm">
-            <div className="bg-gray-50 px-3 py-2 flex items-center justify-between border-b">
+            <div className="bg-gray-50 px-2 sm:px-3 py-2 flex flex-wrap items-center justify-between border-b gap-1">
               <div
                 onClick={() => toggleBl(bl.code)}
-                className="flex items-center gap-2 cursor-pointer hover:bg-gray-100 rounded px-1 -mx-1"
+                className="flex items-center gap-1.5 sm:gap-2 cursor-pointer hover:bg-gray-100 rounded px-1 -mx-1 min-w-0"
               >
                 <span className="text-xs text-gray-400">{isCollapsed ? '▶' : '▼'}</span>
-                <span className="font-medium text-sm">{bl.name}</span>
-                <span className="bg-[#0d6efd] text-white text-xs px-1.5 py-0.5 rounded-full">{reportCount}</span>
+                <span className="font-medium text-xs sm:text-sm truncate">{bl.name}</span>
+                <span className="bg-[#0d6efd] text-white text-xs px-1.5 py-0.5 rounded-full flex-shrink-0">{reportCount}</span>
               </div>
-              <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+              <div className="flex items-center gap-1.5 sm:gap-2" onClick={e => e.stopPropagation()}>
                 <button
                   onClick={() => setAddRepBl(addRepBl === bl.code ? null : bl.code)}
-                  className="text-xs text-gray-400 hover:text-blue-600"
+                  className="text-xs text-gray-400 hover:text-blue-600 hidden sm:inline"
                 >
                   + Umsetzer
                 </button>
@@ -230,8 +230,8 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
                   value={blOpCallsigns[bl.code] || ''}
                   onChange={e => setBlOpCallsigns(prev => ({ ...prev, [bl.code]: e.target.value.toUpperCase() }))}
                   onBlur={e => saveOpCallsign(bl.code, e.target.value.toUpperCase())}
-                  placeholder="Rufzeichen"
-                  className="border border-gray-300 rounded px-1.5 py-0.5 text-xs font-mono uppercase w-24 focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  placeholder="Rufz."
+                  className="border border-gray-300 rounded px-1.5 py-0.5 text-xs font-mono uppercase w-20 sm:w-24 focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
             </div>
@@ -382,14 +382,14 @@ function BezirkRow({ bezirk, reports, linkedRepeaters, defaultRepeaterId, onSubm
   };
 
   return (
-    <div className="px-3 py-1.5">
+    <div className="px-2 sm:px-3 py-1.5">
       {bezirk.code !== '??' && (
-        <div className="flex items-center gap-2 mb-1">
+        <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
           <span className={`text-xs font-mono px-1.5 py-0.5 rounded text-white ${bezirk.is_capital ? 'bg-[#dc3545]' : 'bg-[#6c757d]'}`}>
             {bezirk.code}
           </span>
-          <span className="text-xs text-gray-500">{bezirk.name}</span>
-          {reports.length > 0 && <span className="text-xs text-gray-400">({reports.length})</span>}
+          <span className="text-xs text-gray-500 truncate">{bezirk.name}</span>
+          {reports.length > 0 && <span className="text-xs text-gray-400 flex-shrink-0">({reports.length})</span>}
         </div>
       )}
 
@@ -400,10 +400,10 @@ function BezirkRow({ bezirk, reports, linkedRepeaters, defaultRepeaterId, onSubm
               <tr key={r.id} className="hover:bg-blue-50 group">
                 {editingId === r.id ? (
                   <td colSpan={5} className="py-0.5">
-                    <div className="flex items-center gap-1 bg-blue-50 rounded p-1">
+                    <div className="flex items-center gap-1 bg-blue-50 rounded p-1 flex-wrap">
                       <span className="font-mono font-medium">{r.callsign}</span>
-                      <input value={editForm.rapport} onChange={e => onEditChange({ ...editForm, rapport: e.target.value.toUpperCase() })} className="border rounded px-1 py-0.5 font-mono text-xs w-20" autoFocus />
-                      <input value={editForm.notes} onChange={e => onEditChange({ ...editForm, notes: e.target.value })} placeholder="Sonst." className="border rounded px-1 py-0.5 text-xs w-20" />
+                      <input value={editForm.rapport} onChange={e => onEditChange({ ...editForm, rapport: e.target.value.toUpperCase() })} className="border rounded px-1 py-0.5 font-mono text-xs w-16 sm:w-20" autoFocus />
+                      <input value={editForm.notes} onChange={e => onEditChange({ ...editForm, notes: e.target.value })} placeholder="Sonst." className="border rounded px-1 py-0.5 text-xs w-16 sm:w-20" />
                       <button onClick={onEditSave} className="text-green-600 text-xs font-bold">OK</button>
                       <button onClick={onEditCancel} className="text-gray-400 text-xs">X</button>
                     </div>
@@ -412,10 +412,10 @@ function BezirkRow({ bezirk, reports, linkedRepeaters, defaultRepeaterId, onSubm
                   <>
                     <td className="py-0.5 text-gray-400 w-4">{idx + 1}</td>
                     <td className="py-0.5 font-mono font-medium cursor-pointer" onClick={() => onEdit(r)}>{r.callsign}</td>
-                    <td className="py-0.5 font-mono text-gray-500 w-24 cursor-pointer" onClick={() => onEdit(r)}>
+                    <td className="py-0.5 font-mono text-gray-500 w-16 sm:w-24 cursor-pointer" onClick={() => onEdit(r)}>
                       {r.readability && r.strength ? `${r.readability}/${r.strength}${r.db_over_s9 || ''}` : '—'}
                     </td>
-                    <td className="py-0.5 text-gray-500 cursor-pointer" onClick={() => onEdit(r)}>{r.notes || ''}</td>
+                    <td className="py-0.5 text-gray-500 cursor-pointer hidden sm:table-cell" onClick={() => onEdit(r)}>{r.notes || ''}</td>
                     <td className="py-0.5 w-4">
                       <button onClick={() => onDelete(r.id)} className="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100">x</button>
                     </td>
@@ -432,7 +432,7 @@ function BezirkRow({ bezirk, reports, linkedRepeaters, defaultRepeaterId, onSubm
           <select
             value={repeaterId || ''}
             onChange={e => setRepeaterId(parseInt(e.target.value))}
-            className="border border-gray-300 rounded px-1 py-0.5 text-xs focus:outline-none focus:ring-1 focus:ring-blue-500"
+            className="border border-gray-300 rounded px-1 py-0.5 text-xs max-w-[80px] sm:max-w-none focus:outline-none focus:ring-1 focus:ring-blue-500"
           >
             {linkedRepeaters.map(r => (
               <option key={r.id} value={r.id}>
@@ -446,14 +446,14 @@ function BezirkRow({ bezirk, reports, linkedRepeaters, defaultRepeaterId, onSubm
           value={form.callsign}
           onChange={v => setForm(f => ({ ...f, callsign: v }))}
           onSelect={op => setForm(f => ({ ...f, operator: op, callsign: op.callsign }))}
-          className="w-28"
+          className="w-24 sm:w-28"
         />
         <input
           type="text"
           value={form.rapport}
           onChange={e => setForm(f => ({ ...f, rapport: e.target.value.toUpperCase() }))}
           placeholder="5/9"
-          className="border border-gray-300 rounded px-1.5 py-0.5 font-mono text-xs w-20 focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="border border-gray-300 rounded px-1.5 py-0.5 font-mono text-xs w-16 sm:w-20 focus:outline-none focus:ring-1 focus:ring-blue-500"
           onKeyDown={e => {
             if (e.altKey && e.key >= '1' && e.key <= '9') {
               e.preventDefault();
@@ -466,9 +466,9 @@ function BezirkRow({ bezirk, reports, linkedRepeaters, defaultRepeaterId, onSubm
           value={form.notes}
           onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
           placeholder="Sonst."
-          className="border border-gray-300 rounded px-1.5 py-0.5 text-xs flex-1 min-w-[60px] focus:outline-none focus:ring-1 focus:ring-blue-500"
+          className="border border-gray-300 rounded px-1.5 py-0.5 text-xs flex-1 min-w-[40px] sm:min-w-[60px] focus:outline-none focus:ring-1 focus:ring-blue-500"
         />
-        <button type="submit" className="bg-[#c8102e] hover:bg-[#a00d24] text-white px-2 py-0.5 rounded text-xs">
+        <button type="submit" className="bg-[#c8102e] hover:bg-[#a00d24] text-white px-2 py-0.5 rounded text-xs flex-shrink-0">
           +
         </button>
       </form>

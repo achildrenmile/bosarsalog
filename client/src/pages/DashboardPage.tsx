@@ -109,10 +109,10 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-6">
-        <div>
-          <h1 className="text-2xl font-bold text-[#1e3a5f]">Gesamtübersicht</h1>
-          <p className="text-sm text-gray-500">Willkommen, {admin?.username}</p>
+      <div className="flex items-center justify-between mb-4 sm:mb-6 gap-2">
+        <div className="min-w-0">
+          <h1 className="text-xl sm:text-2xl font-bold text-[#1e3a5f]">Gesamtübersicht</h1>
+          <p className="text-xs sm:text-sm text-gray-500">Willkommen, {admin?.username}</p>
         </div>
         {admin?.role === 'admin' && (
           <button
@@ -128,16 +128,16 @@ export default function DashboardPage() {
         <div className="bg-white rounded-xl shadow p-4 mb-6">
           <h2 className="text-sm font-semibold text-[#1e3a5f] mb-3">Neue Übung anlegen</h2>
           <div className="flex items-end gap-3 flex-wrap">
-            <div>
+            <div className="w-full sm:w-auto">
               <label className="block text-xs text-gray-500 mb-1">Datum</label>
               <input
                 type="date"
                 value={newDate}
                 onChange={e => setNewDate(e.target.value)}
-                className="border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="border border-gray-300 rounded px-2 py-1.5 text-sm w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
-            <div className="flex-1 min-w-[200px]">
+            <div className="flex-1 min-w-0 w-full sm:w-auto">
               <label className="block text-xs text-gray-500 mb-1">Typ / Name</label>
               <div className="flex gap-2">
                 <select
@@ -193,21 +193,21 @@ export default function DashboardPage() {
 
       {/* Summary cards */}
       {!loading && exercises.length > 0 && (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-          <div className="bg-white rounded-lg shadow-sm p-4 text-center">
-            <div className="text-3xl font-bold text-[#1e3a5f]">{exercises.length}</div>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 mb-4 sm:mb-6">
+          <div className="bg-white rounded-lg shadow-sm p-2 sm:p-4 text-center">
+            <div className="text-2xl sm:text-3xl font-bold text-[#1e3a5f]">{exercises.length}</div>
             <div className="text-sm text-gray-500">Übungen</div>
           </div>
-          <div className="bg-white rounded-lg shadow-sm p-4 text-center">
-            <div className="text-3xl font-bold text-[#1e3a5f]">{yearParticipants}</div>
+          <div className="bg-white rounded-lg shadow-sm p-2 sm:p-4 text-center">
+            <div className="text-2xl sm:text-3xl font-bold text-[#1e3a5f]">{yearParticipants}</div>
             <div className="text-sm text-gray-500">Teilnehmer gesamt</div>
           </div>
-          <div className="bg-white rounded-lg shadow-sm p-4 text-center">
-            <div className="text-3xl font-bold text-[#1e3a5f]">{yearReports}</div>
+          <div className="bg-white rounded-lg shadow-sm p-2 sm:p-4 text-center">
+            <div className="text-2xl sm:text-3xl font-bold text-[#1e3a5f]">{yearReports}</div>
             <div className="text-sm text-gray-500">Rapporte gesamt</div>
           </div>
-          <div className="bg-white rounded-lg shadow-sm p-4 text-center">
-            <div className="text-3xl font-bold text-gray-600">
+          <div className="bg-white rounded-lg shadow-sm p-2 sm:p-4 text-center">
+            <div className="text-2xl sm:text-3xl font-bold text-gray-600">
               {exercises.length > 0 ? Math.round(yearParticipants / exercises.filter(e => e.participant_count > 0).length || 1) : 0}
             </div>
             <div className="text-sm text-gray-500">Teilnehmer/Übung</div>
@@ -219,7 +219,7 @@ export default function DashboardPage() {
       {!loading && exercises.length > 0 && (
         <div className="bg-white rounded-xl shadow p-4 mb-6">
           <h2 className="text-sm font-semibold text-[#1e3a5f] mb-3">BOS-ARSA Krisenkommunikationsübungen {new Date().getFullYear()}</h2>
-          <div style={{ height: 300 }}>
+          <div className="h-48 sm:h-[300px]">
             <Bar
               data={{
                 labels: exercises.map(e => {
@@ -259,15 +259,15 @@ export default function DashboardPage() {
       ) : exercises.length === 0 ? (
         <p className="text-gray-500">Noch keine Übungen erstellt.</p>
       ) : (
-        <div className="bg-white rounded-xl shadow overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="bg-white rounded-xl shadow overflow-x-auto">
+          <table className="w-full text-xs sm:text-sm min-w-[480px]">
             <thead className="bg-[#1e3a5f] text-white">
               <tr>
-                <th className="px-4 py-2 text-left">Datum</th>
-                <th className="px-4 py-2 text-left">Name</th>
-                <th className="px-4 py-2 text-right">Teilnehmer</th>
-                <th className="px-4 py-2 text-right">Rapporte</th>
-                <th className="px-4 py-2"></th>
+                <th className="px-2 sm:px-4 py-2 text-left">Datum</th>
+                <th className="px-2 sm:px-4 py-2 text-left hidden sm:table-cell">Name</th>
+                <th className="px-2 sm:px-4 py-2 text-right">Teiln.</th>
+                <th className="px-2 sm:px-4 py-2 text-right">Rapp.</th>
+                <th className="px-2 sm:px-4 py-2"></th>
               </tr>
             </thead>
             <tbody>
@@ -277,18 +277,18 @@ export default function DashboardPage() {
                   const isNearest = ex.id === nearestId;
                   return (
                     <tr key={ex.id} className={`border-t ${isNearest ? 'bg-blue-100 font-medium' : 'hover:bg-blue-50'}`}>
-                      <td className="px-4 py-2 font-mono">
+                      <td className="px-2 sm:px-4 py-2 font-mono text-xs sm:text-sm">
                         {formatDate(ex.date)}
-                        {isNearest && <span className="ml-2 text-xs bg-[#c8102e] text-white px-1.5 py-0.5 rounded">Aktuell</span>}
+                        {isNearest && <span className="ml-1 sm:ml-2 text-[10px] sm:text-xs bg-[#c8102e] text-white px-1 sm:px-1.5 py-0.5 rounded">Aktuell</span>}
                       </td>
-                      <td className="px-4 py-2 text-gray-700">{ex.name || '—'}</td>
-                      <td className="px-4 py-2 text-right">{ex.participant_count}</td>
-                      <td className="px-4 py-2 text-right">{ex.report_count}</td>
-                      <td className="px-4 py-2 text-right space-x-2">
+                      <td className="px-2 sm:px-4 py-2 text-gray-700 hidden sm:table-cell">{ex.name || '—'}</td>
+                      <td className="px-2 sm:px-4 py-2 text-right">{ex.participant_count}</td>
+                      <td className="px-2 sm:px-4 py-2 text-right">{ex.report_count}</td>
+                      <td className="px-2 sm:px-4 py-2 text-right space-x-1 sm:space-x-2">
                         <Link to={`/exercises/${ex.id}`} className="text-blue-700 hover:underline text-xs">
                           Öffnen
                         </Link>
-                        <Link to={`/exercises/${ex.id}/reports`} className="text-blue-600 hover:underline text-xs">
+                        <Link to={`/exercises/${ex.id}/reports`} className="text-blue-600 hover:underline text-xs hidden sm:inline">
                           Auswertung
                         </Link>
                       </td>
@@ -298,11 +298,12 @@ export default function DashboardPage() {
                 if (row.type === 'quarter') {
                   return (
                     <tr key={`q${row.quarter}`} className="bg-blue-50 font-semibold border-t-2 border-blue-200">
-                      <td className="px-4 py-1.5 text-blue-800 text-xs" colSpan={2}>
+                      <td className="px-2 sm:px-4 py-1.5 text-blue-800 text-xs" colSpan={1}>
                         {QUARTER_LABELS[row.quarter!]}
                       </td>
-                      <td className="px-4 py-1.5 text-right text-blue-800">{row.participants}</td>
-                      <td className="px-4 py-1.5 text-right text-blue-800">{row.reports}</td>
+                      <td className="px-2 sm:px-4 py-1.5 hidden sm:table-cell"></td>
+                      <td className="px-2 sm:px-4 py-1.5 text-right text-blue-800">{row.participants}</td>
+                      <td className="px-2 sm:px-4 py-1.5 text-right text-blue-800">{row.reports}</td>
                       <td></td>
                     </tr>
                   );
@@ -310,9 +311,10 @@ export default function DashboardPage() {
                 if (row.type === 'year') {
                   return (
                     <tr key="year" className="bg-[#1e3a5f] text-white font-bold">
-                      <td className="px-4 py-2" colSpan={2}>Jahresgesamt</td>
-                      <td className="px-4 py-2 text-right">{row.participants}</td>
-                      <td className="px-4 py-2 text-right">{row.reports}</td>
+                      <td className="px-2 sm:px-4 py-2">Jahresgesamt</td>
+                      <td className="px-2 sm:px-4 py-2 hidden sm:table-cell"></td>
+                      <td className="px-2 sm:px-4 py-2 text-right">{row.participants}</td>
+                      <td className="px-2 sm:px-4 py-2 text-right">{row.reports}</td>
                       <td></td>
                     </tr>
                   );

@@ -68,10 +68,10 @@ export default function OperatorsPage() {
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center justify-between">
-        <h1 className="text-xl font-bold text-[#1e3a5f]">Rufzeichen-Register</h1>
-        <button onClick={() => setShowAdd(true)} className="bg-[#c8102e] hover:bg-[#a00d24] text-white px-3 py-1.5 rounded text-sm">
-          + Neues Rufzeichen
+      <div className="flex items-center justify-between gap-2">
+        <h1 className="text-lg sm:text-xl font-bold text-[#1e3a5f]">Rufzeichen-Register</h1>
+        <button onClick={() => setShowAdd(true)} className="bg-[#c8102e] hover:bg-[#a00d24] text-white px-2 sm:px-3 py-1.5 rounded text-xs sm:text-sm flex-shrink-0">
+          + Neu
         </button>
       </div>
 
@@ -102,17 +102,17 @@ export default function OperatorsPage() {
         </div>
       )}
 
-      <div className="bg-white rounded-xl shadow overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="bg-white rounded-xl shadow overflow-x-auto">
+        <table className="w-full text-xs sm:text-sm min-w-[400px]">
           <thead className="bg-[#1e3a5f] text-white">
             <tr>
-              <th className="px-3 py-2 text-left">Rufzeichen</th>
-              <th className="px-3 py-2 text-left">Name</th>
-              <th className="px-3 py-2 text-left">QTH</th>
-              <th className="px-3 py-2 text-left">Bezirk</th>
-              <th className="px-3 py-2 text-left">BL</th>
-              <th className="px-3 py-2 text-left">Ausstattung</th>
-              <th className="px-3 py-2"></th>
+              <th className="px-2 sm:px-3 py-2 text-left">Rufzeichen</th>
+              <th className="px-2 sm:px-3 py-2 text-left">Name</th>
+              <th className="px-2 sm:px-3 py-2 text-left hidden sm:table-cell">QTH</th>
+              <th className="px-2 sm:px-3 py-2 text-left">Bezirk</th>
+              <th className="px-2 sm:px-3 py-2 text-left hidden sm:table-cell">BL</th>
+              <th className="px-2 sm:px-3 py-2 text-left hidden md:table-cell">Ausstattung</th>
+              <th className="px-2 sm:px-3 py-2"></th>
             </tr>
           </thead>
           <tbody>
@@ -133,19 +133,19 @@ export default function OperatorsPage() {
                   </>
                 ) : (
                   <>
-                    <td className="px-3 py-1.5 font-mono font-medium">{op.callsign}</td>
-                    <td className="px-3 py-1.5">{op.name}</td>
-                    <td className="px-3 py-1.5 text-gray-500">{op.qth}</td>
-                    <td className="px-3 py-1.5">
+                    <td className="px-2 sm:px-3 py-1.5 font-mono font-medium">{op.callsign}</td>
+                    <td className="px-2 sm:px-3 py-1.5">{op.name}</td>
+                    <td className="px-2 sm:px-3 py-1.5 text-gray-500 hidden sm:table-cell">{op.qth}</td>
+                    <td className="px-2 sm:px-3 py-1.5">
                       {op.bezirk_code && (
                         <span className="text-xs bg-gray-200 rounded px-1">{op.bezirk_code}</span>
                       )}
                     </td>
-                    <td className="px-3 py-1.5 text-gray-500">{op.bundesland_code}</td>
-                    <td className="px-3 py-1.5 text-xs text-gray-400">{op.equipment}</td>
-                    <td className="px-3 py-1.5">
+                    <td className="px-2 sm:px-3 py-1.5 text-gray-500 hidden sm:table-cell">{op.bundesland_code}</td>
+                    <td className="px-2 sm:px-3 py-1.5 text-xs text-gray-400 hidden md:table-cell">{op.equipment}</td>
+                    <td className="px-2 sm:px-3 py-1.5">
                       <button onClick={() => setEditing({ ...op })} className="text-red-700 hover:underline text-xs">
-                        Bearbeiten
+                        Bearb.
                       </button>
                     </td>
                   </>

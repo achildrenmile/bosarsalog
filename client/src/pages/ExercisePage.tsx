@@ -109,10 +109,12 @@ export default function ExercisePage() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <h1 className="text-xl font-bold text-[#1e3a5f]">
-          {exercise.name || 'Übung'} — {new Date(exercise.date + 'T00:00:00').toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric' })}
+        <h1 className="text-base sm:text-xl font-bold text-[#1e3a5f] min-w-0">
+          <span className="block sm:inline">{exercise.name || 'Übung'}</span>
+          <span className="hidden sm:inline"> — </span>
+          <span className="block sm:inline text-sm sm:text-xl">{new Date(exercise.date + 'T00:00:00').toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
         </h1>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           {mode === 'land' && (
             <div className="flex items-center gap-1.5">
               <label className="text-xs text-gray-500">OP:</label>
@@ -122,14 +124,14 @@ export default function ExercisePage() {
                 onChange={e => setOpCallsign(e.target.value.toUpperCase())}
                 onBlur={e => updateOpCallsign(e.target.value.toUpperCase())}
                 placeholder="Rufzeichen"
-                className="border border-gray-300 rounded px-2 py-1 text-sm font-mono uppercase w-28 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="border border-gray-300 rounded px-2 py-1 text-sm font-mono uppercase w-24 sm:w-28 focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
           )}
-          <Link to={`/exercises/${id}/setup`} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded text-sm">
+          <Link to={`/exercises/${id}/setup`} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 sm:px-3 py-1 rounded text-xs sm:text-sm">
             Einrichten
           </Link>
-          <Link to={`/exercises/${id}/reports`} className="bg-red-100 hover:bg-red-200 text-red-800 px-3 py-1 rounded text-sm">
+          <Link to={`/exercises/${id}/reports`} className="bg-red-100 hover:bg-red-200 text-red-800 px-2 sm:px-3 py-1 rounded text-xs sm:text-sm">
             Auswertung
           </Link>
         </div>
@@ -137,16 +139,16 @@ export default function ExercisePage() {
 
       <RunningTotals stats={stats} />
 
-      <div className="flex gap-1 bg-white rounded-lg p-1 shadow-sm w-fit">
+      <div className="flex gap-1 bg-white rounded-lg p-1 shadow-sm w-full sm:w-fit">
         <button
           onClick={() => setMode('land')}
-          className={`px-4 py-1.5 rounded text-sm font-medium ${mode === 'land' ? 'bg-[#1e3a5f] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+          className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 rounded text-xs sm:text-sm font-medium ${mode === 'land' ? 'bg-[#1e3a5f] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
         >
           Land (Umsetzer)
         </button>
         <button
           onClick={() => setMode('bund')}
-          className={`px-4 py-1.5 rounded text-sm font-medium ${mode === 'bund' ? 'bg-[#1e3a5f] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+          className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 rounded text-xs sm:text-sm font-medium ${mode === 'bund' ? 'bg-[#1e3a5f] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
         >
           Bund (Bundesland)
         </button>

@@ -92,12 +92,12 @@ export default function ReportsPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-xl font-bold text-[#1e3a5f]">Auswertung</h1>
-          <p className="text-sm text-gray-500">{exercise.name} — {formatDate(exercise.date)}</p>
+      <div className="flex items-center justify-between gap-2">
+        <div className="min-w-0">
+          <h1 className="text-base sm:text-xl font-bold text-[#1e3a5f]">Auswertung</h1>
+          <p className="text-xs sm:text-sm text-gray-500 truncate">{exercise.name} — {formatDate(exercise.date)}</p>
         </div>
-        <Link to={`/exercises/${id}`} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1.5 rounded text-sm">
+        <Link to={`/exercises/${id}`} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 sm:px-3 py-1.5 rounded text-xs sm:text-sm flex-shrink-0">
           Zurück
         </Link>
       </div>
@@ -105,19 +105,19 @@ export default function ReportsPage() {
       {stats && (
         <>
           {/* Summary cards */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            <div className="bg-white rounded-lg shadow-sm p-4 text-center">
-              <div className="text-3xl font-bold text-[#1e3a5f]">{stats.totalParticipants}</div>
-              <div className="text-sm text-gray-500">Teilnehmer</div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
+            <div className="bg-white rounded-lg shadow-sm p-2 sm:p-4 text-center">
+              <div className="text-2xl sm:text-3xl font-bold text-[#1e3a5f]">{stats.totalParticipants}</div>
+              <div className="text-xs sm:text-sm text-gray-500">Teilnehmer</div>
             </div>
-            <div className="bg-white rounded-lg shadow-sm p-4 text-center">
-              <div className="text-3xl font-bold text-[#1e3a5f]">{stats.totalReports}</div>
-              <div className="text-sm text-gray-500">Rapporte</div>
+            <div className="bg-white rounded-lg shadow-sm p-2 sm:p-4 text-center">
+              <div className="text-2xl sm:text-3xl font-bold text-[#1e3a5f]">{stats.totalReports}</div>
+              <div className="text-xs sm:text-sm text-gray-500">Rapporte</div>
             </div>
             {stats.perRepeater.map((r) => (
-              <div key={r.short_name} className="bg-white rounded-lg shadow-sm p-4 text-center">
-                <div className="text-2xl font-bold text-gray-700">{r.count}</div>
-                <div className="text-xs text-gray-500">{r.short_name}</div>
+              <div key={r.short_name} className="bg-white rounded-lg shadow-sm p-2 sm:p-4 text-center">
+                <div className="text-xl sm:text-2xl font-bold text-gray-700">{r.count}</div>
+                <div className="text-xs text-gray-500 truncate">{r.short_name}</div>
               </div>
             ))}
           </div>
@@ -133,11 +133,11 @@ export default function ReportsPage() {
             return chartData.length > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Bar chart: Stationen + Rapporte */}
-              <div className="bg-white rounded-xl shadow p-4">
-                <h2 className="text-sm font-semibold text-[#1e3a5f] mb-3">
+              <div className="bg-white rounded-xl shadow p-3 sm:p-4">
+                <h2 className="text-xs sm:text-sm font-semibold text-[#1e3a5f] mb-2 sm:mb-3">
                   BOS-ARSA Krisenkommunikationsübung am {new Date(exercise.date + 'T00:00:00').toLocaleDateString('de-AT')}
                 </h2>
-                <div style={{ height: 350 }}>
+                <div className="h-48 sm:h-[350px]">
                   <Bar
                     data={{
                       labels: chartData.map(d => d.label),
@@ -168,11 +168,11 @@ export default function ReportsPage() {
               </div>
 
               {/* Pie chart: Rapporte distribution */}
-              <div className="bg-white rounded-xl shadow p-4">
-                <h2 className="text-sm font-semibold text-[#1e3a5f] mb-3">
+              <div className="bg-white rounded-xl shadow p-3 sm:p-4">
+                <h2 className="text-xs sm:text-sm font-semibold text-[#1e3a5f] mb-2 sm:mb-3">
                   Rapporte-Verteilung nach {chartLevel}
                 </h2>
-                <div style={{ height: 350 }} className="flex items-center justify-center">
+                <div className="h-48 sm:h-[350px] flex items-center justify-center">
                   <Pie
                     data={{
                       labels: chartData.filter(d => d.reports > 0).map(d => d.label),
@@ -235,15 +235,16 @@ export default function ReportsPage() {
           {/* Bezirk/Bundesland table */}
           {stats.bezirkStats.length > 0 && (
             <div className="bg-white rounded-xl shadow overflow-hidden">
-              <div className="bg-[#1e3a5f] text-white px-4 py-2 text-sm font-semibold">
+              <div className="bg-[#1e3a5f] text-white px-2 sm:px-4 py-2 text-xs sm:text-sm font-semibold">
                 Nebenstationen nach Bezirk
               </div>
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto">
+              <table className="w-full text-xs sm:text-sm min-w-[360px]">
                 <thead>
                   <tr className="bg-gray-50 border-b text-left text-xs text-gray-500 uppercase">
-                    <th className="px-4 py-2">Bundesland / Bezirk</th>
-                    <th className="px-4 py-2 text-right w-28">Teilnehmer</th>
-                    <th className="px-4 py-2 text-right w-28">Rapporte</th>
+                    <th className="px-2 sm:px-4 py-2">Bundesland / Bezirk</th>
+                    <th className="px-2 sm:px-4 py-2 text-right w-16 sm:w-28">Teiln.</th>
+                    <th className="px-2 sm:px-4 py-2 text-right w-16 sm:w-28">Rapp.</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -278,6 +279,7 @@ export default function ReportsPage() {
                   </tr>
                 </tbody>
               </table>
+              </div>
             </div>
           )}
 
@@ -291,34 +293,36 @@ export default function ReportsPage() {
               <span className="text-xs">{showParticipants ? '▼' : '▶'}</span>
             </div>
             {showParticipants && (
-              <table className="w-full text-sm">
+              <div className="overflow-x-auto">
+              <table className="w-full text-xs sm:text-sm min-w-[360px]">
                 <thead>
                   <tr className="bg-gray-50 border-b text-left text-xs text-gray-500 uppercase">
-                    <th className="px-4 py-2 w-8">#</th>
-                    <th className="px-4 py-2">Rufzeichen</th>
-                    <th className="px-4 py-2">Name</th>
-                    <th className="px-4 py-2">Bezirk</th>
-                    <th className="px-4 py-2">Bundesland</th>
-                    <th className="px-4 py-2 text-right w-24">Rapporte</th>
+                    <th className="px-2 sm:px-4 py-2 w-8">#</th>
+                    <th className="px-2 sm:px-4 py-2">Rufzeichen</th>
+                    <th className="px-2 sm:px-4 py-2 hidden sm:table-cell">Name</th>
+                    <th className="px-2 sm:px-4 py-2">Bezirk</th>
+                    <th className="px-2 sm:px-4 py-2 hidden md:table-cell">Bundesland</th>
+                    <th className="px-2 sm:px-4 py-2 text-right w-16 sm:w-24">Rapp.</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">
                   {stats.participants.map((p, idx) => (
                     <tr key={p.callsign} className="hover:bg-blue-50">
-                      <td className="px-4 py-1 text-xs text-gray-400">{idx + 1}</td>
-                      <td className="px-4 py-1 font-mono font-medium">{p.callsign}</td>
-                      <td className="px-4 py-1 text-gray-600">{p.name || ''}</td>
-                      <td className="px-4 py-1">
+                      <td className="px-2 sm:px-4 py-1 text-xs text-gray-400">{idx + 1}</td>
+                      <td className="px-2 sm:px-4 py-1 font-mono font-medium">{p.callsign}</td>
+                      <td className="px-2 sm:px-4 py-1 text-gray-600 hidden sm:table-cell">{p.name || ''}</td>
+                      <td className="px-2 sm:px-4 py-1">
                         {p.bezirk_code && (
                           <span className="text-xs bg-gray-200 rounded px-1.5 py-0.5 font-mono">{p.bezirk_code}</span>
                         )}
                       </td>
-                      <td className="px-4 py-1 text-gray-600 text-xs">{p.bundesland_name || ''}</td>
-                      <td className="px-4 py-1 text-right font-mono">{p.report_count}</td>
+                      <td className="px-2 sm:px-4 py-1 text-gray-600 text-xs hidden md:table-cell">{p.bundesland_name || ''}</td>
+                      <td className="px-2 sm:px-4 py-1 text-right font-mono">{p.report_count}</td>
                     </tr>
                   ))}
                 </tbody>
               </table>
+              </div>
             )}
           </div>
 

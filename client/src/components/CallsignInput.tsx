@@ -92,7 +92,7 @@ const CallsignInput = forwardRef<CallsignInputRef, Props>(({ value, onChange, on
         placeholder="Rufzeichen"
       />
       {showSuggestions && (
-        <div className="absolute z-20 top-full left-0 mt-1 bg-white border rounded shadow-lg max-h-48 overflow-auto w-64">
+        <div className="absolute z-20 top-full left-0 mt-1 bg-white border rounded shadow-lg max-h-48 overflow-auto w-64 max-w-[calc(100vw-2rem)]">
           {suggestions.map((op, i) => (
             <div
               key={op.id}
