@@ -290,26 +290,45 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
                       />
                     );
                   })}
-                  {/* Reports without matching bezirk */}
+                  {/* Reports without matching bezirk — shown directly as list items */}
                   {(() => {
                     const bzCodes = new Set(blBezirke.map(b => b.code));
                     const unassigned = blReports.filter(r => !r.bezirk_code || !bzCodes.has(r.bezirk_code));
                     if (unassigned.length === 0) return null;
                     return (
-                      <BezirkRow
-                        bezirk={{ code: '??', name: 'Unzugeordnet', is_capital: false }}
-                        reports={unassigned}
-                        linkedRepeaters={linkedRepeaters}
-                        defaultRepeaterId={defaultRepId}
-                        onSubmit={(repeaterId, form) => handleBezirkSubmit('??', repeaterId, form)}
-                        onEdit={handleEdit}
-                        onDelete={handleDelete}
-                        editingId={editingId}
-                        editForm={editForm}
-                        onEditChange={setEditForm}
-                        onEditSave={handleUpdate}
-                        onEditCancel={() => setEditingId(null)}
-                      />
+                      <div className="px-3 py-1.5">
+                        <table className="w-full text-xs mb-1">
+                          <tbody>
+                            {unassigned.map((r, idx) => (
+                              <tr key={r.id} className="hover:bg-blue-50 group">
+                                {editingId === r.id ? (
+                                  <td colSpan={5} className="py-0.5">
+                                    <div className="flex items-center gap-1 bg-blue-50 rounded p-1">
+                                      <span className="font-mono font-medium">{r.callsign}</span>
+                                      <input value={editForm.rapport} onChange={e => onEditChange({ ...editForm, rapport: e.target.value.toUpperCase() })} className="border rounded px-1 py-0.5 font-mono text-xs w-20" autoFocus />
+                                      <input value={editForm.notes} onChange={e => onEditChange({ ...editForm, notes: e.target.value })} placeholder="Sonst." className="border rounded px-1 py-0.5 text-xs w-20" />
+                                      <button onClick={handleUpdate} className="text-green-600 text-xs font-bold">OK</button>
+                                      <button onClick={() => setEditingId(null)} className="text-gray-400 text-xs">X</button>
+                                    </div>
+                                  </td>
+                                ) : (
+                                  <>
+                                    <td className="py-0.5 text-gray-400 w-4">{idx + 1}</td>
+                                    <td className="py-0.5 font-mono font-medium cursor-pointer" onClick={() => handleEdit(r)}>{r.callsign}</td>
+                                    <td className="py-0.5 font-mono text-gray-500 w-24 cursor-pointer" onClick={() => handleEdit(r)}>
+                                      {r.readability && r.strength ? `${r.readability}/${r.strength}${r.db_over_s9 || ''}` : '—'}
+                                    </td>
+                                    <td className="py-0.5 text-gray-500 cursor-pointer" onClick={() => handleEdit(r)}>{r.notes || ''}</td>
+                                    <td className="py-0.5 w-4">
+                                      <button onClick={() => handleDelete(r.id)} className="text-red-400 hover:text-red-600 opacity-0 group-hover:opacity-100">x</button>
+                                    </td>
+                                  </>
+                                )}
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
                     );
                   })()}
                 </div>
