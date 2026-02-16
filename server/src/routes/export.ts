@@ -25,7 +25,7 @@ exportRouter.get('/exercises/:id/bund', (req, res) => {
   `).all(req.params.id) as any[];
 
   let text = `BOS-ARSA Krisenkommunikationsübung — ${exercise.date}\n`;
-  text += `Auswertung nach Bundesland\n`;
+  text += `Auswertung OE-Link\n`;
   text += '='.repeat(60) + '\n\n';
 
   let currentBl = '';
@@ -48,7 +48,7 @@ exportRouter.get('/exercises/:id/bund', (req, res) => {
   }
 
   res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-  res.setHeader('Content-Disposition', `attachment; filename="bos-arsa-bund-${exercise.date}.txt"`);
+  res.setHeader('Content-Disposition', `attachment; filename="bos-arsa-oelink-${exercise.date}.txt"`);
   res.send(text);
 });
 
@@ -74,7 +74,7 @@ exportRouter.get('/exercises/:id/land', (req, res) => {
   `).all(req.params.id) as any[];
 
   let text = `BOS-ARSA Krisenkommunikationsübung — ${exercise.date}\n`;
-  text += `Auswertung nach Umsetzer\n`;
+  text += `Auswertung Frequenzen\n`;
   text += '='.repeat(60) + '\n\n';
 
   let currentRep = '';
@@ -97,7 +97,7 @@ exportRouter.get('/exercises/:id/land', (req, res) => {
   }
 
   res.setHeader('Content-Type', 'text/plain; charset=utf-8');
-  res.setHeader('Content-Disposition', `attachment; filename="bos-arsa-land-${exercise.date}.txt"`);
+  res.setHeader('Content-Disposition', `attachment; filename="bos-arsa-frequenzen-${exercise.date}.txt"`);
   res.send(text);
 });
 
@@ -125,7 +125,7 @@ exportRouter.get('/exercises/:id/combined', (req, res) => {
   text += '='.repeat(60) + '\n';
   text += `Teilnehmer: ${stats.participants}\n`;
   text += `Rapporte gesamt: ${stats.reports}\n\n`;
-  text += 'Pro Umsetzer:\n';
+  text += 'Pro Frequenz:\n';
   for (const r of perRepeater) {
     text += `  ${r.short_name.padEnd(25)} ${r.count}\n`;
   }

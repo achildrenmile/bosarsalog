@@ -467,14 +467,14 @@ export default function ReportsPage() {
                 className="bg-red-100 hover:bg-red-200 text-red-800 px-4 py-2 rounded text-sm font-medium"
                 target="_blank"
               >
-                TXT — Bund
+                TXT — OE-Link
               </a>
               <a
                 href={`/api/v1/export/exercises/${id}/land`}
                 className="bg-red-100 hover:bg-red-200 text-red-800 px-4 py-2 rounded text-sm font-medium"
                 target="_blank"
               >
-                TXT — Land
+                TXT — Frequenzen
               </a>
               <a
                 href={`/api/v1/export/exercises/${id}/combined`}
