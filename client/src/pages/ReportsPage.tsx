@@ -313,7 +313,7 @@ export default function ReportsPage() {
               <div ref={pieCardRef} className="bg-white rounded-xl shadow p-3 sm:p-4">
                 <div className="flex items-center justify-between mb-2 sm:mb-3">
                   <h2 className="text-xs sm:text-sm font-semibold text-[#1e3a5f]">
-                    Rapporte-Verteilung nach {chartLevel}
+                    Rapporte Verteilung nach Bundesland / Land
                   </h2>
                   <button
                     onClick={() => downloadChart(pieCardRef, `BOS-ARSA_Verteilung_${exercise.date}.png`)}
@@ -357,7 +357,7 @@ export default function ReportsPage() {
           {stats.bezirkStats.length === 0 && stats.blStats.length > 0 && (
             <div className="bg-white rounded-xl shadow overflow-hidden">
               <div className="bg-[#1e3a5f] text-white px-4 py-2 text-sm font-semibold">
-                Teilnehmer nach Bundesland
+                Teilnehmer nach Bundesland / Land
               </div>
               <table className="w-full text-sm">
                 <thead>
@@ -454,7 +454,7 @@ export default function ReportsPage() {
                     <th className="px-2 sm:px-4 py-2">Rufzeichen</th>
                     <th className="px-2 sm:px-4 py-2 hidden sm:table-cell">Name</th>
                     <th className="px-2 sm:px-4 py-2">Bezirk</th>
-                    <th className="px-2 sm:px-4 py-2 hidden md:table-cell">Bundesland</th>
+                    <th className="px-2 sm:px-4 py-2 hidden md:table-cell">Bundesland / Land</th>
                     <th className="px-2 sm:px-4 py-2 text-right w-16 sm:w-24">Rapp.</th>
                   </tr>
                 </thead>
