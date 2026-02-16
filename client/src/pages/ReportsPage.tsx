@@ -1,6 +1,15 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { apiFetch } from '../services/api';
+import {
+  Chart as ChartJS,
+  CategoryScale, LinearScale, BarElement,
+  ArcElement, PointElement, LineElement,
+  Title, Tooltip, Legend,
+} from 'chart.js';
+import { Bar, Pie } from 'react-chartjs-2';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, PointElement, LineElement, Title, Tooltip, Legend);
 
 interface BezirkStat {
   bundesland: string;
@@ -104,6 +113,76 @@ export default function ReportsPage() {
               </div>
             ))}
           </div>
+
+          {/* Charts */}
+          {stats.bezirkStats.length > 0 && (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Bar chart: Stationen + Rapporte per Bezirk */}
+              <div className="bg-white rounded-xl shadow p-4">
+                <h2 className="text-sm font-semibold text-[#5b3a1a] mb-3">
+                  BOS-ARSA Krisenkommunikationsübung am {new Date(exercise.date + 'T00:00:00').toLocaleDateString('de-AT')}
+                </h2>
+                <div style={{ height: 350 }}>
+                  <Bar
+                    data={{
+                      labels: stats.bezirkStats.map(bz => `${bz.bundesland} ${bz.bezirk_code}`),
+                      datasets: [
+                        {
+                          label: 'Stationen',
+                          data: stats.bezirkStats.map(bz => bz.participants),
+                          backgroundColor: '#5b3a1a',
+                        },
+                        {
+                          label: 'Rapporte',
+                          data: stats.bezirkStats.map(bz => bz.reports),
+                          backgroundColor: '#d97706',
+                        },
+                      ],
+                    }}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: { legend: { position: 'bottom' } },
+                      scales: {
+                        x: { ticks: { maxRotation: 90, minRotation: 45, font: { size: 9 } } },
+                        y: { beginAtZero: true },
+                      },
+                    }}
+                  />
+                </div>
+              </div>
+
+              {/* Pie chart: Rapporte distribution */}
+              <div className="bg-white rounded-xl shadow p-4">
+                <h2 className="text-sm font-semibold text-[#5b3a1a] mb-3">
+                  Rapporte-Verteilung nach Bezirk
+                </h2>
+                <div style={{ height: 350 }} className="flex items-center justify-center">
+                  <Pie
+                    data={{
+                      labels: stats.bezirkStats.filter(bz => bz.reports > 0).map(bz => `${bz.bundesland} ${bz.bezirk_code}`),
+                      datasets: [{
+                        data: stats.bezirkStats.filter(bz => bz.reports > 0).map(bz => bz.reports),
+                        backgroundColor: [
+                          '#5b3a1a', '#d97706', '#dc3545', '#0d6efd', '#198754',
+                          '#6f42c1', '#fd7e14', '#20c997', '#0dcaf0', '#6c757d',
+                          '#8b5a2b', '#e8a317', '#c70039', '#4361ee', '#2d6a4f',
+                          '#9b59b6', '#e67e22', '#1abc9c', '#3498db', '#95a5a6',
+                        ],
+                      }],
+                    }}
+                    options={{
+                      responsive: true,
+                      maintainAspectRatio: false,
+                      plugins: {
+                        legend: { position: 'right', labels: { font: { size: 10 } } },
+                      },
+                    }}
+                  />
+                </div>
+              </div>
+            </div>
+          )}
 
           {/* Bezirk/Bundesland table */}
           {stats.bezirkStats.length > 0 && (

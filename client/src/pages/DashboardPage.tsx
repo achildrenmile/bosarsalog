@@ -2,6 +2,14 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { apiFetch } from '../services/api';
+import {
+  Chart as ChartJS,
+  CategoryScale, LinearScale, PointElement, LineElement,
+  Title, Tooltip, Legend, Filler,
+} from 'chart.js';
+import { Line } from 'react-chartjs-2';
+
+ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
 const EXERCISE_TYPES = [
   'Krisenkommunikationsübung',
@@ -203,6 +211,55 @@ export default function DashboardPage() {
               {exercises.length > 0 ? Math.round(yearParticipants / exercises.filter(e => e.participant_count > 0).length || 1) : 0}
             </div>
             <div className="text-sm text-gray-500">Teilnehmer/Übung</div>
+          </div>
+        </div>
+      )}
+
+      {/* Trend chart */}
+      {!loading && exercises.filter(e => e.participant_count > 0 || e.report_count > 0).length > 1 && (
+        <div className="bg-white rounded-xl shadow p-4 mb-6">
+          <h2 className="text-sm font-semibold text-[#5b3a1a] mb-3">BOS-ARSA Krisenkommunikationsübungen {new Date().getFullYear()}</h2>
+          <div style={{ height: 300 }}>
+            <Line
+              data={{
+                labels: exercises.map(e => {
+                  const d = new Date(e.date + 'T00:00:00');
+                  return d.toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit' });
+                }),
+                datasets: [
+                  {
+                    label: 'Teilnehmer',
+                    data: exercises.map(e => e.participant_count || null),
+                    borderColor: '#5b3a1a',
+                    backgroundColor: 'rgba(91,58,26,0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 4,
+                    spanGaps: false,
+                  },
+                  {
+                    label: 'Rapporte',
+                    data: exercises.map(e => e.report_count || null),
+                    borderColor: '#d97706',
+                    backgroundColor: 'rgba(217,119,6,0.1)',
+                    fill: true,
+                    tension: 0.3,
+                    pointRadius: 4,
+                    spanGaps: false,
+                  },
+                ],
+              }}
+              options={{
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                  legend: { position: 'bottom' },
+                },
+                scales: {
+                  y: { beginAtZero: true },
+                },
+              }}
+            />
           </div>
         </div>
       )}
