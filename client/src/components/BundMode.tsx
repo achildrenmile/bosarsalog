@@ -354,13 +354,15 @@ function BezirkRow({ bezirk, reports, linkedRepeaters, defaultRepeaterId, onSubm
 
   return (
     <div className="px-3 py-1.5">
-      <div className="flex items-center gap-2 mb-1">
-        <span className={`text-xs font-mono px-1.5 py-0.5 rounded text-white ${bezirk.is_capital ? 'bg-[#dc3545]' : 'bg-[#6c757d]'}`}>
-          {bezirk.code}
-        </span>
-        <span className="text-xs text-gray-500">{bezirk.name}</span>
-        {reports.length > 0 && <span className="text-xs text-gray-400">({reports.length})</span>}
-      </div>
+      {bezirk.code !== '??' && (
+        <div className="flex items-center gap-2 mb-1">
+          <span className={`text-xs font-mono px-1.5 py-0.5 rounded text-white ${bezirk.is_capital ? 'bg-[#dc3545]' : 'bg-[#6c757d]'}`}>
+            {bezirk.code}
+          </span>
+          <span className="text-xs text-gray-500">{bezirk.name}</span>
+          {reports.length > 0 && <span className="text-xs text-gray-400">({reports.length})</span>}
+        </div>
+      )}
 
       {reports.length > 0 && (
         <table className="w-full text-xs mb-1">
