@@ -107,10 +107,20 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
     };
   };
 
-  const handleBezirkSubmit = async (repeaterId: number, form: EntryForm) => {
+  const handleBezirkSubmit = async (bezirkCode: string, repeaterId: number, form: EntryForm) => {
     try {
       const operator = await getOrCreateOperator(form.callsign, form.operator);
       if (!operator) return;
+
+      // Set operator's bezirk_code to match the row they were entered in
+      if (bezirkCode && bezirkCode !== '??' && operator.bezirk_code !== bezirkCode) {
+        try {
+          await apiFetch(`/api/v1/operators/${operator.id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ bezirk_code: bezirkCode }),
+          });
+        } catch {}
+      }
 
       const parsed = parseRapport(form.rapport);
 
@@ -220,7 +230,7 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
                   bezirk={bz}
                   reports={bzReports}
                   repeaterId={rep.repeater_id}
-                  onSubmit={(form) => handleBezirkSubmit(rep.repeater_id, form)}
+                  onSubmit={(form) => handleBezirkSubmit(bz.code, rep.repeater_id, form)}
                   onEdit={handleEdit}
                   onDelete={handleDelete}
                   editingId={editingId}
