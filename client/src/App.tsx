@@ -43,6 +43,11 @@ function PublicLayout() {
   );
 }
 
+function FlexLayout() {
+  const { token } = useAuth();
+  return token ? <Layout /> : <PublicLayout />;
+}
+
 export default function App() {
   return (
     <AuthProvider>
@@ -61,11 +66,8 @@ export default function App() {
           <Route path="exercises/:id/setup" element={<ExerciseSetupPage />} />
           <Route path="exercises/:id/reports" element={<ReportsPage />} />
           <Route path="operators" element={<OperatorsPage />} />
-          <Route path="impressum" element={<ImpressumPage />} />
-          <Route path="datenschutz" element={<DatenschutzPage />} />
-          <Route path="hilfe" element={<HilfePage />} />
         </Route>
-        <Route element={<PublicLayout />}>
+        <Route element={<FlexLayout />}>
           <Route path="/impressum" element={<ImpressumPage />} />
           <Route path="/datenschutz" element={<DatenschutzPage />} />
           <Route path="/hilfe" element={<HilfePage />} />
