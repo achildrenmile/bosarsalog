@@ -76,6 +76,24 @@ operatorsRouter.post('/', (req, res) => {
   }
 });
 
+// Delete operator
+operatorsRouter.delete('/:id', (req, res) => {
+  const db = getDb();
+  const operator = db.prepare('SELECT * FROM operators WHERE id = ?').get(req.params.id);
+  if (!operator) {
+    res.status(404).json({ error: 'Operator nicht gefunden' });
+    return;
+  }
+  const refs = (db.prepare('SELECT COUNT(*) as c FROM signal_reports WHERE operator_id = ?').get(req.params.id) as any).c;
+  if (refs > 0) {
+    res.status(409).json({ error: `Operator hat ${refs} Rapporte und kann nicht gelöscht werden` });
+    return;
+  }
+  db.prepare('DELETE FROM exercise_attendance WHERE operator_id = ?').run(req.params.id);
+  db.prepare('DELETE FROM operators WHERE id = ?').run(req.params.id);
+  res.json({ ok: true });
+});
+
 // Update operator
 operatorsRouter.patch('/:id', (req, res) => {
   const db = getDb();

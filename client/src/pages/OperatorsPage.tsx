@@ -60,6 +60,17 @@ export default function OperatorsPage() {
     }
   };
 
+  const handleDelete = async (op: any) => {
+    if (!confirm(`Rufzeichen ${op.callsign} wirklich löschen?`)) return;
+    try {
+      await apiFetch(`/api/v1/operators/${op.id}`, { method: 'DELETE' });
+      setOperators(prev => prev.filter(o => o.id !== op.id));
+      setTotal(t => t - 1);
+    } catch (e: any) {
+      alert(e.message);
+    }
+  };
+
   const handlePage = (dir: number) => {
     const newPage = page + dir;
     setPage(newPage);
@@ -143,9 +154,12 @@ export default function OperatorsPage() {
                     </td>
                     <td className="px-2 sm:px-3 py-1.5 text-gray-500 hidden sm:table-cell">{op.bundesland_code}</td>
                     <td className="px-2 sm:px-3 py-1.5 text-xs text-gray-400 hidden md:table-cell">{op.equipment}</td>
-                    <td className="px-2 sm:px-3 py-1.5">
-                      <button onClick={() => setEditing({ ...op })} className="text-red-700 hover:underline text-xs">
+                    <td className="px-2 sm:px-3 py-1.5 flex gap-2">
+                      <button onClick={() => setEditing({ ...op })} className="text-blue-700 hover:underline text-xs">
                         Bearb.
+                      </button>
+                      <button onClick={() => handleDelete(op)} className="text-red-500 hover:underline text-xs">
+                        Löschen
                       </button>
                     </td>
                   </>
