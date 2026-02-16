@@ -1,0 +1,42 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "68e2017e89a5",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "Dockerfile",
+    "README.md",
+    "client/index.html",
+    "client/src/App.tsx",
+    "client/src/components/Layout.tsx",
+    "client/src/pages/DashboardPage.tsx",
+    "client/src/pages/HilfePage.tsx",
+    "client/src/pages/LoginPage.tsx",
+    "client/src/pages/ReportsPage.tsx",
+    "docker-compose.yml",
+    "server/src/db/database.ts",
+    "server/src/db/seed.ts",
+    "server/src/index.ts",
+    "server/src/middleware/auth.ts",
+    "server/src/routes/auth.ts",
+    "server/src/routes/export.ts",
+    "server/src/routes/operators.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/68/e2017e89a5/0/metadata.json",
+      "transcript": "/68/e2017e89a5/0/full.jsonl",
+      "context": "/68/e2017e89a5/0/context.md",
+      "content_hash": "/68/e2017e89a5/0/content_hash.txt",
+      "prompt": "/68/e2017e89a5/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 13,
+    "cache_creation_tokens": 25700,
+    "cache_read_tokens": 1179824,
+    "output_tokens": 6148,
+    "api_call_count": 11
+  }
+}
