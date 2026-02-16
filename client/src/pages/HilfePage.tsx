@@ -190,7 +190,28 @@ export default function HilfePage() {
       {/* ── Auswertung ── */}
       <Section title="6. Auswertung & Export">
         <p>
-          Die Auswertungsseite zeigt statistische Grafiken und Tabellen für eine Übung.
+          Es gibt zwei Auswertungsmöglichkeiten: eine <b>Einzelauswertung</b> pro Übung und eine
+          übergreifende <b>Sonderauswertung</b> über einen frei wählbaren Zeitraum.
+        </p>
+
+        <h4 className="font-semibold text-[#1e3a5f] mt-3">Sonderauswertung (Zeitraum-Auswertung)</h4>
+        <p>
+          Über den Navigationspunkt <b>Auswertung</b> gelangen Sie zur Sonderauswertung.
+          Hier werden die Daten aller Übungen in einem Zeitraum zusammengefasst.
+        </p>
+        <ul className="list-disc ml-5 space-y-1">
+          <li><b>Schnellauswahl</b> — Buttons für Q1, Q2, Q3, Q4 und das gesamte Jahr</li>
+          <li><b>Eigener Zeitraum</b> — Mit den Feldern Von / Bis kann ein beliebiger Zeitraum gewählt werden</li>
+          <li><b>Übersichtskarten</b> — Teilnehmer (eindeutig über alle Übungen), Rapporte, Anzahl Übungen, Ø Teilnehmer/Übung</li>
+          <li><b>Übungsliste</b> — Aufklappbare Liste aller enthaltenen Übungen mit Einzelwerten</li>
+          <li>Karte, Diagramme, Tabellen und Teilnehmerliste wie bei der Einzelauswertung</li>
+          <li><b>PNG-Export</b> — Die gesamte Sonderauswertung als Bild herunterladen</li>
+        </ul>
+
+        <h4 className="font-semibold text-[#1e3a5f] mt-3">Einzelauswertung (pro Übung)</h4>
+        <p>
+          Die Einzelauswertung zeigt statistische Grafiken und Tabellen für eine einzelne Übung.
+          Sie ist über den Button <b>Auswertung</b> in der Übungstabelle auf dem Dashboard erreichbar.
         </p>
         <h4 className="font-semibold text-[#1e3a5f] mt-3">Karte</h4>
         <p>

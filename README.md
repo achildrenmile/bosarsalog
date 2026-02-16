@@ -91,7 +91,13 @@ Part of the [oeradio.at](https://oeradio.at) ecosystem.
 
 ### Reports & Export
 
-- Exercise summary with per-repeater and per-Bezirk/Bundesland/Land breakdown
+- **Per-exercise reports** — Summary with per-repeater and per-Bezirk/Bundesland/Land breakdown
+- **Sonderauswertung (Aggregated Reports)** — Date-range aggregated statistics across multiple exercises
+  - Quick-select buttons: Q1, Q2, Q3, Q4, full year
+  - Custom date range (Von / Bis) picker
+  - Summary cards: unique participants, total reports, exercise count, average participants per exercise
+  - Collapsible exercise list with per-exercise breakdown
+  - Deduplicates participants across exercises for accurate totals
 - Interactive Austria map with neighbor countries showing participant distribution
 - Bar chart (stations vs. reports) and pie chart (distribution by Bundesland/Land)
 - Participants list with callsign, name, location, report count
@@ -223,6 +229,12 @@ GET /api/v1/reference/bezirke
 GET /api/v1/reference/einstiegspunkte
 GET /api/v1/repeaters
 GET /api/v1/repeaters/:id/einstiegspunkte
+```
+
+### Aggregated Reports
+
+```
+GET /api/v1/reports/stats?from=YYYY-MM-DD&to=YYYY-MM-DD   Aggregated stats across date range
 ```
 
 ### Export
