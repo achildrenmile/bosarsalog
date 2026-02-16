@@ -122,20 +122,37 @@ exercisesRouter.get('/:id/stats', (req, res) => {
     ORDER BY bl.sort_order, bz.code
   `).all(eid);
 
+  // Bundesland breakdown (works even without bezirk_code, derives BL from callsign prefix)
+  const blStats = db.prepare(`
+    SELECT
+      COALESCE(bl.name, 'OE' || SUBSTR(o.callsign, 3, 1), 'Sonstige') as bundesland,
+      COALESCE(o.bundesland_code, '0' || SUBSTR(o.callsign, 3, 1)) as bundesland_code,
+      COUNT(DISTINCT sr.operator_id) as participants,
+      COUNT(CASE WHEN sr.readability IS NOT NULL THEN 1 END) as reports
+    FROM signal_reports sr
+    JOIN operators o ON o.id = sr.operator_id
+    LEFT JOIN bundeslaender bl ON bl.code = o.bundesland_code
+      OR (o.bundesland_code IS NULL AND bl.code = '0' || SUBSTR(o.callsign, 3, 1))
+    WHERE sr.exercise_id = ? AND sr.is_op_marker = 0
+    GROUP BY COALESCE(o.bundesland_code, '0' || SUBSTR(o.callsign, 3, 1))
+    ORDER BY bundesland_code
+  `).all(eid);
+
   // Participant list: all operators with their report counts
   const participants = db.prepare(`
     SELECT o.callsign, o.name, o.bezirk_code, o.bundesland_code,
-      bl.name as bundesland_name,
+      COALESCE(bl.name, bl2.name) as bundesland_name,
       COUNT(CASE WHEN sr.readability IS NOT NULL THEN 1 END) as report_count
     FROM signal_reports sr
     JOIN operators o ON o.id = sr.operator_id
     LEFT JOIN bundeslaender bl ON bl.code = o.bundesland_code
+    LEFT JOIN bundeslaender bl2 ON o.bundesland_code IS NULL AND bl2.code = '0' || SUBSTR(o.callsign, 3, 1)
     WHERE sr.exercise_id = ? AND sr.is_op_marker = 0
     GROUP BY sr.operator_id
-    ORDER BY bl.sort_order, o.bezirk_code, o.callsign
+    ORDER BY COALESCE(bl.sort_order, bl2.sort_order), o.bezirk_code, o.callsign
   `).all(eid);
 
-  res.json({ totalParticipants, totalReports, perRepeater, bezirkStats, participants });
+  res.json({ totalParticipants, totalReports, perRepeater, bezirkStats, blStats, participants });
 });
 
 // Exercise repeaters management

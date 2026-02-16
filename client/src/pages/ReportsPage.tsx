@@ -35,11 +35,19 @@ interface RepeaterStat {
   count: number;
 }
 
+interface BlStat {
+  bundesland: string;
+  bundesland_code: string;
+  participants: number;
+  reports: number;
+}
+
 interface Stats {
   totalParticipants: number;
   totalReports: number;
   perRepeater: RepeaterStat[];
   bezirkStats: BezirkStat[];
+  blStats: BlStat[];
   participants: Participant[];
 }
 
@@ -48,7 +56,7 @@ export default function ReportsPage() {
   const [exercise, setExercise] = useState<any>(null);
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showParticipants, setShowParticipants] = useState(false);
+  const [showParticipants, setShowParticipants] = useState(true);
 
   useEffect(() => {
     if (!id) return;
@@ -115,9 +123,16 @@ export default function ReportsPage() {
           </div>
 
           {/* Charts */}
-          {stats.bezirkStats.length > 0 && (
+          {(() => {
+            // Use bezirkStats if available, otherwise fall back to blStats (Bundesland level)
+            const chartData = stats.bezirkStats.length > 0
+              ? stats.bezirkStats.map(bz => ({ label: `${bz.bundesland} ${bz.bezirk_code}`, participants: bz.participants, reports: bz.reports }))
+              : stats.blStats.map(bl => ({ label: bl.bundesland, participants: bl.participants, reports: bl.reports }));
+            const chartLevel = stats.bezirkStats.length > 0 ? 'Bezirk' : 'Bundesland';
+
+            return chartData.length > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              {/* Bar chart: Stationen + Rapporte per Bezirk */}
+              {/* Bar chart: Stationen + Rapporte */}
               <div className="bg-white rounded-xl shadow p-4">
                 <h2 className="text-sm font-semibold text-[#5b3a1a] mb-3">
                   BOS-ARSA Krisenkommunikationsübung am {new Date(exercise.date + 'T00:00:00').toLocaleDateString('de-AT')}
@@ -125,16 +140,16 @@ export default function ReportsPage() {
                 <div style={{ height: 350 }}>
                   <Bar
                     data={{
-                      labels: stats.bezirkStats.map(bz => `${bz.bundesland} ${bz.bezirk_code}`),
+                      labels: chartData.map(d => d.label),
                       datasets: [
                         {
                           label: 'Stationen',
-                          data: stats.bezirkStats.map(bz => bz.participants),
+                          data: chartData.map(d => d.participants),
                           backgroundColor: '#5b3a1a',
                         },
                         {
                           label: 'Rapporte',
-                          data: stats.bezirkStats.map(bz => bz.reports),
+                          data: chartData.map(d => d.reports),
                           backgroundColor: '#d97706',
                         },
                       ],
@@ -155,14 +170,14 @@ export default function ReportsPage() {
               {/* Pie chart: Rapporte distribution */}
               <div className="bg-white rounded-xl shadow p-4">
                 <h2 className="text-sm font-semibold text-[#5b3a1a] mb-3">
-                  Rapporte-Verteilung nach Bezirk
+                  Rapporte-Verteilung nach {chartLevel}
                 </h2>
                 <div style={{ height: 350 }} className="flex items-center justify-center">
                   <Pie
                     data={{
-                      labels: stats.bezirkStats.filter(bz => bz.reports > 0).map(bz => `${bz.bundesland} ${bz.bezirk_code}`),
+                      labels: chartData.filter(d => d.reports > 0).map(d => d.label),
                       datasets: [{
-                        data: stats.bezirkStats.filter(bz => bz.reports > 0).map(bz => bz.reports),
+                        data: chartData.filter(d => d.reports > 0).map(d => d.reports),
                         backgroundColor: [
                           '#5b3a1a', '#d97706', '#dc3545', '#0d6efd', '#198754',
                           '#6f42c1', '#fd7e14', '#20c997', '#0dcaf0', '#6c757d',
@@ -181,6 +196,39 @@ export default function ReportsPage() {
                   />
                 </div>
               </div>
+            </div>
+          ) : null;
+          })()}
+
+          {/* Bundesland table (when no bezirk data) */}
+          {stats.bezirkStats.length === 0 && stats.blStats.length > 0 && (
+            <div className="bg-white rounded-xl shadow overflow-hidden">
+              <div className="bg-[#5b3a1a] text-white px-4 py-2 text-sm font-semibold">
+                Teilnehmer nach Bundesland
+              </div>
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-gray-50 border-b text-left text-xs text-gray-500 uppercase">
+                    <th className="px-4 py-2">Bundesland</th>
+                    <th className="px-4 py-2 text-right w-28">Teilnehmer</th>
+                    <th className="px-4 py-2 text-right w-28">Rapporte</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.blStats.map(bl => (
+                    <tr key={bl.bundesland_code} className="border-t hover:bg-amber-50">
+                      <td className="px-4 py-1.5 font-medium">{bl.bundesland}</td>
+                      <td className="px-4 py-1.5 text-right">{bl.participants}</td>
+                      <td className="px-4 py-1.5 text-right">{bl.reports}</td>
+                    </tr>
+                  ))}
+                  <tr className="bg-[#5b3a1a] text-white font-bold">
+                    <td className="px-4 py-2">Gesamt</td>
+                    <td className="px-4 py-2 text-right">{stats.totalParticipants}</td>
+                    <td className="px-4 py-2 text-right">{stats.totalReports}</td>
+                  </tr>
+                </tbody>
+              </table>
             </div>
           )}
 
