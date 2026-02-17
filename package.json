@@ -1,6 +1,6 @@
 {
   "name": "bosarsalog",
-  "version": "1.0.0-beta.7",
+  "version": "1.0.0",
   "private": true,
   "type": "module",
   "description": "BOS-ARSA Log — Krisenkommunikationsübung Live-Erfassung",

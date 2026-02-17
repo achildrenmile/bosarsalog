@@ -36,11 +36,13 @@ export default function HilfePage() {
         <p>
           Nach der Anmeldung sehen Sie das Dashboard mit einer Übersicht aller Übungen.
         </p>
-        <h4 className="font-semibold text-[#1e3a5f] mt-3">Jahresfilter</h4>
+        <h4 className="font-semibold text-[#1e3a5f] mt-3">Jahres- und Typfilter</h4>
         <p>
-          Unterhalb der Überschrift befinden sich Jahres-Buttons (z.B. 2026, 2027).
-          Ein Klick filtert alle Daten — Statistik-Karten, Diagramm, Tabelle und Quartalssummen — auf das gewählte Jahr.
-          Standardmäßig ist das aktuelle Jahr vorausgewählt.
+          Unterhalb der Überschrift befinden sich Jahres-Buttons (z.B. 2026, 2027) und — wenn im gewählten Jahr
+          mehr als ein Übungstyp vorhanden ist — Typ-Filter-Checkboxen (z.B. KriKom, Notfunk).
+          Ein Klick auf ein Jahr filtert alle Daten — Statistik-Karten, Diagramm, Tabelle und Quartalssummen — auf das gewählte Jahr.
+          Standardmäßig ist das aktuelle Jahr vorausgewählt und alle Typen werden angezeigt.
+          Mit den Checkboxen kann auf einzelne Typen gefiltert werden; <b>Alle</b> setzt den Filter zurück.
         </p>
         <h4 className="font-semibold text-[#1e3a5f] mt-3">Statistik-Karten</h4>
         <p>

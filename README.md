@@ -48,9 +48,9 @@ Part of the [oeradio.at](https://oeradio.at) ecosystem.
 ### Dashboard
 
 - **Year filter** — Button row to switch between years (2026, 2027, ...), derived from existing data
-- Summary cards, trend chart, and exercise table filtered by selected year
+- **Type filter** — Checkbox filter by exercise type (KriKom, Notfunk, etc.), appears when multiple types exist in a year
+- Summary cards, trend chart, and exercise table filtered by selected year and type
 - Exercise table shows type (short label), name, participants, and reports with quarterly subtotals
-- "Typ" column with short labels (KriKom, Notfunk, etc.)
 
 ### Two Data Entry Modes
 
