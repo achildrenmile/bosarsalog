@@ -217,13 +217,37 @@ export default function AggregatedReportsPage() {
         </div>
         <div className="flex items-center gap-2 flex-shrink-0" data-no-export="true">
           {stats && exercises.length > 0 && (
-            <button
-              onClick={downloadFullPage}
-              disabled={exporting}
-              className="bg-[#1e3a5f] hover:bg-[#2a4a7f] text-white px-2 sm:px-3 py-1.5 rounded text-xs sm:text-sm disabled:opacity-50"
-            >
-              {exporting ? 'Exportieren...' : 'Download Auswertung'}
-            </button>
+            <>
+              <button
+                onClick={async () => {
+                  try {
+                    const token = localStorage.getItem('token');
+                    const res = await fetch(`/api/v1/reports/adif?from=${from}&to=${to}`, {
+                      headers: token ? { Authorization: `Bearer ${token}` } : {},
+                    });
+                    if (!res.ok) throw new Error();
+                    const blob = await res.blob();
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `BOS-ARSA_QSOs_${from}_${to}.adi`;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                  } catch {}
+                }}
+                className="bg-[#198754] hover:bg-[#146c43] text-white px-2 sm:px-3 py-1.5 rounded text-xs sm:text-sm"
+                title="ADIF-Datei für QRZ.com, LOTW etc."
+              >
+                ADIF
+              </button>
+              <button
+                onClick={downloadFullPage}
+                disabled={exporting}
+                className="bg-[#1e3a5f] hover:bg-[#2a4a7f] text-white px-2 sm:px-3 py-1.5 rounded text-xs sm:text-sm disabled:opacity-50"
+              >
+                {exporting ? '...' : 'PNG'}
+              </button>
+            </>
           )}
         </div>
       </div>
