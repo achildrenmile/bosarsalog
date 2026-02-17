@@ -36,18 +36,24 @@ export default function HilfePage() {
         <p>
           Nach der Anmeldung sehen Sie das Dashboard mit einer Übersicht aller Übungen.
         </p>
+        <h4 className="font-semibold text-[#1e3a5f] mt-3">Jahresfilter</h4>
+        <p>
+          Unterhalb der Überschrift befinden sich Jahres-Buttons (z.B. 2026, 2027).
+          Ein Klick filtert alle Daten — Statistik-Karten, Diagramm, Tabelle und Quartalssummen — auf das gewählte Jahr.
+          Standardmäßig ist das aktuelle Jahr vorausgewählt.
+        </p>
         <h4 className="font-semibold text-[#1e3a5f] mt-3">Statistik-Karten</h4>
         <p>
-          Oben werden vier Kennzahlen angezeigt: <b>Übungen gesamt</b>, <b>Teilnehmer (Jahressumme)</b>,
-          <b> Rapporte (Jahressumme)</b> und <b>Teilnehmer/Übung (Durchschnitt)</b>.
+          Oben werden vier Kennzahlen für das gewählte Jahr angezeigt: <b>Übungen</b>, <b>Teilnehmer gesamt</b>,
+          <b> Rapporte gesamt</b> und <b>Teilnehmer/Übung (Durchschnitt)</b>.
         </p>
         <h4 className="font-semibold text-[#1e3a5f] mt-3">Trend-Diagramm</h4>
         <p>
-          Ein Balkendiagramm zeigt die Entwicklung von Teilnehmern und Rapporten über alle Übungen des Jahres.
+          Ein Balkendiagramm zeigt die Entwicklung von Teilnehmern und Rapporten über alle Übungen des gewählten Jahres.
         </p>
         <h4 className="font-semibold text-[#1e3a5f] mt-3">Übungstabelle</h4>
         <p>
-          Jede Übung wird mit Datum, Name, Teilnehmeranzahl und Rapportanzahl aufgelistet.
+          Jede Übung wird mit Datum, <b>Typ</b> (Kurzform, z.B. KriKom, Notfunk), Name, Teilnehmeranzahl und Rapportanzahl aufgelistet.
           Die aktuelle Übung (nächste zum heutigen Datum oder in der Zukunft) ist blau hervorgehoben und mit <b>Aktuell</b> markiert.
           Quartals-Zwischensummen und ein Jahresgesamt werden automatisch berechnet.
         </p>
@@ -57,15 +63,23 @@ export default function HilfePage() {
         </ul>
         <h4 className="font-semibold text-[#1e3a5f] mt-3">Neue Übung erstellen (nur Admin)</h4>
         <p>
-          Klicken Sie auf <b>+ Neue Übung</b>. Wählen Sie ein Datum und einen Übungstyp
-          (Krisenkommunikationsübung, Notfunkübung, Feldtag, Relaisfunktest oder eigener Name).
+          Klicken Sie auf <b>+ Neue Übung</b>. Wählen Sie ein Datum und einen <b>Übungstyp</b>
+          (Krisenkommunikationsübung, 80m Notfunk Runde oder „Eigener Typ..." für Freitext).
+          Optional kann ein zusätzlicher <b>Name</b> vergeben werden (z.B. „Sonntagsrunde KW 07").
         </p>
       </Section>
 
       {/* ── Übung einrichten ── */}
       <Section title="3. Übung einrichten (Setup)">
         <p>
-          Auf der Setup-Seite einer Übung werden die aktiven Umsetzer und Frequenzen konfiguriert.
+          Auf der Setup-Seite einer Übung werden Typ, Name und die aktiven Umsetzer und Frequenzen konfiguriert.
+        </p>
+        <h4 className="font-semibold text-[#1e3a5f] mt-3">Typ & Name (nur Admin)</h4>
+        <p>
+          Im Bereich <b>Typ & Name der Übung</b> kann der <b>Übungstyp</b> gewählt werden
+          (Krisenkommunikationsübung, 80m Notfunk Runde oder „Eigener Typ..." für Freitext).
+          Der Typ wird für die Filterung in der Auswertung verwendet.
+          Optional kann ein <b>Name</b> vergeben werden. Änderungen werden automatisch beim Verlassen des Feldes gespeichert.
         </p>
         <h4 className="font-semibold text-[#1e3a5f] mt-3">Bundesland-Auswahl (nur Admin)</h4>
         <p>
@@ -202,6 +216,8 @@ export default function HilfePage() {
         <ul className="list-disc ml-5 space-y-1">
           <li><b>Schnellauswahl</b> — Buttons für Q1, Q2, Q3, Q4 und das gesamte Jahr</li>
           <li><b>Eigener Zeitraum</b> — Mit den Feldern Von / Bis kann ein beliebiger Zeitraum gewählt werden</li>
+          <li><b>Übungstyp-Filter</b> — Checkboxen zum Filtern nach Übungstyp (z.B. nur Krisenkommunikationsübungen oder nur 80m Notfunk Runde).
+            Wenn kein Typ ausgewählt ist, werden alle Typen angezeigt. Mit <b>Alle anzeigen</b> wird der Filter zurückgesetzt.</li>
           <li><b>Übersichtskarten</b> — Teilnehmer (eindeutig über alle Übungen), Rapporte, Anzahl Übungen, Ø Teilnehmer/Übung</li>
           <li><b>Übungsliste</b> — Aufklappbare Liste aller enthaltenen Übungen mit Einzelwerten</li>
           <li>Karte, Diagramme, Tabellen und Teilnehmerliste wie bei der Einzelauswertung</li>
@@ -331,7 +347,7 @@ export default function HilfePage() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               <RoleRow label="Übung erstellen" admin operator={false} />
-              <RoleRow label="Übungsname/Datum ändern" admin operator={false} />
+              <RoleRow label="Übungstyp/Name/Datum ändern" admin operator={false} />
               <RoleRow label="Umsetzer konfigurieren" admin operator={false} />
               <RoleRow label="OE-Link aktivieren" admin operator={false} />
               <RoleRow label="Bundesländer aktivieren" admin operator={false} />

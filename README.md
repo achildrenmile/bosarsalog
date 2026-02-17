@@ -45,6 +45,13 @@ Part of the [oeradio.at](https://oeradio.at) ecosystem.
 
 ## Features
 
+### Dashboard
+
+- **Year filter** — Button row to switch between years (2026, 2027, ...), derived from existing data
+- Summary cards, trend chart, and exercise table filtered by selected year
+- Exercise table shows type (short label), name, participants, and reports with quarterly subtotals
+- "Typ" column with short labels (KriKom, Notfunk, etc.)
+
 ### Two Data Entry Modes
 
 - **Frequenzen (Land)** — Repeater-first entry. Select a repeater, enter reports grouped by Bezirk.
@@ -52,6 +59,8 @@ Part of the [oeradio.at](https://oeradio.at) ecosystem.
 
 ### Exercise Setup
 
+- **Exercise type** selection (Krisenkommunikationsübung, 80m Notfunk Runde, or custom free-text types)
+- Optional exercise name (e.g. "Sonntagsrunde KW 07")
 - Bundesland selection grid (OE1–OE9) with one-click activation of all repeaters per state
 - ~80 pre-configured Austrian repeaters from OEVSV data
 - Custom repeater and simplex frequency creation
@@ -95,6 +104,7 @@ Part of the [oeradio.at](https://oeradio.at) ecosystem.
 - **Auswertung (Aggregated Reports)** — Date-range aggregated statistics across multiple exercises
   - Quick-select buttons: Q1, Q2, Q3, Q4, full year
   - Custom date range (Von / Bis) picker
+  - Exercise type filter (multi-select checkboxes: KriKom, Notfunk, etc.)
   - Summary cards: unique participants, total reports, exercise count, average participants per exercise
   - Collapsible exercise list with per-exercise breakdown
   - Deduplicates participants across exercises for accurate totals
@@ -142,7 +152,7 @@ Part of the [oeradio.at](https://oeradio.at) ecosystem.
 |-----------|-------|----------|
 | Create exercises | ✓ | — |
 | Configure repeaters | ✓ | — |
-| Change exercise name/date | ✓ | — |
+| Change exercise type/name/date | ✓ | — |
 | Enable OE-Link | ✓ | — |
 | Enter/edit/delete reports | ✓ | ✓ |
 | Manage operators | ✓ | ✓ |
@@ -204,9 +214,9 @@ POST /api/v1/auth/login    { username, password } -> { token, admin }
 
 ```
 GET    /api/v1/exercises              List all (with summary stats)
-POST   /api/v1/exercises              Create { date, name }
+POST   /api/v1/exercises              Create { date, name, exercise_type }
 GET    /api/v1/exercises/:id          Full exercise with reports
-PATCH  /api/v1/exercises/:id          Update (name, organisator, oe_link)
+PATCH  /api/v1/exercises/:id          Update (name, exercise_type, organisator, oe_link)
 GET    /api/v1/exercises/:id/stats    Live statistics
 GET    /api/v1/exercises/:id/reports  All signal reports
 POST   /api/v1/exercises/:id/reports  Create report
@@ -245,7 +255,7 @@ GET /api/v1/repeaters/:id/einstiegspunkte
 ### Aggregated Reports
 
 ```
-GET /api/v1/reports/stats?from=YYYY-MM-DD&to=YYYY-MM-DD   Aggregated stats across date range
+GET /api/v1/reports/stats?from=YYYY-MM-DD&to=YYYY-MM-DD[&types=...]   Aggregated stats (optional type filter)
 ```
 
 ### Export
