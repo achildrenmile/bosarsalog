@@ -1,0 +1,526 @@
+Implement the following plan:
+
+# Sonderauswertung (Special Reports) — Date Range Aggregated Stats
+
+## Context
+The app has per-exercise reports at `/exercises/:id/reports`. The user wants a new report type that accumulates data across a date range (quarterly, yearly, custom). It should show the same visualizations (map, charts, tables) but aggregated across all exercises in the range, with the timespan displayed at the top. Accessible via a dedicated nav link.
+
+## Changes
+
+### 1. Server: Aggregated Stats Endpoint
+**`server/src/routes/reports.ts`** — replace placeholder
+
+New endpoint: `GET /api/v1/reports/stats?from=YYYY-MM-DD&to=YYYY-MM-DD`
+
+- Fetch exercises in date range, collect their IDs
+- Run the same 5 SQL queries as `exercises/:id/stats` but with `WHERE sr.exercise_id IN (?,?,...)` instead of single exercise filter
+- `totalParticipants`: COUNT(DISTINCT operator_id) — deduplicates across exercises
+- `totalReports`, `perRepeater`, `bezirkStats`, `blStats`, `participants`: same pattern
+- Returns: `{ exercises[], stats: { totalParticipants, totalReports, perRepeater[], bezirkStats[], blStats[], participants[] } }`
+
+### 2. Shared Types
+**`client/src/types/stats.ts`** — NEW
+
+Extract interfaces from ReportsPage.tsx (lines 16-54): `BezirkStat`, `BlStat`, `Participant`, `RepeaterStat`, `Stats`. Both pages import from here.
+
+### 3. New Page
+**`client/src/pages/AggregatedReportsPage.tsx`** — NEW
+
+- Quick-select buttons: Q1, Q2, Q3, Q4, Jahr (current year)
+- Two date inputs (Von / Bis) for custom range
+- Timespan header: "01.01.2026 – 31.03.2026 · 12 Übungen"
+- Summary cards: Teilnehmer (unique), Rapporte, Übungen, Ø Teilnehmer/Übung
+- Collapsible exercise list (date, name, individual counts)
+- AustriaMap, bar chart, pie chart, bezirk table, participant list (same as ReportsPage)
+- PNG export button
+
+### 4. Route + Navigation
+**`client/src/App.tsx`** — add `<Route path="reports" element={<AggregatedReportsPage />} />`
+
+**`client/src/components/Layout.tsx`** — add "Auswertung" nav link (desktop + mobile)
+
+### 5. Refactor ReportsPage
+**`client/src/pages/ReportsPage.tsx`** — import shared types from `client/src/types/stats.ts`
+
+## Files
+| File | Action |
+|------|--------|
+| `server/src/routes/reports.ts` | Replace placeholder with aggregated stats endpoint |
+| `client/src/types/stats.ts` | NEW — shared interfaces |
+| `client/src/pages/AggregatedReportsPage.tsx` | NEW — main page |
+| `client/src/App.tsx` | Add route |
+| `client/src/components/Layout.tsx` | Add nav link |
+| `client/src/pages/ReportsPage.tsx` | Use shared types |
+
+## Verification
+1. `nix-shell -p nodejs --run "npm run build"` compiles
+2. Quick-select buttons (Q1–Q4, Jahr) fetch correct aggregated data
+3. Custom date range works
+4. Map, charts, tables render correctly with multi-exercise data
+5. Empty state shows when no exercises in range
+6. Deploy to production
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+
+---
+
+commit this and deploy
+
+---
+
+update readme, hilfe, create release, update release in footer
+
+---
+
+add to the view in frequenzen oelink right after the RUZEICHEN, Name and QTH as disabled text fields. they should appear if they are stored in the ruzeichen list, if there is no data, leave it empty
+
+---
+
+show the name and qth also after the name was added to the list in all lists. currently only the rufzeichen will show like OE8YML. in future show OE8YML NAME QTH
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me chronologically analyze the conversation:
+
+1. **First request**: User asked to implement a plan for "Sonderauswertung (Special Reports) — Date Range Aggregated Stats". This was a detailed plan with specific files and changes.
+
+2. **Implementation of Sonderauswertung**:
+   - Created `client/src/types/stats.ts` - shared type interfaces
+   - Replaced `server/src/routes/reports.ts` - aggregated stats endpoint
+   - Created `client/src/pages/AggregatedReportsPage.tsx` - new page
+   - Updated `client/src/App.tsx` - added route
+   - Updated `client/src/components/Layout.tsx` - added nav link
+   - Updated `client/src/pages/ReportsPage.tsx` - use shared types
+   - Build succeeded
+
+3. **Second request**: "commit this and deploy"
+   - Committed and pushed
+   - Tried to deploy locally with docker compose - failed due to JWT_SECRET not set
+   - Tried with --env-file .env.production - JWT fixed but better-sqlite3 native module failed (ERR_DLOPEN_FAILED, fcntl64 symbol not found)
+   - User interrupted: "do not do it on this pc" and "roll out see deploy script!!"
+   - Fixed Dockerfile by adding python3, make, g++ to builder stage and --build-from-source flag
+   - Committed Dockerfile fix
+   - Ran deploy-production.sh successfully
+
+4. **Third request**: "update readme, hilfe, create release, update release in footer"
+   - Updated README.md with Sonderauswertung features and API docs
+   - Updated HilfePage.tsx with Sonderauswertung help section
+   - Updated Layout.tsx footer from v1.0.0-beta.2 to v1.0.0-beta.3
+   - Updated package.json version
+   - Created GitHub release v1.0.0-beta.3
+   - Deployed via deploy-production.sh
+
+5. **Fourth request**: "add to the view in frequenzen oelink right after the RUZEICHEN, Name and QTH as disabled text fields..."
+   - Initially implemented as disabled fields
+   - User interrupted: "enable the fields. in case there will be something stored it should immediately update the rufzeichenliste"
+   - Changed to editable fields with onBlur save to PATCH /api/v1/operators/:id
+   - Added opName/opQth to EntryForm interface in both LandMode and BundMode
+   - Added saveOperatorField helper function to BezirkRow and FlatReportRow
+   - On operator select, fields populate; on blur, changes save to DB
+   - Deployed
+
+6. **Fifth request**: "show the name and qth also after the name was added to the list in all lists. currently only the rufzeichen will show like OE8YML. in future show OE8YML NAME QTH"
+   - Added `o.qth as operator_qth` to all report SELECT queries in exercises.ts
+   - Updated all report display rows in LandMode (3 locations: unassigned reports, BezirkRow, FlatReportRow)
+   - Updated all report display rows in BundMode (2 locations: unassigned reports, BezirkRow)
+   - Format: callsign in mono font, then name in gray, then QTH in lighter gray (hidden on mobile)
+   - Deployed successfully
+
+Key errors:
+- Docker JWT_SECRET not set locally
+- better-sqlite3 native module build failed on Alpine (glibc vs musl)
+- User said not to deploy on local PC, use deploy script instead
+- User wanted fields enabled, not disabled
+
+All tasks appear to be completed. The last deployment was successful.
+
+Summary:
+1. Primary Request and Intent:
+   - **Implement Sonderauswertung**: A new date-range aggregated statistics page (`/reports`) that accumulates data across multiple exercises with quick-select buttons (Q1-Q4, year), custom date range, summary cards, map, charts, tables, and PNG export.
+   - **Commit and deploy**: Push changes and deploy to production server using the deploy script.
+   - **Update docs and release**: Update README, Hilfe page, create GitHub release v1.0.0-beta.3, update footer version.
+   - **Add Name/QTH fields to entry forms**: Add editable Name and QTH text fields after the Rufzeichen (callsign) input in both Frequenzen (LandMode) and OE-Link (BundMode) data entry forms. Fields should auto-populate from operator database on selection and save changes back to the operator record on blur.
+   - **Show Name/QTH in report lists**: Display operator Name and QTH alongside callsign in all existing report list rows (previously only showed callsign like "OE8YML", now shows "OE8YML Name QTH").
+
+2. Key Technical Concepts:
+   - Monorepo: `/client` (React/Vite/Tailwind) + `/server` (Express/TypeScript/SQLite)
+   - NixOS environment — use `nix-shell -p nodejs --run "..."` for npm/node
+   - Docker deployment via `deploy-production.sh` script (SSH to remote, git pull, docker build, docker compose up)
+   - SQLite via better-sqlite3 (native module requiring build tools on Alpine)
+   - Real-time sync via Socket.IO
+   - `apiFetch()` wrapper for API calls with JWT auth
+   - German UI text, English code convention
+   - Report entry forms: CallsignInput component with autocomplete, EntryForm interface with callsign/operator/rapport/notes/opName/opQth
+   - Operator PATCH API for inline field updates
+
+3. Files and Code Sections:
+
+   - **`client/src/types/stats.ts`** (NEW)
+     - Shared type interfaces extracted from ReportsPage for reuse in AggregatedReportsPage
+     - Exports: `BezirkStat`, `Participant`, `RepeaterStat`, `BlStat`, `Stats`
+
+   - **`server/src/routes/reports.ts`** (REPLACED)
+     - New endpoint: `GET /api/v1/reports/stats?from=YYYY-MM-DD&to=YYYY-MM-DD`
+     - Fetches exercises in date range, runs 5 aggregated SQL queries with `WHERE exercise_id IN (...)` for totalParticipants (COUNT DISTINCT), totalReports, perRepeater, bezirkStats, blStats, participants
+     - Returns `{ exercises[], stats }` shape
+
+   - **`client/src/pages/AggregatedReportsPage.tsx`** (NEW)
+     - Full page with quick-select buttons (Q1-Q4, Jahr), custom date range inputs
+     - Summary cards: Teilnehmer (unique), Rapporte, Übungen, Ø Teilnehmer/Übung
+     - Collapsible exercise list, AustriaMap, bar/pie charts, bezirk table, participant list
+     - PNG export with branded header/footer injection
+
+   - **`client/src/App.tsx`** (MODIFIED)
+     - Added import for AggregatedReportsPage
+     - Added route: `<Route path="reports" element={<AggregatedReportsPage />} />`
+
+   - **`client/src/components/Layout.tsx`** (MODIFIED)
+     - Added "Auswertung" nav link in both desktop and mobile nav
+     - Updated footer version from v1.0.0-beta.2 to v1.0.0-beta.3
+
+   - **`client/src/pages/ReportsPage.tsx`** (MODIFIED)
+     - Removed inline type definitions, replaced with `import type { BezirkStat, Stats } from '../types/stats'`
+
+   - **`Dockerfile`** (MODIFIED)
+     - Added `RUN apk add --no-cache python3 make g++` to builder stage
+     - Changed `npm ci` to `npm ci --build-from-source` for server deps
+
+   - **`README.md`** (MODIFIED)
+     - Added Sonderauswertung feature description under Reports & Export
+     - Added Aggregated Reports API endpoint section
+
+   - **`client/src/pages/HilfePage.tsx`** (MODIFIED)
+     - Added Sonderauswertung section explaining date range selection, quick-select, summary cards, PNG export
+
+   - **`package.json`** (MODIFIED)
+     - Version bumped to `1.0.0-beta.3`
+
+   - **`client/src/components/LandMode.tsx`** (MODIFIED)
+     - Extended `EntryForm` interface with `opName: string; opQth: string`
+     - Updated all form initial states to include `opName: '', opQth: ''`
+     - In BezirkRow and FlatReportRow: added `saveOperatorField` function that PATCHes operator on blur
+     - Updated `onSelect` to populate opName/opQth from operator data
+     - Updated `onChange` to clear opName/opQth when callsign changes manually
+     - Added editable Name and QTH input fields in forms (hidden on mobile with `hidden sm:block`)
+     - Updated all 4 report display rows (1 unassigned + 2 BezirkRow + 1 FlatReportRow) to show Name and QTH:
+     ```tsx
+     <td className="py-0.5 cursor-pointer" onClick={() => onEdit(r)}>
+       <span className="font-mono font-medium">{r.callsign}</span>
+       {r.operator_name && <span className="ml-1 text-gray-500 text-xs">{r.operator_name}</span>}
+       {r.operator_qth && <span className="ml-1 text-gray-400 text-xs hidden sm:inline">{r.operator_qth}</span>}
+     </td>
+     ```
+
+   - **`client/src/components/BundMode.tsx`** (MODIFIED)
+     - Same EntryForm extension with opName/opQth
+     - Same saveOperatorField pattern in BezirkRow
+     - Same editable Name/QTH fields in form
+     - Updated 2 report display rows (1 unassigned + 1 BezirkRow) to show Name and QTH
+
+   - **`server/src/routes/exercises.ts`** (MODIFIED)
+     - Added `o.qth as operator_qth` to all 4 report SELECT queries (lines 55, 208, 244, 279)
+     - Pattern: `SELECT sr.*, o.callsign, o.name as operator_name, o.qth as operator_qth, o.bezirk_code, o.bundesland_code, ...`
+
+4. Errors and fixes:
+   - **JWT_SECRET not set in Docker**: Docker compose locally showed `JWT_SECRET must be set in production`. Fixed by using `--env-file .env.production` flag.
+   - **better-sqlite3 native module build failure**: `Error relocating better_sqlite3.node: fcntl64: symbol not found`. The native module was compiled on glibc (host) but Alpine uses musl. Fixed by adding `python3 make g++` to Docker builder stage and using `npm ci --build-from-source`.
+   - **User said "do not do it on this pc"**: User interrupted local Docker deployment, instructing to use `deploy-production.sh` script instead. All subsequent deployments used the deploy script.
+   - **User said "enable the fields"**: Initially implemented Name/QTH as disabled text fields. User wanted them editable so changes would immediately update the operator database. Changed from `disabled` inputs to editable inputs with `onBlur` handlers that PATCH the operator record.
+
+5. Problem Solving:
+   - All features implemented and deployed successfully
+   - Docker native module issue resolved with build tools in Alpine
+   - Deployment workflow established: commit → push → `bash deploy-production.sh`
+   - GitHub release v1.0.0-beta.3 created at https://github.com/achildrenmile/bosarsalog/releases/tag/v1.0.0-beta.3
+
+6. All user messages:
+   - "Implement the following plan: # Sonderauswertung (Special Reports) — Date Range Aggregated Stats [detailed plan]"
+   - "commit this and deploy"
+   - "do not do it on this pc"
+   - "roll out see deploy script!!"
+   - "update readme, hilfe, create release, update release in footer"
+   - "add to the view in frequenzen oelink right after the RUZEICHEN, Name and QTH as disabled text fields. they should appear if they are stored in the ruzeichen list, if there is no data, leave it empty"
+   - "enable the fields. in case there will be something stored it should immediately update the rufzeichenliste"
+   - "show the name and qth also after the name was added to the list in all lists. currently only the rufzeichen will show like OE8YML. in future show OE8YML NAME QTH"
+
+7. Pending Tasks:
+   - None. All explicit user requests have been implemented, committed, and deployed.
+
+8. Current Work:
+   The most recent work was showing operator Name and QTH next to the callsign in all report list rows across both LandMode and BundMode. This involved:
+   - Adding `o.qth as operator_qth` to all report SQL queries in `server/src/routes/exercises.ts`
+   - Updating all report display `<td>` elements in `LandMode.tsx` (4 locations) and `BundMode.tsx` (2 locations) to render Name and QTH after the callsign
+   - This was committed, pushed, and deployed successfully. The deploy script confirmed: "Container is running on port 3416" and "Site is accessible at https://bosarsalog.oeradio.at/"
+
+9. Optional Next Step:
+   No pending next steps. All user requests have been completed and deployed. Awaiting further instructions from the user.
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.claude/projects/-home-achildrenmile-bosarsalog/fea1333a-a7e9-44e5-9a3d-9e6e2cf0c4e3.jsonl
+Please continue the conversation from where we left it off without asking the user any further questions. Continue with the last task that you were asked to work on.
+
+---
+
+deploy via deploy script
+
+---
+
+push first and then deploy
+
+---
+
+the edit fields in the labels where RUFZEICHEN NAME QTH is edited, shall also be able to edit Name and QTH. currently only rapport and sonstige can be saved. do it in Frequenzen and OE Link table
+
+---
+
+in the label field you can either click OK or enter to save. enter is currently missing in both tables
+
+---
+
+create a rufzeichen update script. input is the pdf from the fernmeldebehörde. currently the latest pdf i have downloaded in download folder Rufzeichenliste_AT_Stand_010725.pdf. this is the input. based on this the rufzeichen shall be inserted/updated. Rufzeichen column = RUFZEICHEN, Name = Name and Standort=QTH. if a rufzeichen is existing the data should be either updated or skipped, depending on an environment configuration parameter. create the script and let it updte with update env parameter
+
+---
+
+run the import on production
+
+---
+
+update help, readme. create a new release, update release in footer. push
+
+---
+
+deploy
+
+---
+
+add an export functionality in adif format. There should be a date chooser analog to Auswertungen. Export function should generate a valid ADIF file, which can be imported in QRZ.com.
+
+---
+
+where is the functionality? not visible
+
+---
+
+ADIF, PNG not clear. Write Downlaod ADIF and Download Auswertung. same down in the footer
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me analyze the conversation chronologically:
+
+1. **First request**: "deploy via deploy script" - Simple deployment, already up to date.
+
+2. **Second request**: "push first and then deploy" - Checked git status, everything was already pushed. Deployed.
+
+3. **Third request**: "the edit fields in the labels where RUFZEICHEN NAME QTH is edited, shall also be able to edit Name and QTH. currently only rapport and sonstige can be saved. do it in Frequenzen and OE Link table"
+   - Read LandMode.tsx and BundMode.tsx
+   - Found that edit inline forms (when clicking a report row) only had rapport and notes fields
+   - Added opName/opQth fields to all 5 edit inline forms (3 in LandMode, 2 in BundMode)
+   - Fixed handleEdit to populate opQth from report.operator_qth (was empty string before)
+   - Fixed handleUpdate to save name/qth changes to operator via PATCH
+   - Fixed operator object in handleEdit to include name and qth for change detection
+   - Committed, pushed, deployed
+
+4. **Fourth request**: "in the label field you can either click OK or enter to save. enter is currently missing in both tables"
+   - Added onKeyDown handlers to all 5 edit inline div wrappers
+   - `onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); handleUpdate/onEditSave(); } }}`
+   - Committed, pushed, deployed
+
+5. **Fifth request**: "create a rufzeichen update script. input is the pdf from the fernmeldebehörde..."
+   - Examined PDF structure using pdftotext
+   - Created server/src/scripts/import-rufzeichen.ts
+   - Parses PDF with pdftotext, extracts callsign/name/QTH
+   - RUFZEICHEN_MODE env var: "update" (default) or "skip"
+   - Fixed DB path resolution (multiple candidate paths)
+   - Ran successfully: 5953 callsigns parsed and inserted
+   - Added npm script to package.json
+   - Built and verified
+
+6. **Sixth request**: "run the import on production"
+   - Exported parsed data to JSON locally
+   - Copied JSON to remote server, then into Docker container
+   - Created a standalone Node.js script for the import
+   - Had to handle NODE_PATH issue (better-sqlite3 in /app/node_modules)
+   - Result: 5897 inserted, 56 updated on production
+
+7. **Seventh request**: "update help, readme. create a new release, update release in footer. push"
+   - Updated HilfePage.tsx: added section 8 "Rufzeichen-Import", renumbered 8→9, 9→10
+   - Updated README.md: added Rufzeichen Import section, updated Operator Registry section
+   - Updated package.json: version to 1.0.0-beta.4
+   - Updated Layout.tsx: footer version to v1.0.0-beta.4
+   - Created GitHub release v1.0.0-beta.4
+   - Pushed
+
+8. **Eighth request**: "deploy" - Deployed successfully
+
+9. **Ninth request**: "add an export functionality in adif format. There should be a date chooser analog to Auswertungen. Export function should generate a valid ADIF file, which can be imported in QRZ.com."
+   - Read AggregatedReportsPage.tsx and reports.ts
+   - Created ADIF endpoint in server/src/routes/reports.ts
+   - Added ADIF download button to AggregatedReportsPage.tsx export section
+   - Built, committed, pushed, deployed
+   - Found auth issue: used <a> tag which bypasses JWT auth
+   - Fixed to use authenticated fetch with localStorage token
+   - Committed, pushed, deployed
+
+10. **Tenth request**: "where is the functionality? not visible"
+    - Realized the ADIF button was buried at bottom of page
+    - Added green ADIF button to header area next to existing Download button
+    - Kept button at bottom too
+    - User also said "also leave the button at the end" - confirmed both locations
+    - Committed, pushed, deployed
+
+11. **Eleventh request**: "ADIF, PNG not clear. Write Download ADIF and Download Auswertung. same down in the footer"
+    - This is the current pending task
+    - Need to change button labels:
+      - Top: "ADIF" → "Download ADIF", "PNG" → "Download Auswertung"
+      - Bottom: "PNG — Download Sonderauswertung" → "Download Auswertung", "ADIF — Download QSO-Daten" → "Download ADIF"
+
+The current state of the code:
+- Top buttons (line 241): "ADIF" and (line 248): "PNG" / "..."
+- Bottom buttons (line 620): "PNG — Download Sonderauswertung" and the ADIF button with "ADIF — Download QSO-Daten"
+
+The user wants clearer labels on all buttons.
+
+Summary:
+1. Primary Request and Intent:
+   - Deploy the application via deploy script (multiple times throughout)
+   - Add Name/QTH fields to edit inline forms in both Frequenzen (LandMode) and OE-Link (BundMode) tables
+   - Add Enter key support to save in edit inline forms
+   - Create a Rufzeichen import script from Fernmeldebehörde PDF
+   - Run the import on production
+   - Update README, Hilfe page, create release v1.0.0-beta.4, update footer
+   - Add ADIF export functionality with date chooser (analog to Auswertungen) for QRZ.com import
+   - Fix ADIF button visibility and labeling
+
+2. Key Technical Concepts:
+   - ADIF (Amateur Data Interchange Format) 3.1.4 — standard for amateur radio QSO log exchange
+   - ADIF field format: `<FIELDNAME:LENGTH>VALUE`, records end with `<EOR>`
+   - PDF parsing with `pdftotext -layout` (poppler-utils) for column-aligned extraction
+   - Authenticated file downloads via `fetch()` with JWT from `localStorage`
+   - NixOS environment requiring `nix-shell -p nodejs poppler-utils` for tools
+   - Docker deployment via SSH to `host-node-01`, `docker cp` for file transfer into containers
+   - `NODE_PATH=/app/node_modules` needed when running scripts from `/tmp` inside container
+   - Inline edit forms using `onKeyDown` for Enter key support on wrapper `<div>` elements
+   - Operator PATCH API for saving name/qth changes during report editing
+
+3. Files and Code Sections:
+
+   - **`server/src/routes/reports.ts`** — ADIF export endpoint
+     - Added `GET /api/v1/reports/adif?from=YYYY-MM-DD&to=YYYY-MM-DD`
+     - Queries all signal reports in date range, maps to ADIF fields (CALL, QSO_DATE, TIME_ON, MODE=FM, BAND, FREQ, RST_SENT, RST_RCVD, NAME, QTH, COMMENT)
+     - Returns as `text/plain` attachment with `.adi` extension
+
+   - **`client/src/pages/AggregatedReportsPage.tsx`** — ADIF download buttons
+     - Added green ADIF button in header area (line ~221-242) and in bottom Export section (~622-643)
+     - Uses authenticated fetch: `const token = localStorage.getItem('token'); fetch(url, { headers: { Authorization: \`Bearer ${token}\` } })`
+     - Creates blob download via `URL.createObjectURL`
+     - **Current button labels need changing**: Top shows "ADIF" and "PNG", bottom shows "PNG — Download Sonderauswertung" and "ADIF — Download QSO-Daten"
+     - Current header buttons code:
+       ```tsx
+       >
+         ADIF
+       </button>
+       ...
+       >
+         {exporting ? '...' : 'PNG'}
+       </button>
+       ```
+     - Current bottom export section:
+       ```tsx
+       {exporting ? 'Exportieren...' : 'PNG — Download Sonderauswertung'}
+       ...
+       ADIF — Download QSO-Daten
+       ```
+
+   - **`client/src/components/LandMode.tsx`** — Frequenzen mode
+     - Added opName/opQth to all 3 edit inline forms (unassigned, BezirkRow, FlatReportRow)
+     - Fixed `handleEdit` to include `opQth: report.operator_qth || ''` and operator object with `name`/`qth`
+     - Fixed `handleUpdate` to PATCH operator name/qth when changed
+     - Added `onKeyDown` Enter handlers to all edit divs
+
+   - **`client/src/components/BundMode.tsx`** — OE-Link mode
+     - Same changes as LandMode for 2 edit inline forms (unassigned, BezirkRow)
+     - Same handleEdit/handleUpdate fixes
+
+   - **`server/src/scripts/import-rufzeichen.ts`** — NEW script
+     - Parses Fernmeldebehörde PDF via `pdftotext -layout`
+     - Extracts callsign, name, QTH (Standort) using regex
+     - `RUFZEICHEN_MODE=update|skip` environment variable
+     - Auto-derives bundesland_code from callsign prefix
+     - Skips redacted entries (`*-*-*`)
+     - DB path resolution checks multiple candidates
+
+   - **`package.json`** — Added `import:rufzeichen` script, version bumped to `1.0.0-beta.4`
+   - **`client/src/pages/HilfePage.tsx`** — Added section 8 "Rufzeichen-Import (Fernmeldebehörde)", renumbered 8→9, 9→10
+   - **`README.md`** — Added Rufzeichen Import section, updated Operator Registry features
+   - **`client/src/components/Layout.tsx`** — Footer version updated to v1.0.0-beta.4
+
+4. Errors and fixes:
+   - **DB path not found**: `import-rufzeichen.ts` used relative path that didn't exist. Fixed by checking multiple candidate paths (`/data/bosarsalog.db`, `data/bosarsalog.db`, etc.)
+   - **`better-sqlite3` not found in Docker**: Running script from `/tmp` couldn't find modules in `/app/node_modules`. Fixed with `docker exec -e NODE_PATH=/app/node_modules`
+   - **Shell escaping with `!==`**: Inline Node.js via `docker exec ... node -e "..."` escaped `!==` incorrectly. Fixed by writing a separate `.js` file, copying it into the container, and executing it.
+   - **Shell escaping with password `!`**: `BosArsa2024!` password gets mangled by bash quoting in SSH commands. Not a code bug — just couldn't test ADIF endpoint via curl. Verified endpoint returns 401 without auth instead.
+   - **ADIF download bypassing auth**: Initial `<a href=...>` tag doesn't send JWT token. Fixed by using `fetch()` with `Authorization: Bearer` header from localStorage, then creating a blob download.
+   - **ADIF button not visible**: User couldn't find it — was buried at bottom of page. Added button to header area alongside existing download button.
+   - **Button labels unclear**: User said "ADIF, PNG not clear" — needs to be changed to "Download ADIF" and "Download Auswertung". **This is the current pending fix.**
+
+5. Problem Solving:
+   - Production Rufzeichen import: Solved by extracting data locally to JSON, transferring via SCP + docker cp, then running a CommonJS import script inside the container with NODE_PATH set
+   - ADIF format research: Mapped available report data to ADIF 3.1.4 fields (CALL, QSO_DATE, TIME_ON, BAND, FREQ, MODE, RST_SENT/RCVD, NAME, QTH, COMMENT)
+   - All features deployed and verified on production at https://bosarsalog.oeradio.at/
+
+6. All user messages:
+   - "deploy via deploy script"
+   - "push first and then deploy"
+   - "the edit fields in the labels where RUFZEICHEN NAME QTH is edited, shall also be able to edit Name and QTH. currently only rapport and sonstige can be saved. do it in Frequenzen and OE Link table"
+   - "in the label field you can either click OK or enter to save. enter is currently missing in both tables"
+   - "create a rufzeichen update script. input is the pdf from the fernmeldebehörde. currently the latest pdf i have downloaded in download folder Rufzeichenliste_AT_Stand_010725.pdf. this is the input. based on this the rufzeichen shall be inserted/updated. Rufzeichen column = RUFZEICHEN, Name = Name and Standort=QTH. if a rufzeichen is existing the data should be either updated or skipped, depending on an environment configuration parameter. create the script and let it updte with update env parameter"
+   - "run the import on production"
+   - "update help, readme. create a new release, update release in footer. push"
+   - "deploy"
+   - "add an export functionality in adif format. There should be a date chooser analog to Auswertungen. Export function should generate a valid ADIF file, which can be imported in QRZ.com."
+   - "where is the functionality? not visible"
+   - "also leave the button at the end"
+   - "ADIF, PNG not clear. Write Downlaod ADIF and Download Auswertung. same down in the footer"
+
+7. Pending Tasks:
+   - Change button labels in AggregatedReportsPage.tsx:
+     - Top header: "ADIF" → "Download ADIF", "PNG" → "Download Auswertung"
+     - Bottom export section: "PNG — Download Sonderauswertung" → "Download Auswertung", "ADIF — Download QSO-Daten" → "Download ADIF"
+   - Push and deploy after the label changes
+
+8. Current Work:
+   The user's most recent message was: "ADIF, PNG not clear. Write Downlaod ADIF and Download Auswertung. same down in the footer"
+   
+   I need to edit `client/src/pages/AggregatedReportsPage.tsx` to change button labels:
+   - Line ~241: `ADIF` → `Download ADIF`
+   - Line ~248: `{exporting ? '...' : 'PNG'}` → `{exporting ? 'Exportieren...' : 'Download Auswertung'}`
+   - Line ~620: `{exporting ? 'Exportieren...' : 'PNG — Download Sonderauswertung'}` → `{exporting ? 'Exportieren...' : 'Download Auswertung'}`
+   - Line ~643 area: `ADIF — Download QSO-Daten` → `Download ADIF`
+
+9. Optional Next Step:
+   Edit the four button labels in `AggregatedReportsPage.tsx` as described above, then build, commit, push, and deploy. This directly addresses the user's last message: "ADIF, PNG not clear. Write Downlaod ADIF and Download Auswertung. same down in the footer"
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.claude/projects/-home-achildrenmile-bosarsalog/fea1333a-a7e9-44e5-9a3d-9e6e2cf0c4e3.jsonl
+Please continue the conversation from where we left it off without asking the user any further questions. Continue with the last task that you were asked to work on.
+
+---
+
+update readme, help. create a new release, update footer with new release, deploy
+
+---
+
+make the downlaod adif button police red like abmelden. and recreate the same relaese
+
+---
+
+rename sonderauswertung to auswertung, again same release and deploy
+
+---
+
+bezirkszuordnung... the bezirk for a rufzeichen shall not be automatically assigned based on the first entry in the rapports. if possible determine the bezirk from the address. if not possible let the users do this by hand if needed. for entry in the rapports, nothing shall change
