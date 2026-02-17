@@ -16,3 +16,4 @@ coverage/
 *.tsbuildinfo
 .entire/
 .claude/
+docs/excel-import-bericht.md
