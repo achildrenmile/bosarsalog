@@ -103,6 +103,7 @@ Part of the [oeradio.at](https://oeradio.at) ecosystem.
 - Participants list with callsign, name, location, report count
 - Export formats:
   - **PNG** — Full-page screenshot of the analytics view
+  - **ADIF** — Amateur Data Interchange Format (.adi) for import into QRZ.com, LOTW, and other logbook software
   - **TXT OE-Link** — Bundesland-grouped text export
   - **TXT Frequenzen** — Repeater-grouped text export
   - **TXT Kombiniert** — Summary statistics with per-repeater breakdown

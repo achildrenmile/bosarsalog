@@ -150,7 +150,7 @@ reportsRouter.get('/adif', (req, res) => {
   adif += '\n';
   adif += adifField('ADIF_VER', '3.1.4');
   adif += adifField('PROGRAMID', 'BOS-ARSA Log');
-  adif += adifField('PROGRAMVERSION', '1.0.0-beta.4');
+  adif += adifField('PROGRAMVERSION', '1.0.0-beta.5');
   adif += '\n<EOH>\n\n';
 
   // Records

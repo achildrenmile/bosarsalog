@@ -205,7 +205,8 @@ export default function HilfePage() {
           <li><b>Übersichtskarten</b> — Teilnehmer (eindeutig über alle Übungen), Rapporte, Anzahl Übungen, Ø Teilnehmer/Übung</li>
           <li><b>Übungsliste</b> — Aufklappbare Liste aller enthaltenen Übungen mit Einzelwerten</li>
           <li>Karte, Diagramme, Tabellen und Teilnehmerliste wie bei der Einzelauswertung</li>
-          <li><b>PNG-Export</b> — Die gesamte Sonderauswertung als Bild herunterladen</li>
+          <li><b>Download Auswertung (PNG)</b> — Die gesamte Sonderauswertung als Bild herunterladen</li>
+          <li><b>Download ADIF</b> — QSO-Daten im ADIF-Format (.adi) für den Import in QRZ.com, LOTW oder andere Logbuch-Software</li>
         </ul>
 
         <h4 className="font-semibold text-[#1e3a5f] mt-3">Einzelauswertung (pro Übung)</h4>
@@ -244,6 +245,7 @@ export default function HilfePage() {
             </thead>
             <tbody>
               <Shortcut keys="PNG Auswertung" desc="Screenshot der gesamten Auswertungsseite" />
+              <Shortcut keys="ADIF (.adi)" desc="QSO-Daten für QRZ.com, LOTW und andere Logbuch-Software" />
               <Shortcut keys="TXT — OE-Link" desc="Textdatei, gruppiert nach Bundesland und Bezirk" />
               <Shortcut keys="TXT — Frequenzen" desc="Textdatei, gruppiert nach Umsetzer und Bezirk" />
               <Shortcut keys="TXT — Kombiniert" desc="Zusammenfassung mit Statistiken und Umsetzer-Aufschlüsselung" />
