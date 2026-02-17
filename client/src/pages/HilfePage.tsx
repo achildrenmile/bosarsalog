@@ -191,12 +191,12 @@ export default function HilfePage() {
       <Section title="6. Auswertung & Export">
         <p>
           Es gibt zwei Auswertungsmöglichkeiten: eine <b>Einzelauswertung</b> pro Übung und eine
-          übergreifende <b>Sonderauswertung</b> über einen frei wählbaren Zeitraum.
+          übergreifende <b>Auswertung</b> über einen frei wählbaren Zeitraum.
         </p>
 
-        <h4 className="font-semibold text-[#1e3a5f] mt-3">Sonderauswertung (Zeitraum-Auswertung)</h4>
+        <h4 className="font-semibold text-[#1e3a5f] mt-3">Auswertung (Zeitraum-Auswertung)</h4>
         <p>
-          Über den Navigationspunkt <b>Auswertung</b> gelangen Sie zur Sonderauswertung.
+          Über den Navigationspunkt <b>Auswertung</b> gelangen Sie zur Zeitraum-Auswertung.
           Hier werden die Daten aller Übungen in einem Zeitraum zusammengefasst.
         </p>
         <ul className="list-disc ml-5 space-y-1">
@@ -205,7 +205,7 @@ export default function HilfePage() {
           <li><b>Übersichtskarten</b> — Teilnehmer (eindeutig über alle Übungen), Rapporte, Anzahl Übungen, Ø Teilnehmer/Übung</li>
           <li><b>Übungsliste</b> — Aufklappbare Liste aller enthaltenen Übungen mit Einzelwerten</li>
           <li>Karte, Diagramme, Tabellen und Teilnehmerliste wie bei der Einzelauswertung</li>
-          <li><b>Download Auswertung (PNG)</b> — Die gesamte Sonderauswertung als Bild herunterladen</li>
+          <li><b>Download Auswertung (PNG)</b> — Die gesamte Auswertung als Bild herunterladen</li>
           <li><b>Download ADIF</b> — QSO-Daten im ADIF-Format (.adi) für den Import in QRZ.com, LOTW oder andere Logbuch-Software</li>
         </ul>
 

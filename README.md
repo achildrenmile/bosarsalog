@@ -92,7 +92,7 @@ Part of the [oeradio.at](https://oeradio.at) ecosystem.
 ### Reports & Export
 
 - **Per-exercise reports** — Summary with per-repeater and per-Bezirk/Bundesland/Land breakdown
-- **Sonderauswertung (Aggregated Reports)** — Date-range aggregated statistics across multiple exercises
+- **Auswertung (Aggregated Reports)** — Date-range aggregated statistics across multiple exercises
   - Quick-select buttons: Q1, Q2, Q3, Q4, full year
   - Custom date range (Von / Bis) picker
   - Summary cards: unique participants, total reports, exercise count, average participants per exercise

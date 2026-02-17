@@ -172,7 +172,7 @@ export default function AggregatedReportsPage() {
         },
       });
       const link = document.createElement('a');
-      link.download = `BOS-ARSA_Sonderauswertung_${from}_${to}.png`;
+      link.download = `BOS-ARSA_Auswertung_${from}_${to}.png`;
       link.href = url;
       link.click();
     } catch {} finally {
@@ -208,7 +208,7 @@ export default function AggregatedReportsPage() {
       {/* Header */}
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <h1 className="text-base sm:text-xl font-bold text-[#1e3a5f]">Sonderauswertung</h1>
+          <h1 className="text-base sm:text-xl font-bold text-[#1e3a5f]">Auswertung</h1>
           {exercises.length > 0 && (
             <p className="text-xs sm:text-sm text-gray-500">
               {formatDateDE(from)} – {formatDateDE(to)} · {exercises.length} Übung{exercises.length !== 1 ? 'en' : ''}
@@ -404,7 +404,7 @@ export default function AggregatedReportsPage() {
                 <div ref={barCardRef} className="bg-white rounded-xl shadow p-3 sm:p-4">
                   <div className="flex items-center justify-between mb-2 sm:mb-3">
                     <h2 className="text-xs sm:text-sm font-semibold text-[#1e3a5f]">
-                      Sonderauswertung {formatDateDE(from)} – {formatDateDE(to)}
+                      Auswertung {formatDateDE(from)} – {formatDateDE(to)}
                     </h2>
                     <button
                       onClick={() => downloadChart(barCardRef, `BOS-ARSA_Stationen_${from}_${to}.png`)}
