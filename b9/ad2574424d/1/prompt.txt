@@ -1,0 +1,92 @@
+Implement the following plan:
+
+# Übungstyp (Exercise Type) Field
+
+## Context
+Exercises currently have only a `name` field used both as type and title. The user needs a dedicated `exercise_type` field to distinguish between "Krisenkommunikationsübung" and "80m Notfunk Runde" (and future types). This enables filtering in Auswertungen by type (multi-select or all). Existing data must be backfilled correctly.
+
+## Changes
+
+### 1. Shared Constants
+**NEW `client/src/constants/exerciseTypes.ts`**
+
+```typescript
+export const EXERCISE_TYPES = [
+  { value: 'Krisenkommunikationsübung', label: 'Krisenkommunikationsübung', short: 'KriKom' },
+  { value: '80m Notfunk Runde', label: '80m Notfunk Runde', short: 'Notfunk' },
+];
+export const DEFAULT_EXERCISE_TYPE = 'Krisenkommunikationsübung';
+export function getShortLabel(type: string) { ... }
+```
+
+### 2. Schema Migration
+**`server/src/db/schema.ts`** — after line 207 (organisator migration)
+
+- `ALTER TABLE exercises ADD COLUMN exercise_type TEXT DEFAULT 'Krisenkommunikationsübung'`
+- Backfill: `UPDATE exercises SET exercise_type = '80m Notfunk Runde' WHERE name LIKE '%Notfunk%'`
+
+### 3. API: Exercises CRUD
+**`server/src/routes/exercises.ts`**
+
+- **GET /exercises**: Add `e.exercise_type` to SELECT (line 12)
+- **POST /exercises**: Accept `exercise_type` in body, include in INSERT (lines 22, 29)
+- **PATCH /exercises/:id**: Add `exercise_type` to dynamic updates (lines 80-86)
+
+### 4. API: Aggregated Reports Filter
+**`server/src/routes/reports.ts`**
+
+- Accept optional `types` query param (comma-separated)
+- Add `AND e.exercise_type IN (...)` to exercises query when provided
+- Include `e.exercise_type` in exercises SELECT
+
+### 5. Dashboard
+**`client/src/pages/DashboardPage.tsx`**
+
+- Import shared constants, remove inline `EXERCISE_TYPES` (lines 14-19)
+- Add `exercise_type` to `ExerciseSummary` interface
+- Creation form: add exercise type dropdown (separate from name)
+- POST: send both `exercise_type` and `name`
+- Exercise table: add "Typ" column (hidden on small screens) with short labels
+
+### 6. ExerciseSetupPage
+**`client/src/pages/ExerciseSetupPage.tsx`**
+
+- Add type dropdown (admin-only) after name input, using PATCH pattern
+
+### 7. AggregatedReportsPage
+**`client/src/pages/AggregatedReportsPage.tsx`**
+
+- Add `selectedTypes` state (Set, empty = all)
+- Add type filter checkboxes below date range selector
+- Pass `&types=...` to `/api/v1/reports/stats` when filtered
+- Add "Typ" column to exercise list table
+
+## Files
+| File | Action |
+|------|--------|
+| `client/src/constants/exerciseTypes.ts` | NEW — shared type definitions |
+| `server/src/db/schema.ts` | Migration: add column + backfill |
+| `server/src/routes/exercises.ts` | SELECT/INSERT/UPDATE exercise_type |
+| `server/src/routes/reports.ts` | Optional `types` filter param |
+| `client/src/pages/DashboardPage.tsx` | Type dropdown in form + "Typ" table column |
+| `client/src/pages/ExerciseSetupPage.tsx` | Type selector (admin-only) |
+| `client/src/pages/AggregatedReportsPage.tsx` | Type filter + "Typ" column |
+
+## Verification
+1. `nix-shell -p nodejs --run "npm run build"` compiles
+2. Existing exercises correctly backfilled (Notfunk → "80m Notfunk Runde", rest → "Krisenkommunikationsübung")
+3. Dashboard table shows "Typ" column with short labels
+4. New exercise creation sends exercise_type
+5. Auswertung type filter works (multi-select, all)
+6. Deploy to production
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.claude/projects/-home-achildrenmile-bosarsalog/fea1333a-a7e9-44e5-9a3d-9e6e2cf0c4e3.jsonl
+
+---
+
+deploy
+
+---
+
+see deploy.script always use this! remember
