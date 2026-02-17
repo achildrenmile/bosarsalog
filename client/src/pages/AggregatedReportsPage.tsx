@@ -595,7 +595,17 @@ export default function AggregatedReportsPage() {
               >
                 {exporting ? 'Exportieren...' : 'PNG — Download Sonderauswertung'}
               </button>
+              <a
+                href={`/api/v1/reports/adif?from=${from}&to=${to}`}
+                download
+                className="bg-[#198754] hover:bg-[#146c43] text-white px-4 py-2 rounded text-sm font-medium inline-block"
+              >
+                ADIF — Download QSO-Daten
+              </a>
             </div>
+            <p className="text-xs text-gray-400 mt-2">
+              ADIF-Datei kann in QRZ.com, LOTW oder andere Logbuch-Software importiert werden.
+            </p>
           </div>
         </>
       )}

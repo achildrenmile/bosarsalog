@@ -97,6 +97,109 @@ reportsRouter.get('/stats', (req, res) => {
   });
 });
 
+// ADIF export across a date range
+reportsRouter.get('/adif', (req, res) => {
+  const { from, to } = req.query;
+  if (!from || !to) {
+    res.status(400).json({ error: 'from und to Parameter erforderlich (YYYY-MM-DD)' });
+    return;
+  }
+
+  const db = getDb();
+
+  const exercises = db.prepare(
+    `SELECT id, date FROM exercises WHERE date >= ? AND date <= ? ORDER BY date ASC`
+  ).all(from, to) as { id: string; date: string }[];
+
+  if (exercises.length === 0) {
+    res.status(404).json({ error: 'Keine Übungen im gewählten Zeitraum' });
+    return;
+  }
+
+  const ids = exercises.map(e => e.id);
+  const placeholders = ids.map(() => '?').join(',');
+
+  const reports = db.prepare(
+    `SELECT sr.readability, sr.strength, sr.db_over_s9, sr.notes, sr.created_at,
+      o.callsign, o.name as op_name, o.qth,
+      r.short_name, r.frequency_mhz, r.band, r.type,
+      e.date as exercise_date
+    FROM signal_reports sr
+    JOIN operators o ON o.id = sr.operator_id
+    JOIN repeaters r ON r.id = sr.repeater_id
+    JOIN exercises e ON e.id = sr.exercise_id
+    WHERE sr.exercise_id IN (${placeholders})
+      AND sr.is_op_marker = 0
+      AND sr.readability IS NOT NULL
+    ORDER BY e.date, sr.created_at`
+  ).all(...ids) as any[];
+
+  // Build ADIF
+  const adifField = (name: string, value: string) => {
+    if (!value) return '';
+    return `<${name}:${value.length}>${value} `;
+  };
+
+  let adif = '';
+
+  // Header
+  adif += 'ADIF Export from BOS-ARSA Log\n';
+  adif += `https://bosarsalog.oeradio.at/\n`;
+  adif += `Date range: ${from} to ${to}\n`;
+  adif += `QSO count: ${reports.length}\n`;
+  adif += '\n';
+  adif += adifField('ADIF_VER', '3.1.4');
+  adif += adifField('PROGRAMID', 'BOS-ARSA Log');
+  adif += adifField('PROGRAMVERSION', '1.0.0-beta.4');
+  adif += '\n<EOH>\n\n';
+
+  // Records
+  for (const r of reports) {
+    const qsoDate = r.exercise_date.replace(/-/g, '');
+
+    // Extract time from created_at (format: "2026-02-16 14:30:00")
+    let timeOn = '0900'; // default
+    if (r.created_at) {
+      const timePart = r.created_at.split(' ')[1];
+      if (timePart) {
+        timeOn = timePart.replace(/:/g, '').slice(0, 4);
+      }
+    }
+
+    // RST: combine readability + strength + optional dB
+    const rst = `${r.readability}${r.strength}`;
+
+    // Frequency in MHz as string
+    const freq = r.frequency_mhz ? String(r.frequency_mhz) : '';
+
+    // Band mapping
+    let band = r.band || '';
+    if (!band && r.frequency_mhz) {
+      if (r.frequency_mhz >= 144 && r.frequency_mhz < 148) band = '2m';
+      else if (r.frequency_mhz >= 430 && r.frequency_mhz < 440) band = '70cm';
+      else if (r.frequency_mhz >= 1240 && r.frequency_mhz < 1300) band = '23cm';
+    }
+
+    adif += adifField('CALL', r.callsign);
+    adif += adifField('QSO_DATE', qsoDate);
+    adif += adifField('TIME_ON', timeOn);
+    adif += adifField('MODE', 'FM');
+    if (band) adif += adifField('BAND', band);
+    if (freq) adif += adifField('FREQ', freq);
+    adif += adifField('RST_SENT', rst);
+    adif += adifField('RST_RCVD', rst);
+    if (r.op_name) adif += adifField('NAME', r.op_name);
+    if (r.qth) adif += adifField('QTH', r.qth);
+    if (r.notes) adif += adifField('COMMENT', r.notes);
+    adif += '<EOR>\n';
+  }
+
+  const filename = `BOS-ARSA_QSOs_${from}_${to}.adi`;
+  res.setHeader('Content-Type', 'text/plain; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  res.send(adif);
+});
+
 // Placeholder fallback
 reportsRouter.get('/', (_req, res) => {
   res.json({ message: 'Use /api/v1/reports/stats?from=YYYY-MM-DD&to=YYYY-MM-DD' });
