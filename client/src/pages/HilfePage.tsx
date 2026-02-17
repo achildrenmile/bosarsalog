@@ -275,6 +275,19 @@ export default function HilfePage() {
           (z.B. OE8 → Kärnten, S55 → Slowenien, DL → Deutschland).
           Suffixe wie /P, /M oder /OE8 werden dabei ignoriert.
         </p>
+        <h4 className="font-semibold text-[#1e3a5f] mt-3">Automatische Bezirkszuordnung</h4>
+        <p>
+          Der <b>Bezirk</b> (Heimatbezirk) wird nach Möglichkeit automatisch aus dem QTH (Standort) abgeleitet
+          (z.B. „Graz" → GC, „Wien" → WC, „Mödling" → MD). Wenn keine Zuordnung möglich ist,
+          kann der Bezirk manuell gesetzt werden.
+        </p>
+        <h4 className="font-semibold text-[#1e3a5f] mt-3">Bezirk in Rapports vs. Rufzeichenliste</h4>
+        <p>
+          Der <b>Heimatbezirk</b> eines Operators (in der Rufzeichenliste) und der <b>Rapport-Bezirk</b> (wo der Rapport
+          abgegeben wurde) sind unabhängig voneinander. Ein Operator kann reisen und von jedem Bezirk aus
+          einen Rapport abgeben, ohne dass sein Heimatbezirk verändert wird.
+          Auswertungen, Exporte und Diagramme gruppieren nach dem Rapport-Bezirk.
+        </p>
         <h4 className="font-semibold text-[#1e3a5f] mt-3">Operator bearbeiten</h4>
         <p>
           Klicken Sie auf <b>Bearb.</b> in der Operatoren-Tabelle, um alle Felder inline zu bearbeiten.

@@ -108,6 +108,14 @@ Part of the [oeradio.at](https://oeradio.at) ecosystem.
   - **TXT Frequenzen** — Repeater-grouped text export
   - **TXT Kombiniert** — Summary statistics with per-repeater breakdown
 
+### Bezirk Assignment
+
+- **Operator bezirk** (home location) and **report bezirk** (where the rapport was given) are independent
+- Operator home bezirk is auto-derived from QTH address when possible (matching against district names)
+- Report bezirk is stored per signal report from the entry row context
+- An operator can travel and report from any bezirk without affecting their registered home location
+- All stats, exports, and charts group by the report's bezirk
+
 ### Operator Registry
 
 - Searchable operator database (callsign, name, QTH)
