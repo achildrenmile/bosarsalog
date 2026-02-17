@@ -31,6 +31,7 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   const [allExercises, setAllExercises] = useState<ExerciseSummary[]>([]);
   const [selectedYear, setSelectedYear] = useState(() => new Date().getFullYear());
+  const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [newDate, setNewDate] = useState(() => new Date().toISOString().split('T')[0]);
@@ -47,7 +48,11 @@ export default function DashboardPage() {
 
   // Derive available years and filter exercises
   const availableYears = [...new Set(allExercises.map(e => new Date(e.date + 'T00:00:00').getFullYear()))].sort();
-  const exercises = allExercises.filter(e => new Date(e.date + 'T00:00:00').getFullYear() === selectedYear);
+  const yearExercises = allExercises.filter(e => new Date(e.date + 'T00:00:00').getFullYear() === selectedYear);
+  const availableTypes = [...new Set(yearExercises.map(e => e.exercise_type || '').filter(Boolean))];
+  const exercises = selectedTypes.size === 0
+    ? yearExercises
+    : yearExercises.filter(e => selectedTypes.has(e.exercise_type || ''));
 
   const formatDate = (d: string) => {
     const date = new Date(d + 'T00:00:00');
@@ -128,13 +133,13 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {/* Year selector */}
+      {/* Year + type filter */}
       {!loading && availableYears.length > 0 && (
         <div className="flex flex-wrap items-center gap-2 mb-4 sm:mb-6">
           {availableYears.map(y => (
             <button
               key={y}
-              onClick={() => setSelectedYear(y)}
+              onClick={() => { setSelectedYear(y); setSelectedTypes(new Set()); }}
               className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
                 y === selectedYear
                   ? 'bg-[#1e3a5f] text-white'
@@ -144,6 +149,33 @@ export default function DashboardPage() {
               {y}
             </button>
           ))}
+          {availableTypes.length > 1 && (
+            <>
+              <span className="text-gray-300 mx-1">|</span>
+              {availableTypes.map(type => (
+                <label key={type} className="flex items-center gap-1.5 cursor-pointer text-sm">
+                  <input
+                    type="checkbox"
+                    checked={selectedTypes.has(type)}
+                    onChange={() => {
+                      setSelectedTypes(prev => {
+                        const next = new Set(prev);
+                        if (next.has(type)) next.delete(type); else next.add(type);
+                        return next;
+                      });
+                    }}
+                    className="w-3.5 h-3.5 accent-red-600"
+                  />
+                  <span className={selectedTypes.has(type) ? 'text-[#1e3a5f] font-medium' : 'text-gray-600'}>{getShortLabel(type)}</span>
+                </label>
+              ))}
+              {selectedTypes.size > 0 && (
+                <button onClick={() => setSelectedTypes(new Set())} className="text-xs text-gray-400 hover:text-gray-600">
+                  Alle
+                </button>
+              )}
+            </>
+          )}
         </div>
       )}
 
