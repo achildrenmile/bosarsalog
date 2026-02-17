@@ -5,7 +5,7 @@ export const reportsRouter = Router();
 
 // Aggregated stats across a date range
 reportsRouter.get('/stats', (req, res) => {
-  const { from, to } = req.query;
+  const { from, to, types } = req.query;
   if (!from || !to) {
     res.status(400).json({ error: 'from und to Parameter erforderlich (YYYY-MM-DD)' });
     return;
@@ -13,15 +13,25 @@ reportsRouter.get('/stats', (req, res) => {
 
   const db = getDb();
 
-  // Fetch exercises in date range
+  // Fetch exercises in date range, optionally filtered by type
+  let typeFilter = '';
+  const queryParams: any[] = [from, to];
+  if (types && typeof types === 'string' && types.trim()) {
+    const typeList = types.split(',').map(t => t.trim()).filter(Boolean);
+    if (typeList.length > 0) {
+      typeFilter = ` AND e.exercise_type IN (${typeList.map(() => '?').join(',')})`;
+      queryParams.push(...typeList);
+    }
+  }
+
   const exercises = db.prepare(
-    `SELECT e.id, e.date, e.name, e.oe_link_enabled,
+    `SELECT e.id, e.date, e.name, e.oe_link_enabled, e.exercise_type,
       (SELECT COUNT(DISTINCT operator_id) FROM signal_reports WHERE exercise_id = e.id AND is_op_marker = 0) as participant_count,
       (SELECT COUNT(*) FROM signal_reports WHERE exercise_id = e.id AND is_op_marker = 0 AND readability IS NOT NULL) as report_count
     FROM exercises e
-    WHERE e.date >= ? AND e.date <= ?
+    WHERE e.date >= ? AND e.date <= ?${typeFilter}
     ORDER BY e.date ASC`
-  ).all(from, to) as any[];
+  ).all(...queryParams) as any[];
 
   if (exercises.length === 0) {
     res.json({

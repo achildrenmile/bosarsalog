@@ -205,6 +205,10 @@ export function runMigrations(db: Database.Database): void {
   if (!cols.some((c: any) => c.name === 'organisator')) {
     db.exec("ALTER TABLE exercises ADD COLUMN organisator TEXT");
   }
+  if (!cols.some((c: any) => c.name === 'exercise_type')) {
+    db.exec("ALTER TABLE exercises ADD COLUMN exercise_type TEXT DEFAULT 'Krisenkommunikationsübung'");
+    db.exec("UPDATE exercises SET exercise_type = '80m Notfunk Runde' WHERE name LIKE '%Notfunk%'");
+  }
 
   const repCols = db.prepare("PRAGMA table_info(repeaters)").all() as any[];
   if (!repCols.some((c: any) => c.name === 'bundesland_code')) {

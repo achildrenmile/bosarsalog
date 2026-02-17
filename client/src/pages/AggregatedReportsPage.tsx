@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { apiFetch } from '../services/api';
+import { EXERCISE_TYPES, getShortLabel } from '../constants/exerciseTypes';
 import {
   Chart as ChartJS,
   CategoryScale, LinearScale, BarElement,
@@ -17,6 +18,7 @@ interface ExerciseSummary {
   id: string;
   date: string;
   name: string;
+  exercise_type: string | null;
   participant_count: number;
   report_count: number;
 }
@@ -53,6 +55,7 @@ export default function AggregatedReportsPage() {
   const [showExercises, setShowExercises] = useState(false);
   const [showParticipants, setShowParticipants] = useState(true);
   const [exporting, setExporting] = useState(false);
+  const [selectedTypes, setSelectedTypes] = useState<Set<string>>(new Set());
 
   const barChartRef = useRef<any>(null);
   const pieChartRef = useRef<any>(null);
@@ -61,22 +64,23 @@ export default function AggregatedReportsPage() {
   const mapCardRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
 
-  const fetchStats = (f: string, t: string) => {
+  const fetchStats = (f: string, t: string, types?: Set<string>) => {
     setLoading(true);
-    apiFetch(`/api/v1/reports/stats?from=${f}&to=${t}`)
+    const typesParam = types && types.size > 0 ? `&types=${Array.from(types).map(encodeURIComponent).join(',')}` : '';
+    apiFetch(`/api/v1/reports/stats?from=${f}&to=${t}${typesParam}`)
       .then((res) => setData(res))
       .catch(() => setData(null))
       .finally(() => setLoading(false));
   };
 
   useEffect(() => {
-    fetchStats(from, to);
+    fetchStats(from, to, selectedTypes);
   }, []);
 
   const applyRange = (f: string, t: string) => {
     setFrom(f);
     setTo(t);
-    fetchStats(f, t);
+    fetchStats(f, t, selectedTypes);
   };
 
   const applyQuarter = (q: number) => {
@@ -91,12 +95,22 @@ export default function AggregatedReportsPage() {
 
   const handleFromChange = (v: string) => {
     setFrom(v);
-    fetchStats(v, to);
+    fetchStats(v, to, selectedTypes);
   };
 
   const handleToChange = (v: string) => {
     setTo(v);
-    fetchStats(from, v);
+    fetchStats(from, v, selectedTypes);
+  };
+
+  const toggleType = (type: string) => {
+    setSelectedTypes(prev => {
+      const next = new Set(prev);
+      if (next.has(type)) next.delete(type);
+      else next.add(type);
+      fetchStats(from, to, next);
+      return next;
+    });
   };
 
   const createExportHeader = () => {
@@ -287,6 +301,28 @@ export default function AggregatedReportsPage() {
             className="border rounded px-2 py-1 text-sm"
           />
         </div>
+        <div className="flex flex-wrap items-center gap-3 mt-3 pt-3 border-t border-gray-100">
+          <span className="text-xs text-gray-500">Übungstyp:</span>
+          {EXERCISE_TYPES.map(t => (
+            <label key={t.value} className="flex items-center gap-1.5 cursor-pointer text-sm">
+              <input
+                type="checkbox"
+                checked={selectedTypes.has(t.value)}
+                onChange={() => toggleType(t.value)}
+                className="w-3.5 h-3.5 accent-red-600"
+              />
+              <span className={selectedTypes.has(t.value) ? 'text-[#1e3a5f] font-medium' : 'text-gray-600'}>{t.short}</span>
+            </label>
+          ))}
+          {selectedTypes.size > 0 && (
+            <button
+              onClick={() => { setSelectedTypes(new Set()); fetchStats(from, to, new Set()); }}
+              className="text-xs text-gray-400 hover:text-gray-600"
+            >
+              Alle anzeigen
+            </button>
+          )}
+        </div>
       </div>
 
       {loading && <p className="text-gray-500">Laden...</p>}
@@ -346,6 +382,7 @@ export default function AggregatedReportsPage() {
                   <thead>
                     <tr className="bg-gray-50 border-b text-left text-xs text-gray-500 uppercase">
                       <th className="px-2 sm:px-4 py-2">Datum</th>
+                      <th className="px-2 sm:px-4 py-2 hidden sm:table-cell">Typ</th>
                       <th className="px-2 sm:px-4 py-2">Name</th>
                       <th className="px-2 sm:px-4 py-2 text-right w-20">Teiln.</th>
                       <th className="px-2 sm:px-4 py-2 text-right w-20">Rapp.</th>
@@ -355,6 +392,7 @@ export default function AggregatedReportsPage() {
                     {exercises.map((ex) => (
                       <tr key={ex.id} className="hover:bg-blue-50">
                         <td className="px-2 sm:px-4 py-1.5 font-mono text-xs">{formatDateDE(ex.date)}</td>
+                        <td className="px-2 sm:px-4 py-1.5 text-xs text-gray-500 hidden sm:table-cell">{getShortLabel(ex.exercise_type || '')}</td>
                         <td className="px-2 sm:px-4 py-1.5">{ex.name}</td>
                         <td className="px-2 sm:px-4 py-1.5 text-right">{ex.participant_count}</td>
                         <td className="px-2 sm:px-4 py-1.5 text-right">{ex.report_count}</td>

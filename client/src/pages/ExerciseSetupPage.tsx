@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { apiFetch } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
+import { EXERCISE_TYPES } from '../constants/exerciseTypes';
 
 const BUNDESLAENDER = [
   { code: '01', name: 'Wien', label: 'OE1' },
@@ -161,22 +162,45 @@ export default function ExerciseSetupPage() {
         </div>
       </div>
 
-      {/* Exercise name (admin only) */}
+      {/* Exercise type + name (admin only) */}
       {isAdmin && (
         <div className="bg-white rounded-xl shadow p-3 sm:p-4">
-          <h2 className="text-base sm:text-lg font-semibold text-[#1e3a5f] mb-2 sm:mb-3">Name der Übung</h2>
-          <input
-            type="text"
-            defaultValue={exercise.name || ''}
-            placeholder="z.B. Sonntagsrunde KW 07"
-            onBlur={async (e) => {
-              await apiFetch(`/api/v1/exercises/${id}`, {
-                method: 'PATCH',
-                body: JSON.stringify({ name: e.target.value || null }),
-              });
-            }}
-            className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full max-w-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
+          <h2 className="text-base sm:text-lg font-semibold text-[#1e3a5f] mb-2 sm:mb-3">Typ & Name der Übung</h2>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <div>
+              <label className="block text-xs text-gray-500 mb-1">Übungstyp</label>
+              <select
+                defaultValue={exercise.exercise_type || 'Krisenkommunikationsübung'}
+                onChange={async (e) => {
+                  await apiFetch(`/api/v1/exercises/${id}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ exercise_type: e.target.value }),
+                  });
+                  setExercise((prev: any) => prev ? { ...prev, exercise_type: e.target.value } : null);
+                }}
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {EXERCISE_TYPES.map(t => (
+                  <option key={t.value} value={t.value}>{t.label}</option>
+                ))}
+              </select>
+            </div>
+            <div className="flex-1">
+              <label className="block text-xs text-gray-500 mb-1">Name (optional)</label>
+              <input
+                type="text"
+                defaultValue={exercise.name || ''}
+                placeholder="z.B. Sonntagsrunde KW 07"
+                onBlur={async (e) => {
+                  await apiFetch(`/api/v1/exercises/${id}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ name: e.target.value || null }),
+                  });
+                }}
+                className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full max-w-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
+            </div>
+          </div>
         </div>
       )}
 

@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { apiFetch } from '../services/api';
+import { EXERCISE_TYPES, DEFAULT_EXERCISE_TYPE, getShortLabel } from '../constants/exerciseTypes';
 import {
   Chart as ChartJS,
   CategoryScale, LinearScale, BarElement, PointElement, LineElement,
@@ -11,16 +12,10 @@ import { Bar, Line } from 'react-chartjs-2';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, PointElement, LineElement, Title, Tooltip, Legend, Filler);
 
-const EXERCISE_TYPES = [
-  'Krisenkommunikationsübung',
-  'Notfunkübung',
-  'Feldtag',
-  'Relaisfunktest',
-];
-
 interface ExerciseSummary {
   id: string;
   name: string | null;
+  exercise_type: string | null;
   date: string;
   participant_count: number;
   report_count: number;
@@ -38,7 +33,8 @@ export default function DashboardPage() {
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [newDate, setNewDate] = useState(() => new Date().toISOString().split('T')[0]);
-  const [newName, setNewName] = useState(EXERCISE_TYPES[0]);
+  const [newType, setNewType] = useState(DEFAULT_EXERCISE_TYPE);
+  const [newName, setNewName] = useState('');
   const [creating, setCreating] = useState(false);
 
   useEffect(() => {
@@ -138,39 +134,36 @@ export default function DashboardPage() {
                 className="border border-gray-300 rounded px-2 py-1.5 text-sm w-full sm:w-auto focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
             </div>
+            <div className="w-full sm:w-auto">
+              <label className="block text-xs text-gray-500 mb-1">Typ</label>
+              <select
+                value={newType}
+                onChange={e => setNewType(e.target.value)}
+                className="border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+              >
+                {EXERCISE_TYPES.map(t => (
+                  <option key={t.value} value={t.value}>{t.label}</option>
+                ))}
+              </select>
+            </div>
             <div className="flex-1 min-w-0 w-full sm:w-auto">
-              <label className="block text-xs text-gray-500 mb-1">Typ / Name</label>
-              <div className="flex gap-2">
-                <select
-                  value={EXERCISE_TYPES.includes(newName) ? newName : ''}
-                  onChange={e => setNewName(e.target.value)}
-                  className="border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-                >
-                  {EXERCISE_TYPES.map(t => (
-                    <option key={t} value={t}>{t}</option>
-                  ))}
-                  <option value="">Eigener Name...</option>
-                </select>
-                {!EXERCISE_TYPES.includes(newName) && (
-                  <input
-                    type="text"
-                    value={newName}
-                    onChange={e => setNewName(e.target.value)}
-                    placeholder="Name der Übung"
-                    className="border border-gray-300 rounded px-2 py-1.5 text-sm flex-1 focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    autoFocus
-                  />
-                )}
-              </div>
+              <label className="block text-xs text-gray-500 mb-1">Name (optional)</label>
+              <input
+                type="text"
+                value={newName}
+                onChange={e => setNewName(e.target.value)}
+                placeholder="z.B. Sonntagsrunde KW 07"
+                className="border border-gray-300 rounded px-2 py-1.5 text-sm w-full focus:outline-none focus:ring-2 focus:ring-blue-500"
+              />
             </div>
             <button
-              disabled={creating || !newDate || !newName}
+              disabled={creating || !newDate || !newType}
               onClick={async () => {
                 setCreating(true);
                 try {
                   const ex = await apiFetch('/api/v1/exercises', {
                     method: 'POST',
-                    body: JSON.stringify({ date: newDate, name: newName }),
+                    body: JSON.stringify({ date: newDate, name: newName || newType, exercise_type: newType }),
                   });
                   navigate(`/exercises/${ex.id}/setup`);
                 } catch {
@@ -265,7 +258,8 @@ export default function DashboardPage() {
             <thead className="bg-[#1e3a5f] text-white">
               <tr>
                 <th className="px-2 sm:px-4 py-2 text-left">Datum</th>
-                <th className="px-2 sm:px-4 py-2 text-left hidden sm:table-cell">Name</th>
+                <th className="px-2 sm:px-4 py-2 text-left hidden sm:table-cell">Typ</th>
+                <th className="px-2 sm:px-4 py-2 text-left hidden md:table-cell">Name</th>
                 <th className="px-2 sm:px-4 py-2 text-right">Teiln.</th>
                 <th className="px-2 sm:px-4 py-2 text-right">Rapp.</th>
                 <th className="px-2 sm:px-4 py-2"></th>
@@ -282,7 +276,8 @@ export default function DashboardPage() {
                         {formatDate(ex.date)}
                         {isNearest && <span className="ml-1 sm:ml-2 text-[10px] sm:text-xs bg-[#c8102e] text-white px-1 sm:px-1.5 py-0.5 rounded">Aktuell</span>}
                       </td>
-                      <td className="px-2 sm:px-4 py-2 text-gray-700 hidden sm:table-cell">{ex.name || '—'}</td>
+                      <td className="px-2 sm:px-4 py-2 text-gray-700 hidden sm:table-cell">{getShortLabel(ex.exercise_type || '')}</td>
+                      <td className="px-2 sm:px-4 py-2 text-gray-700 hidden md:table-cell">{ex.name || '—'}</td>
                       <td className="px-2 sm:px-4 py-2 text-right">{ex.participant_count}</td>
                       <td className="px-2 sm:px-4 py-2 text-right">{ex.report_count}</td>
                       <td className="px-2 sm:px-4 py-2 text-right space-x-1 sm:space-x-2">
@@ -303,6 +298,7 @@ export default function DashboardPage() {
                         {QUARTER_LABELS[row.quarter!]}
                       </td>
                       <td className="px-2 sm:px-4 py-1.5 hidden sm:table-cell"></td>
+                      <td className="px-2 sm:px-4 py-1.5 hidden md:table-cell"></td>
                       <td className="px-2 sm:px-4 py-1.5 text-right text-blue-800">{row.participants}</td>
                       <td className="px-2 sm:px-4 py-1.5 text-right text-blue-800">{row.reports}</td>
                       <td></td>
@@ -314,6 +310,7 @@ export default function DashboardPage() {
                     <tr key="year" className="bg-[#1e3a5f] text-white font-bold">
                       <td className="px-2 sm:px-4 py-2">Jahresgesamt</td>
                       <td className="px-2 sm:px-4 py-2 hidden sm:table-cell"></td>
+                      <td className="px-2 sm:px-4 py-2 hidden md:table-cell"></td>
                       <td className="px-2 sm:px-4 py-2 text-right">{row.participants}</td>
                       <td className="px-2 sm:px-4 py-2 text-right">{row.reports}</td>
                       <td></td>

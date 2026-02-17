@@ -9,7 +9,7 @@ export const exercisesRouter = Router();
 exercisesRouter.get('/', (_req, res) => {
   const db = getDb();
   const exercises = db.prepare(`
-    SELECT e.id, e.date, e.name, e.notes, e.oe_link_enabled,
+    SELECT e.id, e.date, e.name, e.notes, e.oe_link_enabled, e.exercise_type,
       (SELECT COUNT(DISTINCT operator_id) FROM signal_reports WHERE exercise_id = e.id AND is_op_marker = 0) as participant_count,
       (SELECT COUNT(*) FROM signal_reports WHERE exercise_id = e.id AND is_op_marker = 0 AND readability IS NOT NULL) as report_count
     FROM exercises e ORDER BY e.date ASC
@@ -19,14 +19,14 @@ exercisesRouter.get('/', (_req, res) => {
 
 // Create exercise (admin only)
 exercisesRouter.post('/', requireRole('admin'), (req, res) => {
-  const { date, name, oe_link_enabled } = req.body;
+  const { date, name, oe_link_enabled, exercise_type } = req.body;
   if (!date || !name) {
     res.status(400).json({ error: 'Datum und Name erforderlich' });
     return;
   }
   const db = getDb();
   const id = randomUUID();
-  db.prepare('INSERT INTO exercises (id, date, name, oe_link_enabled) VALUES (?, ?, ?, ?)').run(id, date, name, oe_link_enabled !== undefined ? (oe_link_enabled ? 1 : 0) : 1);
+  db.prepare('INSERT INTO exercises (id, date, name, oe_link_enabled, exercise_type) VALUES (?, ?, ?, ?, ?)').run(id, date, name, oe_link_enabled !== undefined ? (oe_link_enabled ? 1 : 0) : 1, exercise_type || 'Krisenkommunikationsübung');
   const exercise = db.prepare('SELECT * FROM exercises WHERE id = ?').get(id);
   res.status(201).json(exercise);
 });
@@ -77,13 +77,14 @@ exercisesRouter.get('/:id', (req, res) => {
 // Update exercise notes/name (admin only)
 exercisesRouter.patch('/:id', requireRole('admin'), (req, res) => {
   const db = getDb();
-  const { notes, name, oe_link_enabled, organisator } = req.body;
+  const { notes, name, oe_link_enabled, organisator, exercise_type } = req.body;
   const updates: string[] = [];
   const params: any[] = [];
   if (notes !== undefined) { updates.push('notes = ?'); params.push(notes); }
   if (name !== undefined) { updates.push('name = ?'); params.push(name); }
   if (oe_link_enabled !== undefined) { updates.push('oe_link_enabled = ?'); params.push(oe_link_enabled ? 1 : 0); }
   if (organisator !== undefined) { updates.push('organisator = ?'); params.push(organisator || null); }
+  if (exercise_type !== undefined) { updates.push('exercise_type = ?'); params.push(exercise_type); }
   if (updates.length === 0) {
     res.status(400).json({ error: 'Keine Änderungen' });
     return;
