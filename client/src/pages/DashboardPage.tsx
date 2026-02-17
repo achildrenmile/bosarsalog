@@ -136,15 +136,31 @@ export default function DashboardPage() {
             </div>
             <div className="w-full sm:w-auto">
               <label className="block text-xs text-gray-500 mb-1">Typ</label>
-              <select
-                value={newType}
-                onChange={e => setNewType(e.target.value)}
-                className="border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {EXERCISE_TYPES.map(t => (
-                  <option key={t.value} value={t.value}>{t.label}</option>
-                ))}
-              </select>
+              <div className="flex gap-2">
+                <select
+                  value={EXERCISE_TYPES.some(t => t.value === newType) ? newType : '__custom__'}
+                  onChange={e => {
+                    if (e.target.value === '__custom__') setNewType('');
+                    else setNewType(e.target.value);
+                  }}
+                  className="border border-gray-300 rounded px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {EXERCISE_TYPES.map(t => (
+                    <option key={t.value} value={t.value}>{t.label}</option>
+                  ))}
+                  <option value="__custom__">Eigener Typ...</option>
+                </select>
+                {!EXERCISE_TYPES.some(t => t.value === newType) && (
+                  <input
+                    type="text"
+                    value={newType}
+                    onChange={e => setNewType(e.target.value)}
+                    placeholder="Typ eingeben"
+                    className="border border-gray-300 rounded px-2 py-1.5 text-sm flex-1 min-w-[140px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    autoFocus
+                  />
+                )}
+              </div>
             </div>
             <div className="flex-1 min-w-0 w-full sm:w-auto">
               <label className="block text-xs text-gray-500 mb-1">Name (optional)</label>

@@ -169,21 +169,46 @@ export default function ExerciseSetupPage() {
           <div className="flex flex-col sm:flex-row gap-3">
             <div>
               <label className="block text-xs text-gray-500 mb-1">Übungstyp</label>
-              <select
-                defaultValue={exercise.exercise_type || 'Krisenkommunikationsübung'}
-                onChange={async (e) => {
-                  await apiFetch(`/api/v1/exercises/${id}`, {
-                    method: 'PATCH',
-                    body: JSON.stringify({ exercise_type: e.target.value }),
-                  });
-                  setExercise((prev: any) => prev ? { ...prev, exercise_type: e.target.value } : null);
-                }}
-                className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                {EXERCISE_TYPES.map(t => (
-                  <option key={t.value} value={t.value}>{t.label}</option>
-                ))}
-              </select>
+              <div className="flex gap-2">
+                <select
+                  value={EXERCISE_TYPES.some(t => t.value === (exercise.exercise_type || '')) ? exercise.exercise_type : '__custom__'}
+                  onChange={async (e) => {
+                    if (e.target.value === '__custom__') {
+                      setExercise((prev: any) => prev ? { ...prev, exercise_type: '' } : null);
+                    } else {
+                      await apiFetch(`/api/v1/exercises/${id}`, {
+                        method: 'PATCH',
+                        body: JSON.stringify({ exercise_type: e.target.value }),
+                      });
+                      setExercise((prev: any) => prev ? { ...prev, exercise_type: e.target.value } : null);
+                    }
+                  }}
+                  className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  {EXERCISE_TYPES.map(t => (
+                    <option key={t.value} value={t.value}>{t.label}</option>
+                  ))}
+                  <option value="__custom__">Eigener Typ...</option>
+                </select>
+                {!EXERCISE_TYPES.some(t => t.value === (exercise.exercise_type || '')) && (
+                  <input
+                    type="text"
+                    value={exercise.exercise_type || ''}
+                    onChange={e => setExercise((prev: any) => prev ? { ...prev, exercise_type: e.target.value } : null)}
+                    onBlur={async (e) => {
+                      if (e.target.value) {
+                        await apiFetch(`/api/v1/exercises/${id}`, {
+                          method: 'PATCH',
+                          body: JSON.stringify({ exercise_type: e.target.value }),
+                        });
+                      }
+                    }}
+                    placeholder="Typ eingeben"
+                    className="border border-gray-300 rounded-lg px-3 py-2 text-sm flex-1 min-w-[140px] focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    autoFocus
+                  />
+                )}
+              </div>
             </div>
             <div className="flex-1">
               <label className="block text-xs text-gray-500 mb-1">Name (optional)</label>
