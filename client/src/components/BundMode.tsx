@@ -127,14 +127,6 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
       const operator = await getOrCreateOperator(form.callsign, form.operator);
       if (!operator) return;
 
-      // Set operator's bezirk_code to match the row they were entered in
-      if (bezirkCode && bezirkCode !== '??') {
-        apiFetch(`/api/v1/operators/${operator.id}`, {
-          method: 'PATCH',
-          body: JSON.stringify({ bezirk_code: bezirkCode }),
-        }).catch(() => {});
-      }
-
       const parsed = parseRapport(form.rapport);
 
       try {
