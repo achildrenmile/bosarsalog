@@ -57,8 +57,7 @@ reportsRouter.get('/stats', (req, res) => {
       COUNT(DISTINCT sr.operator_id) as participants,
       COUNT(CASE WHEN sr.readability IS NOT NULL THEN 1 END) as reports
     FROM signal_reports sr
-    JOIN operators o ON o.id = sr.operator_id
-    JOIN bezirke bz ON bz.code = o.bezirk_code
+    JOIN bezirke bz ON bz.code = sr.bezirk_code
     JOIN bundeslaender bl ON bl.code = bz.bundesland_code
     WHERE sr.exercise_id IN (${placeholders}) AND sr.is_op_marker = 0
     GROUP BY bz.code

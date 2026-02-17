@@ -14,7 +14,7 @@ exportRouter.get('/exercises/:id/bund', (req, res) => {
   if (!exercise) { res.status(404).json({ error: 'Nicht gefunden' }); return; }
 
   const reports = db.prepare(`
-    SELECT sr.*, o.callsign, o.bezirk_code, o.bundesland_code,
+    SELECT sr.*, o.callsign, sr.bezirk_code, o.bundesland_code,
       bl.name as bundesland_name, bz.name as bezirk_name,
       r.short_name as repeater_name,
       ep.abbreviation as ep_abbr
@@ -22,7 +22,7 @@ exportRouter.get('/exercises/:id/bund', (req, res) => {
     JOIN operators o ON o.id = sr.operator_id
     JOIN repeaters r ON r.id = sr.repeater_id
     LEFT JOIN bundeslaender bl ON bl.code = o.bundesland_code
-    LEFT JOIN bezirke bz ON bz.code = o.bezirk_code
+    LEFT JOIN bezirke bz ON bz.code = sr.bezirk_code
     LEFT JOIN einstiegspunkte ep ON ep.id = sr.einstiegspunkt_id
     WHERE sr.exercise_id = ? AND sr.is_op_marker = 0
     ORDER BY bl.sort_order, bz.code, o.callsign
@@ -63,7 +63,7 @@ exportRouter.get('/exercises/:id/land', (req, res) => {
   if (!exercise) { res.status(404).json({ error: 'Nicht gefunden' }); return; }
 
   const reports = db.prepare(`
-    SELECT sr.*, o.callsign, o.bezirk_code, o.bundesland_code,
+    SELECT sr.*, o.callsign, sr.bezirk_code, o.bundesland_code,
       bl.name as bundesland_name, bz.name as bezirk_name,
       r.short_name as repeater_name, r.sort_order as rep_sort,
       ep.abbreviation as ep_abbr
@@ -71,7 +71,7 @@ exportRouter.get('/exercises/:id/land', (req, res) => {
     JOIN operators o ON o.id = sr.operator_id
     JOIN repeaters r ON r.id = sr.repeater_id
     LEFT JOIN bundeslaender bl ON bl.code = o.bundesland_code
-    LEFT JOIN bezirke bz ON bz.code = o.bezirk_code
+    LEFT JOIN bezirke bz ON bz.code = sr.bezirk_code
     LEFT JOIN einstiegspunkte ep ON ep.id = sr.einstiegspunkt_id
     WHERE sr.exercise_id = ? AND sr.is_op_marker = 0
     ORDER BY r.sort_order, bl.sort_order, bz.code, o.callsign

@@ -127,14 +127,6 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
       const operator = await getOrCreateOperator(form.callsign, form.operator);
       if (!operator) return;
 
-      // Set operator's bezirk_code to match the row they were entered in
-      if (bezirkCode && bezirkCode !== '??') {
-        apiFetch(`/api/v1/operators/${operator.id}`, {
-          method: 'PATCH',
-          body: JSON.stringify({ bezirk_code: bezirkCode }),
-        }).catch(() => {});
-      }
-
       const parsed = parseRapport(form.rapport);
 
       try {
@@ -145,10 +137,9 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
             repeater_id: repeaterId,
             ...parsed,
             notes: form.notes || null,
+            bezirk_code: (bezirkCode && bezirkCode !== '??') ? bezirkCode : null,
           }),
         });
-        // Force bezirk_code on report so it shows in the correct row immediately
-        if (bezirkCode && bezirkCode !== '??') report.bezirk_code = bezirkCode;
         onReportCreated(report);
       } catch (err: any) {
         if (err.message?.includes('existiert')) {
@@ -158,7 +149,6 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
               method: 'PATCH',
               body: JSON.stringify({ ...parsed, notes: form.notes || null }),
             });
-            if (bezirkCode && bezirkCode !== '??') updated.bezirk_code = bezirkCode;
             onReportUpdated(updated);
           }
         }

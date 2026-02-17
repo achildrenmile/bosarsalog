@@ -52,7 +52,7 @@ exercisesRouter.get('/:id', (req, res) => {
   `).all(req.params.id);
 
   const reports = db.prepare(`
-    SELECT sr.*, o.callsign, o.name as operator_name, o.qth as operator_qth, o.bezirk_code, o.bundesland_code,
+    SELECT sr.*, o.callsign, o.name as operator_name, o.qth as operator_qth, sr.bezirk_code, o.bundesland_code,
       r.short_name as repeater_name, r.bundesland_code as repeater_bundesland_code,
       ep.abbreviation as einstiegspunkt_abbr, ep.site_name as einstiegspunkt_name
     FROM signal_reports sr
@@ -116,8 +116,7 @@ exercisesRouter.get('/:id/stats', (req, res) => {
       COUNT(DISTINCT sr.operator_id) as participants,
       COUNT(CASE WHEN sr.readability IS NOT NULL THEN 1 END) as reports
     FROM signal_reports sr
-    JOIN operators o ON o.id = sr.operator_id
-    JOIN bezirke bz ON bz.code = o.bezirk_code
+    JOIN bezirke bz ON bz.code = sr.bezirk_code
     JOIN bundeslaender bl ON bl.code = bz.bundesland_code
     WHERE sr.exercise_id = ? AND sr.is_op_marker = 0
     GROUP BY bz.code
@@ -205,7 +204,7 @@ exercisesRouter.delete('/:id/repeaters/:rid', requireRole('admin'), (req, res) =
 exercisesRouter.get('/:id/reports', (req, res) => {
   const db = getDb();
   const reports = db.prepare(`
-    SELECT sr.*, o.callsign, o.name as operator_name, o.qth as operator_qth, o.bezirk_code, o.bundesland_code,
+    SELECT sr.*, o.callsign, o.name as operator_name, o.qth as operator_qth, sr.bezirk_code, o.bundesland_code,
       r.short_name as repeater_name, r.bundesland_code as repeater_bundesland_code,
       ep.abbreviation as einstiegspunkt_abbr, ep.site_name as einstiegspunkt_name
     FROM signal_reports sr
@@ -221,8 +220,8 @@ exercisesRouter.get('/:id/reports', (req, res) => {
 exercisesRouter.post('/:id/reports', (req, res) => {
   const db = getDb();
   const admin = (req as AuthRequest).admin!;
-  const { operator_id, repeater_id, readability, strength, db_over_s9, einstiegspunkt_id, is_op_marker, notes } = req.body;
-  console.log(`[report] POST exercise=${req.params.id} op=${operator_id} rep=${repeater_id} r=${readability} s=${strength} by=${admin.username}`);
+  const { operator_id, repeater_id, readability, strength, db_over_s9, einstiegspunkt_id, is_op_marker, notes, bezirk_code } = req.body;
+  console.log(`[report] POST exercise=${req.params.id} op=${operator_id} rep=${repeater_id} r=${readability} s=${strength} bz=${bezirk_code || '?'} by=${admin.username}`);
 
   if (!operator_id || !repeater_id) {
     console.log('[report] REJECTED: missing operator_id or repeater_id');
@@ -232,16 +231,16 @@ exercisesRouter.post('/:id/reports', (req, res) => {
 
   try {
     const result = db.prepare(`
-      INSERT INTO signal_reports (exercise_id, operator_id, repeater_id, readability, strength, db_over_s9, einstiegspunkt_id, is_op_marker, notes, entered_by)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(req.params.id, operator_id, repeater_id, readability || null, strength || null, db_over_s9 || null, einstiegspunkt_id || null, is_op_marker ? 1 : 0, notes || null, admin.username);
+      INSERT INTO signal_reports (exercise_id, operator_id, repeater_id, readability, strength, db_over_s9, einstiegspunkt_id, is_op_marker, notes, entered_by, bezirk_code)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(req.params.id, operator_id, repeater_id, readability || null, strength || null, db_over_s9 || null, einstiegspunkt_id || null, is_op_marker ? 1 : 0, notes || null, admin.username, bezirk_code || null);
 
     // Auto-add attendance
     db.prepare('INSERT OR IGNORE INTO exercise_attendance (exercise_id, operator_id, entered_by) VALUES (?, ?, ?)')
       .run(req.params.id, operator_id, admin.username);
 
     const report = db.prepare(`
-      SELECT sr.*, o.callsign, o.name as operator_name, o.bezirk_code, o.bundesland_code,
+      SELECT sr.*, o.callsign, o.name as operator_name, sr.bezirk_code, o.bundesland_code,
         r.short_name as repeater_name, r.bundesland_code as repeater_bundesland_code,
         ep.abbreviation as einstiegspunkt_abbr, ep.site_name as einstiegspunkt_name
       FROM signal_reports sr
@@ -276,7 +275,7 @@ exercisesRouter.patch('/:id/reports/:rid', (req, res) => {
   params.push(req.params.rid);
   db.prepare(`UPDATE signal_reports SET ${updates.join(', ')} WHERE id = ?`).run(...params);
   const report = db.prepare(`
-    SELECT sr.*, o.callsign, o.name as operator_name, o.qth as operator_qth, o.bezirk_code, o.bundesland_code,
+    SELECT sr.*, o.callsign, o.name as operator_name, o.qth as operator_qth, sr.bezirk_code, o.bundesland_code,
       r.short_name as repeater_name, r.bundesland_code as repeater_bundesland_code,
       ep.abbreviation as einstiegspunkt_abbr, ep.site_name as einstiegspunkt_name
     FROM signal_reports sr
@@ -333,8 +332,7 @@ exercisesRouter.get('/:id/nebenstationen', (req, res) => {
       COUNT(DISTINCT sr.operator_id) as count,
       COUNT(CASE WHEN sr.readability IS NOT NULL THEN 1 END) as reports
     FROM signal_reports sr
-    JOIN operators o ON o.id = sr.operator_id
-    JOIN bezirke bz ON bz.code = o.bezirk_code
+    JOIN bezirke bz ON bz.code = sr.bezirk_code
     JOIN bundeslaender bl ON bl.code = bz.bundesland_code
     WHERE sr.exercise_id = ? AND sr.is_op_marker = 0
     GROUP BY bz.code

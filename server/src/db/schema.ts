@@ -217,6 +217,20 @@ export function runMigrations(db: Database.Database): void {
   // Create index after migration ensures column exists
   db.exec("CREATE INDEX IF NOT EXISTS idx_repeaters_bundesland ON repeaters(bundesland_code)");
 
+  // Migration: add bezirk_code to signal_reports (report bezirk != operator home bezirk)
+  const srCols = db.prepare("PRAGMA table_info(signal_reports)").all() as any[];
+  if (!srCols.some((c: any) => c.name === 'bezirk_code')) {
+    db.exec("ALTER TABLE signal_reports ADD COLUMN bezirk_code TEXT REFERENCES bezirke(code)");
+    // Backfill from operator's current bezirk_code
+    const backfilled = db.prepare(`
+      UPDATE signal_reports SET bezirk_code = (
+        SELECT o.bezirk_code FROM operators o WHERE o.id = signal_reports.operator_id
+      ) WHERE bezirk_code IS NULL
+    `).run();
+    console.log(`  Migration: added bezirk_code to signal_reports, backfilled ${backfilled.changes} rows`);
+    db.exec("CREATE INDEX IF NOT EXISTS idx_signal_reports_bezirk ON signal_reports(bezirk_code)");
+  }
+
   // Migration: backfill operators with null bundesland_code using callsign prefix
   const nullBlOps = db.prepare("SELECT id, callsign FROM operators WHERE bundesland_code IS NULL").all() as { id: number; callsign: string }[];
   if (nullBlOps.length > 0) {
