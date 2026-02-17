@@ -235,7 +235,7 @@ export default function AggregatedReportsPage() {
                     URL.revokeObjectURL(url);
                   } catch {}
                 }}
-                className="bg-[#198754] hover:bg-[#146c43] text-white px-2 sm:px-3 py-1.5 rounded text-xs sm:text-sm"
+                className="bg-red-700 hover:bg-red-800 text-white px-2 sm:px-3 py-1.5 rounded text-xs sm:text-sm"
                 title="ADIF-Datei für QRZ.com, LOTW etc."
               >
                 Download ADIF
@@ -636,7 +636,7 @@ export default function AggregatedReportsPage() {
                     URL.revokeObjectURL(url);
                   } catch {}
                 }}
-                className="bg-[#198754] hover:bg-[#146c43] text-white px-4 py-2 rounded text-sm font-medium"
+                className="bg-red-700 hover:bg-red-800 text-white px-4 py-2 rounded text-sm font-medium"
               >
                 Download ADIF
               </button>
