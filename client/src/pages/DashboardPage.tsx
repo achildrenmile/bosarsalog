@@ -29,7 +29,8 @@ function getQuarter(date: string): number {
 export default function DashboardPage() {
   const { admin } = useAuth();
   const navigate = useNavigate();
-  const [exercises, setExercises] = useState<ExerciseSummary[]>([]);
+  const [allExercises, setAllExercises] = useState<ExerciseSummary[]>([]);
+  const [selectedYear, setSelectedYear] = useState(() => new Date().getFullYear());
   const [loading, setLoading] = useState(true);
   const [showCreate, setShowCreate] = useState(false);
   const [newDate, setNewDate] = useState(() => new Date().toISOString().split('T')[0]);
@@ -39,10 +40,14 @@ export default function DashboardPage() {
 
   useEffect(() => {
     apiFetch('/api/v1/exercises')
-      .then(data => setExercises(data))
+      .then(data => setAllExercises(data))
       .catch(() => {})
       .finally(() => setLoading(false));
   }, []);
+
+  // Derive available years and filter exercises
+  const availableYears = [...new Set(allExercises.map(e => new Date(e.date + 'T00:00:00').getFullYear()))].sort();
+  const exercises = allExercises.filter(e => new Date(e.date + 'T00:00:00').getFullYear() === selectedYear);
 
   const formatDate = (d: string) => {
     const date = new Date(d + 'T00:00:00');
@@ -111,15 +116,36 @@ export default function DashboardPage() {
           <h1 className="text-xl sm:text-2xl font-bold text-[#1e3a5f]">Gesamtübersicht</h1>
           <p className="text-xs sm:text-sm text-gray-500">Willkommen, {admin?.username}</p>
         </div>
-        {admin?.role === 'admin' && (
-          <button
-            onClick={() => setShowCreate(v => !v)}
-            className="bg-[#c8102e] hover:bg-[#a00d24] text-white px-4 py-2 rounded-lg text-sm font-medium"
-          >
-            + Neue Übung
-          </button>
-        )}
+        <div className="flex items-center gap-2 flex-shrink-0">
+          {admin?.role === 'admin' && (
+            <button
+              onClick={() => setShowCreate(v => !v)}
+              className="bg-[#c8102e] hover:bg-[#a00d24] text-white px-4 py-2 rounded-lg text-sm font-medium"
+            >
+              + Neue Übung
+            </button>
+          )}
+        </div>
       </div>
+
+      {/* Year selector */}
+      {!loading && availableYears.length > 0 && (
+        <div className="flex flex-wrap items-center gap-2 mb-4 sm:mb-6">
+          {availableYears.map(y => (
+            <button
+              key={y}
+              onClick={() => setSelectedYear(y)}
+              className={`px-3 py-1.5 rounded text-sm font-medium transition-colors ${
+                y === selectedYear
+                  ? 'bg-[#1e3a5f] text-white'
+                  : 'bg-gray-100 hover:bg-blue-100 text-gray-700 hover:text-[#1e3a5f]'
+              }`}
+            >
+              {y}
+            </button>
+          ))}
+        </div>
+      )}
 
       {showCreate && (
         <div className="bg-white rounded-xl shadow p-4 mb-6">
@@ -228,7 +254,7 @@ export default function DashboardPage() {
       {/* Trend chart */}
       {!loading && exercises.length > 0 && (
         <div className="bg-white rounded-xl shadow p-4 mb-6">
-          <h2 className="text-sm font-semibold text-[#1e3a5f] mb-3">BOS-ARSA Übungen {new Date().getFullYear()}</h2>
+          <h2 className="text-sm font-semibold text-[#1e3a5f] mb-3">BOS-ARSA Übungen {selectedYear}</h2>
           <div className="h-48 sm:h-[300px]">
             <Bar
               data={{
@@ -267,7 +293,7 @@ export default function DashboardPage() {
       {loading ? (
         <p className="text-gray-500">Laden...</p>
       ) : exercises.length === 0 ? (
-        <p className="text-gray-500">Noch keine Übungen erstellt.</p>
+        <p className="text-gray-500">Keine Übungen in {selectedYear}.</p>
       ) : (
         <div className="bg-white rounded-xl shadow overflow-x-auto">
           <table className="w-full text-xs sm:text-sm min-w-[480px]">
@@ -324,7 +350,7 @@ export default function DashboardPage() {
                 if (row.type === 'year') {
                   return (
                     <tr key="year" className="bg-[#1e3a5f] text-white font-bold">
-                      <td className="px-2 sm:px-4 py-2">Jahresgesamt</td>
+                      <td className="px-2 sm:px-4 py-2">Gesamt {selectedYear}</td>
                       <td className="px-2 sm:px-4 py-2 hidden sm:table-cell"></td>
                       <td className="px-2 sm:px-4 py-2 hidden md:table-cell"></td>
                       <td className="px-2 sm:px-4 py-2 text-right">{row.participants}</td>
