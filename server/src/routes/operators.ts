@@ -1,7 +1,6 @@
 import { Router } from 'express';
 import { getDb } from '../db/database.js';
 import { callsignToCountryCode } from '../utils/callsignCountry.js';
-import { qthToBezirkCode } from '../utils/qthBezirk.js';
 
 export const operatorsRouter = Router();
 
@@ -63,11 +62,10 @@ operatorsRouter.post('/', (req, res) => {
   }
   try {
     const derivedBl = bundesland_code || callsignToCountryCode(callsign) || null;
-    const derivedBz = bezirk_code || (qth ? qthToBezirkCode(db, qth, derivedBl) : null);
     const result = db.prepare(`
       INSERT INTO operators (callsign, name, qth, bezirk_code, bundesland_code)
       VALUES (?, ?, ?, ?, ?)
-    `).run(callsign.toUpperCase(), name || null, qth || null, derivedBz, derivedBl);
+    `).run(callsign.toUpperCase(), name || null, qth || null, bezirk_code || null, derivedBl);
     const operator = db.prepare('SELECT * FROM operators WHERE id = ?').get(result.lastInsertRowid);
     res.status(201).json(operator);
   } catch (e: any) {
@@ -107,18 +105,6 @@ operatorsRouter.patch('/:id', (req, res) => {
     if (req.body[f] !== undefined) {
       updates.push(`${f} = ?`);
       params.push(f === 'callsign' ? req.body[f].toUpperCase() : req.body[f]);
-    }
-  }
-  // Auto-derive bezirk from QTH when QTH changes and bezirk_code not explicitly set
-  if (req.body.qth !== undefined && req.body.bezirk_code === undefined) {
-    const existing = db.prepare('SELECT bundesland_code, bezirk_code FROM operators WHERE id = ?').get(req.params.id) as any;
-    if (existing && !existing.bezirk_code) {
-      const bl = req.body.bundesland_code ?? existing.bundesland_code;
-      const derived = qthToBezirkCode(db, req.body.qth, bl);
-      if (derived) {
-        updates.push('bezirk_code = ?');
-        params.push(derived);
-      }
     }
   }
   if (updates.length === 0) {
