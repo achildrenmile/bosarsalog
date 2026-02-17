@@ -238,14 +238,14 @@ export default function AggregatedReportsPage() {
                 className="bg-[#198754] hover:bg-[#146c43] text-white px-2 sm:px-3 py-1.5 rounded text-xs sm:text-sm"
                 title="ADIF-Datei für QRZ.com, LOTW etc."
               >
-                ADIF
+                Download ADIF
               </button>
               <button
                 onClick={downloadFullPage}
                 disabled={exporting}
                 className="bg-[#1e3a5f] hover:bg-[#2a4a7f] text-white px-2 sm:px-3 py-1.5 rounded text-xs sm:text-sm disabled:opacity-50"
               >
-                {exporting ? '...' : 'PNG'}
+                {exporting ? '...' : 'Download Auswertung'}
               </button>
             </>
           )}
@@ -617,7 +617,7 @@ export default function AggregatedReportsPage() {
                 disabled={exporting}
                 className="bg-[#1e3a5f] hover:bg-[#2a4a7f] text-white px-4 py-2 rounded text-sm font-medium disabled:opacity-50"
               >
-                {exporting ? 'Exportieren...' : 'PNG — Download Sonderauswertung'}
+                {exporting ? 'Exportieren...' : 'Download Auswertung'}
               </button>
               <button
                 onClick={async () => {
@@ -638,7 +638,7 @@ export default function AggregatedReportsPage() {
                 }}
                 className="bg-[#198754] hover:bg-[#146c43] text-white px-4 py-2 rounded text-sm font-medium"
               >
-                ADIF — Download QSO-Daten
+                Download ADIF
               </button>
             </div>
             <p className="text-xs text-gray-400 mt-2">
