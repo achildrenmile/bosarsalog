@@ -595,13 +595,27 @@ export default function AggregatedReportsPage() {
               >
                 {exporting ? 'Exportieren...' : 'PNG — Download Sonderauswertung'}
               </button>
-              <a
-                href={`/api/v1/reports/adif?from=${from}&to=${to}`}
-                download
-                className="bg-[#198754] hover:bg-[#146c43] text-white px-4 py-2 rounded text-sm font-medium inline-block"
+              <button
+                onClick={async () => {
+                  try {
+                    const token = localStorage.getItem('token');
+                    const res = await fetch(`/api/v1/reports/adif?from=${from}&to=${to}`, {
+                      headers: token ? { Authorization: `Bearer ${token}` } : {},
+                    });
+                    if (!res.ok) throw new Error();
+                    const blob = await res.blob();
+                    const url = URL.createObjectURL(blob);
+                    const link = document.createElement('a');
+                    link.href = url;
+                    link.download = `BOS-ARSA_QSOs_${from}_${to}.adi`;
+                    link.click();
+                    URL.revokeObjectURL(url);
+                  } catch {}
+                }}
+                className="bg-[#198754] hover:bg-[#146c43] text-white px-4 py-2 rounded text-sm font-medium"
               >
                 ADIF — Download QSO-Daten
-              </a>
+              </button>
             </div>
             <p className="text-xs text-gray-400 mt-2">
               ADIF-Datei kann in QRZ.com, LOTW oder andere Logbuch-Software importiert werden.
