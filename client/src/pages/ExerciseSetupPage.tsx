@@ -338,10 +338,9 @@ export default function ExerciseSetupPage() {
                             onChange={() => toggleRepeater(rep.id)}
                             className="w-4 h-4 accent-red-600 flex-shrink-0"
                           />
-                          <span className="font-medium text-xs sm:text-sm">{rep.short_name}</span>
+                          <span className="font-medium text-xs sm:text-sm">{rep.short_name}{rep.callsign ? ` (${rep.callsign})` : ''}</span>
                           <span className="text-xs text-gray-500 hidden sm:inline">
                             {rep.frequency_mhz && `${rep.frequency_mhz} MHz`}
-                            {rep.callsign && ` (${rep.callsign})`}
                           </span>
                           {rep.ctcss_hz && <span className="text-xs text-gray-400 hidden md:inline">CTCSS {rep.ctcss_hz}</span>}
                           {rep.is_linked ? <span className="text-xs bg-blue-100 text-blue-700 px-1.5 py-0.5 rounded">oelink</span> : null}
