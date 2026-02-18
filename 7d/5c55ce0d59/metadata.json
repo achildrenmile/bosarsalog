@@ -1,0 +1,38 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "7d5c55ce0d59",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "README.md",
+    "client/src/components/BundMode.tsx",
+    "client/src/components/Layout.tsx",
+    "client/src/constants/exerciseTypes.ts",
+    "client/src/pages/AggregatedReportsPage.tsx",
+    "client/src/pages/DashboardPage.tsx",
+    "client/src/pages/ExerciseSetupPage.tsx",
+    "client/src/pages/HilfePage.tsx",
+    "package.json",
+    "server/src/db/schema.ts",
+    "server/src/db/seed.ts",
+    "server/src/routes/exercises.ts",
+    "server/src/routes/reports.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/7d/5c55ce0d59/0/metadata.json",
+      "transcript": "/7d/5c55ce0d59/0/full.jsonl",
+      "context": "/7d/5c55ce0d59/0/context.md",
+      "content_hash": "/7d/5c55ce0d59/0/content_hash.txt",
+      "prompt": "/7d/5c55ce0d59/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 36,
+    "cache_creation_tokens": 117334,
+    "cache_read_tokens": 3044818,
+    "output_tokens": 556,
+    "api_call_count": 28
+  }
+}
