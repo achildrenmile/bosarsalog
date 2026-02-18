@@ -428,7 +428,7 @@ function BezirkRow({ bezirk, reports, linkedRepeaters, defaultRepeaterId, onSubm
             {reports.map((r, idx) => (
               <tr key={r.id} className="hover:bg-blue-50 group">
                 {editingId === r.id ? (
-                  <td colSpan={5} className="py-0.5">
+                  <td colSpan={6} className="py-0.5">
                     <div className="flex items-center gap-1 bg-blue-50 rounded p-1 flex-wrap" onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); onEditSave(); } }}>
                       <span className="font-mono font-medium">{r.callsign}</span>
                       <input value={editForm.opName} onChange={e => onEditChange({ ...editForm, opName: e.target.value })} placeholder="Name" className="border rounded px-1 py-0.5 text-xs w-16 sm:w-20 hidden sm:block" />
@@ -447,6 +447,7 @@ function BezirkRow({ bezirk, reports, linkedRepeaters, defaultRepeaterId, onSubm
                       {r.operator_name && <span className="ml-1 text-gray-500 text-xs">{r.operator_name}</span>}
                       {r.operator_qth && <span className="ml-1 text-gray-400 text-xs hidden sm:inline">{r.operator_qth}</span>}
                     </td>
+                    <td className="py-0.5 text-blue-600 text-xs cursor-pointer hidden sm:table-cell" onClick={() => onEdit(r)}>{r.repeater_name || ''}</td>
                     <td className="py-0.5 font-mono text-gray-500 w-16 sm:w-24 cursor-pointer" onClick={() => onEdit(r)}>
                       {r.readability && r.strength ? `${r.readability}/${r.strength}${r.db_over_s9 || ''}` : '—'}
                     </td>
