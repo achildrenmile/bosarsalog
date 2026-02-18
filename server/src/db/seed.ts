@@ -41,7 +41,7 @@ console.log(`  ✓ ${bundeslaender.length} Bundesländer`);
 const insertBez = db.prepare('INSERT OR IGNORE INTO bezirke (code, name, bundesland_code, is_capital) VALUES (?, ?, ?, ?)');
 const bezirke = [
   // Wien (01)
-  ['WC', 'Wien', '01', 1],
+  ['W', 'Wien', '01', 1],
   // Salzburg (02)
   ['HA', 'Hallein', '02', 0],
   ['JO', 'St. Johann im Pongau', '02', 0],
@@ -65,7 +65,8 @@ const bezirke = [
   ['MI', 'Mistelbach', '03', 0],
   ['MD', 'Mödling', '03', 0],
   ['NK', 'Neunkirchen', '03', 0],
-  ['PL', 'St. Pölten', '03', 1],
+  ['PC', 'St. Pölten', '03', 1],
+  ['PL', 'St. Pölten-Land', '03', 0],
   ['SB', 'Scheibbs', '03', 0],
   ['TU', 'Tulln', '03', 0],
   ['WY', 'Waidhofen an der Ybbs', '03', 0],
