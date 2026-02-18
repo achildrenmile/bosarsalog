@@ -54,7 +54,7 @@ export default function ExerciseSetupPage() {
   }, [id]);
 
   const repeatersForBl = (blCode: string) =>
-    allRepeaters.filter(r => r.bundesland_code === blCode && r.type !== 'simplex');
+    allRepeaters.filter(r => r.bundesland_code === blCode && r.type !== 'simplex' && !r.is_linked);
 
   const simplexRepeaters = allRepeaters.filter(r => r.type === 'simplex');
 
@@ -243,6 +243,20 @@ export default function ExerciseSetupPage() {
                   body: JSON.stringify({ oe_link_enabled: val }),
                 });
                 setExercise((prev: any) => prev ? { ...prev, oe_link_enabled: val ? 1 : 0 } : null);
+                if (val) {
+                  // Auto-add all linked repeaters
+                  const linkedReps = allRepeaters.filter(r => r.is_linked);
+                  for (const rep of linkedReps) {
+                    if (!activeRepeaters.some(r => r.repeater_id === rep.id)) {
+                      await apiFetch(`/api/v1/exercises/${id}/repeaters`, {
+                        method: 'POST',
+                        body: JSON.stringify({ repeater_id: rep.id }),
+                      });
+                    }
+                  }
+                  const updated = await apiFetch(`/api/v1/exercises/${id}/repeaters`);
+                  setActiveRepeaters(updated);
+                }
               }}
               className="w-5 h-5 accent-red-600"
             />
@@ -263,7 +277,7 @@ export default function ExerciseSetupPage() {
             const repCount = repeatersForBl(bl.code).length;
             const activeCount = activeRepeaters.filter(ar => {
               const rep = allRepeaters.find(r => r.id === ar.repeater_id);
-              return rep?.bundesland_code === bl.code;
+              return rep?.bundesland_code === bl.code && !rep?.is_linked;
             }).length;
             return (
               <button
