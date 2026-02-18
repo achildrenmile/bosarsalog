@@ -1,0 +1,423 @@
+Implement the following plan:
+
+# Übungstyp (Exercise Type) Field
+
+## Context
+Exercises currently have only a `name` field used both as type and title. The user needs a dedicated `exercise_type` field to distinguish between "Krisenkommunikationsübung" and "80m Notfunk Runde" (and future types). This enables filtering in Auswertungen by type (multi-select or all). Existing data must be backfilled correctly.
+
+## Changes
+
+### 1. Shared Constants
+**NEW `client/src/constants/exerciseTypes.ts`**
+
+```typescript
+export const EXERCISE_TYPES = [
+  { value: 'Krisenkommunikationsübung', label: 'Krisenkommunikationsübung', short: 'KriKom' },
+  { value: '80m Notfunk Runde', label: '80m Notfunk Runde', short: 'Notfunk' },
+];
+export const DEFAULT_EXERCISE_TYPE = 'Krisenkommunikationsübung';
+export function getShortLabel(type: string) { ... }
+```
+
+### 2. Schema Migration
+**`server/src/db/schema.ts`** — after line 207 (organisator migration)
+
+- `ALTER TABLE exercises ADD COLUMN exercise_type TEXT DEFAULT 'Krisenkommunikationsübung'`
+- Backfill: `UPDATE exercises SET exercise_type = '80m Notfunk Runde' WHERE name LIKE '%Notfunk%'`
+
+### 3. API: Exercises CRUD
+**`server/src/routes/exercises.ts`**
+
+- **GET /exercises**: Add `e.exercise_type` to SELECT (line 12)
+- **POST /exercises**: Accept `exercise_type` in body, include in INSERT (lines 22, 29)
+- **PATCH /exercises/:id**: Add `exercise_type` to dynamic updates (lines 80-86)
+
+### 4. API: Aggregated Reports Filter
+**`server/src/routes/reports.ts`**
+
+- Accept optional `types` query param (comma-separated)
+- Add `AND e.exercise_type IN (...)` to exercises query when provided
+- Include `e.exercise_type` in exercises SELECT
+
+### 5. Dashboard
+**`client/src/pages/DashboardPage.tsx`**
+
+- Import shared constants, remove inline `EXERCISE_TYPES` (lines 14-19)
+- Add `exercise_type` to `ExerciseSummary` interface
+- Creation form: add exercise type dropdown (separate from name)
+- POST: send both `exercise_type` and `name`
+- Exercise table: add "Typ" column (hidden on small screens) with short labels
+
+### 6. ExerciseSetupPage
+**`client/src/pages/ExerciseSetupPage.tsx`**
+
+- Add type dropdown (admin-only) after name input, using PATCH pattern
+
+### 7. AggregatedReportsPage
+**`client/src/pages/AggregatedReportsPage.tsx`**
+
+- Add `selectedTypes` state (Set, empty = all)
+- Add type filter checkboxes below date range selector
+- Pass `&types=...` to `/api/v1/reports/stats` when filtered
+- Add "Typ" column to exercise list table
+
+## Files
+| File | Action |
+|------|--------|
+| `client/src/constants/exerciseTypes.ts` | NEW — shared type definitions |
+| `server/src/db/schema.ts` | Migration: add column + backfill |
+| `server/src/routes/exercises.ts` | SELECT/INSERT/UPDATE exercise_type |
+| `server/src/routes/reports.ts` | Optional `types` filter param |
+| `client/src/pages/DashboardPage.tsx` | Type dropdown in form + "Typ" table column |
+| `client/src/pages/ExerciseSetupPage.tsx` | Type selector (admin-only) |
+| `client/src/pages/AggregatedReportsPage.tsx` | Type filter + "Typ" column |
+
+## Verification
+1. `nix-shell -p nodejs --run "npm run build"` compiles
+2. Existing exercises correctly backfilled (Notfunk → "80m Notfunk Runde", rest → "Krisenkommunikationsübung")
+3. Dashboard table shows "Typ" column with short labels
+4. New exercise creation sends exercise_type
+5. Auswertung type filter works (multi-select, all)
+6. Deploy to production
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.claude/projects/-home-achildrenmile-bosarsalog/fea1333a-a7e9-44e5-9a3d-9e6e2cf0c4e3.jsonl
+
+---
+
+deploy
+
+---
+
+see deploy.script always use this! remember
+
+---
+
+wie kann man einen neuen typen einfügen?
+
+---
+
+es soll die möglichkeit geben, den typen übers interface einzugeben als admin
+
+---
+
+ja
+
+---
+
+ja, bau einen Jahresfilter ein
+
+---
+
+update hilfe, readme, create release, add release to footer
+
+---
+
+füge den typ filter auch in die gesamtübersicht ein. default ist alle zeigen
+
+---
+
+update hilfe, readme, create v1 release and add to footer
+
+---
+
+Bug OELink: the entries made in a bundesland shall stay there. Lets say you add one entry for Salzbug and have as repeater hermannskogel, then the entry shall stay in salzbug and not be added in oe1.
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me chronologically analyze the conversation:
+
+1. **Initial request**: User asked to implement an "Übungstyp (Exercise Type) Field" plan with detailed specifications across 7 files.
+
+2. **Implementation of exercise_type feature**:
+   - Created `client/src/constants/exerciseTypes.ts` - shared constants
+   - Modified `server/src/db/schema.ts` - migration to add exercise_type column with backfill
+   - Modified `server/src/routes/exercises.ts` - GET/POST/PATCH to handle exercise_type
+   - Modified `server/src/routes/reports.ts` - optional `types` filter param
+   - Modified `client/src/pages/DashboardPage.tsx` - type dropdown in form + Typ table column
+   - Modified `client/src/pages/ExerciseSetupPage.tsx` - type selector (admin-only)
+   - Modified `client/src/pages/AggregatedReportsPage.tsx` - type filter + Typ column
+   - Build succeeded, committed and deployed
+
+3. **User said "deploy"** - I incorrectly used `docker compose up` locally.
+
+4. **User corrected**: "do not deploy it locally" and "see deploy.script always use this! remember"
+   - I found `deploy-production.sh`, updated MEMORY.md with deployment instructions
+   - Stopped local container, committed, pushed, then used `./deploy-production.sh`
+
+5. **User asked**: "wie kann man einen neuen typen einfügen?" - I explained editing the constants file.
+
+6. **User requested**: "es soll die möglichkeit geben, den typen übers interface einzugeben als admin"
+   - Added "Eigener Typ..." option to type dropdowns in DashboardPage and ExerciseSetupPage
+   - Both now show a free-text input when custom type is selected
+   - Deployed via `./deploy-production.sh`
+
+7. **User asked about year handling**: "wie geht das interface damit um, wenn jetzt zb 2027 wäre und die jahresdaten für 2026 schon vorhanden sind?"
+   - I explained the Dashboard shows all exercises without year filtering
+   - User confirmed: "ja, bau einen Jahresfilter ein"
+
+8. **Year filter implementation**:
+   - Added `selectedYear` state, derived `availableYears` from data
+   - Filter `exercises` by selected year
+   - Year buttons above the table
+   - Updated chart title, empty state message, yearly total label
+   - Deployed
+
+9. **User requested**: "update hilfe, readme, create release, add release to footer"
+   - Updated HilfePage with new features (year filter, exercise type, type filter)
+   - Updated README with Dashboard section, type filter, API docs
+   - Bumped version to v1.0.0-beta.7
+   - Updated footer in Layout.tsx
+   - Updated ADIF export version in reports.ts
+   - Created git tag and GitHub release
+   - Deployed
+
+10. **User requested**: "füge den typ filter auch in die gesamtübersicht ein. default ist alle zeigen"
+    - Added `selectedTypes` state to DashboardPage
+    - Added type filter checkboxes next to year buttons (only shown when >1 type exists)
+    - Filter exercises by type, reset on year change
+    - Deployed
+
+11. **User requested**: "update hilfe, readme, create v1 release and add to footer"
+    - Updated HilfePage Dashboard section to mention type filter
+    - Updated README Dashboard section with type filter
+    - Bumped version to v1.0.0 (no longer beta!)
+    - Updated footer, ADIF export version
+    - Created v1.0.0 git tag and GitHub release
+    - Deployed
+
+12. **User reported a bug**: "Bug OELink: the entries made in a bundesland shall stay there. Lets say you add one entry for Salzburg and have as repeater hermannskogel, then the entry shall stay in salzburg and not be added in oe1."
+    - I explored the OE-Link/BundMode code
+    - Read BundMode.tsx completely
+    - Identified the bug: line 215 filters by `r.repeater_bundesland_code === bl.code` - this groups reports by the repeater's Bundesland, not where the user entered the report
+    - The fix should group by the bezirk's Bundesland instead
+
+13. **Current state**: I was about to implement the fix in BundMode.tsx when the summary was requested.
+
+The bug is at line 215 of BundMode.tsx:
+```typescript
+const blReports = reports.filter(r => r.repeater_bundesland_code === bl.code);
+```
+
+This groups reports by the repeater's Bundesland. If someone enters a report in Salzburg's section using Hermannskogel (OE1 repeater), it shows under Wien/OE1 instead of Salzburg.
+
+The fix should use the bezirk_code to determine which Bundesland a report belongs to. The bezirk_code is set when submitting from a Bezirk row (line 140: `bezirk_code: (bezirkCode && bezirkCode !== '??') ? bezirkCode : null`). Since bezirke have a `bundesland_code` field, we can match reports to Bundesländer through their bezirk.
+
+Key environment notes:
+- NixOS system - use `nix-shell -p nodejs --run "..."` for npm/node
+- Always deploy with `./deploy-production.sh`, NEVER `docker compose up` locally
+- Monorepo: /client (React/Vite) + /server (Express/TypeScript)
+- SQLite database
+
+Summary:
+1. Primary Request and Intent:
+   The user requested a series of features for BOS-ARSA Log, a ham radio exercise logging app:
+   - Implement an `exercise_type` field to distinguish exercise types (Krisenkommunikationsübung, 80m Notfunk Runde)
+   - Allow admins to enter custom exercise types via free-text in the UI
+   - Add a year filter to the Dashboard
+   - Add a type filter to both the Auswertung (aggregated reports) page and the Dashboard
+   - Update documentation (Hilfe page, README) and create releases (v1.0.0-beta.7, then v1.0.0)
+   - Fix a bug in OE-Link (Bund) mode where reports are grouped by repeater Bundesland instead of the Bundesland where the entry was made
+
+2. Key Technical Concepts:
+   - NixOS environment: use `nix-shell -p nodejs --run "..."` for npm/node commands
+   - **Deployment: ALWAYS use `./deploy-production.sh`** — deploys via SSH to remote host, builds Docker there. NEVER use `docker compose up` locally
+   - Monorepo: `/client` (React 18, Vite, Tailwind) + `/server` (Express, TypeScript, SQLite)
+   - Schema migrations in `server/src/db/schema.ts` using `PRAGMA table_info` checks
+   - German UI text, English code convention
+   - Exercise type is a free TEXT column (no DB constraint), with shared constants for known types
+   - OE-Link/Bund mode groups reports by geography (Bundesland → Bezirk), vs Land mode by repeater
+   - `bezirk_code` on signal_reports = where the report was entered (independent from operator home bezirk)
+   - `repeater_bundesland_code` = the Bundesland where the repeater is physically located
+
+3. Files and Code Sections:
+
+   - **`client/src/constants/exerciseTypes.ts`** (NEW)
+     - Shared constants for exercise types used across Dashboard, ExerciseSetup, and Auswertung
+     ```typescript
+     export const EXERCISE_TYPES = [
+       { value: 'Krisenkommunikationsübung', label: 'Krisenkommunikationsübung', short: 'KriKom' },
+       { value: '80m Notfunk Runde', label: '80m Notfunk Runde', short: 'Notfunk' },
+     ];
+     export const DEFAULT_EXERCISE_TYPE = 'Krisenkommunikationsübung';
+     export function getShortLabel(type: string): string {
+       const found = EXERCISE_TYPES.find(t => t.value === type);
+       return found ? found.short : type;
+     }
+     ```
+
+   - **`server/src/db/schema.ts`**
+     - Added migration after the `organisator` migration (around line 207):
+     ```typescript
+     if (!cols.some((c: any) => c.name === 'exercise_type')) {
+       db.exec("ALTER TABLE exercises ADD COLUMN exercise_type TEXT DEFAULT 'Krisenkommunikationsübung'");
+       db.exec("UPDATE exercises SET exercise_type = '80m Notfunk Runde' WHERE name LIKE '%Notfunk%'");
+     }
+     ```
+
+   - **`server/src/routes/exercises.ts`**
+     - GET: Added `e.exercise_type` to SELECT
+     - POST: Accepts `exercise_type` in body, includes in INSERT with default fallback
+     - PATCH: Added `exercise_type` to dynamic updates
+
+   - **`server/src/routes/reports.ts`**
+     - GET /stats: Accepts optional `types` query param (comma-separated), adds `AND e.exercise_type IN (...)` filter
+     - Added `e.exercise_type` to exercises SELECT
+     - Version bumped to 1.0.0 in ADIF export header
+
+   - **`client/src/pages/DashboardPage.tsx`**
+     - Replaced inline `EXERCISE_TYPES` array with shared import
+     - Added `exercise_type` to `ExerciseSummary` interface
+     - Separated creation form into Type dropdown (with "Eigener Typ..." free-text option) + optional Name field
+     - Added year filter: `selectedYear` state, `availableYears` derived from data, year buttons
+     - Added type filter: `selectedTypes` state, checkboxes next to year buttons (shown when >1 type), "Alle" reset
+     - Added "Typ" column to table (hidden on small screens) with short labels
+     - Added empty `<td>` cells to quarter/year subtotal rows for correct column alignment
+
+   - **`client/src/pages/ExerciseSetupPage.tsx`**
+     - Replaced "Name der Übung" section with "Typ & Name der Übung" section
+     - Admin-only type dropdown with "Eigener Typ..." free-text option, saves via PATCH on change/blur
+     - Uses controlled `exercise.exercise_type` state
+
+   - **`client/src/pages/AggregatedReportsPage.tsx`**
+     - Added `exercise_type` to `ExerciseSummary` interface
+     - Added `selectedTypes` state with toggle helper
+     - Updated `fetchStats` to pass `&types=` query param
+     - Added type filter checkboxes below date range selector with "Alle anzeigen" reset
+     - Added "Typ" column to exercise list table
+
+   - **`client/src/components/Layout.tsx`**
+     - Footer version updated from `v1.0.0-beta.6` → `v1.0.0-beta.7` → `v1.0.0` with GitHub release link
+
+   - **`client/src/pages/HilfePage.tsx`**
+     - Section 2 (Dashboard): Updated with Jahres- und Typfilter docs, exercise type creation docs
+     - Section 3 (Setup): Added "Typ & Name" subsection documenting type selector
+     - Section 6 (Auswertung): Added Übungstyp-Filter bullet point
+     - Section 9 (Roles): Updated "Übungsname/Datum ändern" → "Übungstyp/Name/Datum ändern"
+
+   - **`README.md`**
+     - Added "Dashboard" feature section with year filter and type filter
+     - Added exercise type to "Exercise Setup" section
+     - Added exercise type filter to "Auswertung" section
+     - Updated API docs: POST exercises accepts `exercise_type`, PATCH accepts `exercise_type`, GET stats accepts `&types=`
+     - Updated roles table
+
+   - **`package.json`**
+     - Version bumped from `1.0.0-beta.6` → `1.0.0-beta.7` → `1.0.0`
+
+   - **`client/src/components/BundMode.tsx`** (READ for bug investigation)
+     - This is the OE-Link mode component. The bug is on line 215:
+     ```typescript
+     const blReports = reports.filter(r => r.repeater_bundesland_code === bl.code);
+     ```
+     - Reports are grouped by `repeater_bundesland_code` (the repeater's physical location), but should be grouped by the Bundesland of the report's `bezirk_code` (where the user entered the report in the UI)
+     - When `handleBezirkSubmit` is called (line 124), it passes `bezirk_code` from the UI context (line 140), which correctly represents where the entry was made
+     - But when displaying, the filter uses `repeater_bundesland_code` which is the repeater's location — causing the mismatch
+
+   - **`/home/achildrenmile/.claude/projects/-home-achildrenmile-bosarsalog/memory/MEMORY.md`**
+     - Updated with deployment instructions: always use `./deploy-production.sh`
+
+4. Errors and fixes:
+   - **Local Docker deploy instead of production**: I ran `docker compose up -d --build` locally when user said "deploy"
+     - User corrected: "do not deploy it locally" and "see deploy.script always use this! remember"
+     - Fix: Stopped local container with `docker compose down`, found `deploy-production.sh`, used it for all subsequent deploys
+     - Saved to MEMORY.md for future reference
+
+5. Problem Solving:
+   - Exercise type feature fully implemented across schema, API, and all 3 frontend pages
+   - Custom free-text types enabled for admins in both creation and edit flows
+   - Year filter added to Dashboard with automatic year detection
+   - Type filter added to both Dashboard and Auswertung
+   - Documentation and releases kept in sync
+   - OE-Link bug identified but not yet fixed
+
+6. All user messages:
+   - "Implement the following plan: [detailed exercise type plan]"
+   - "deploy"
+   - "do not deploy it locally"
+   - "see deploy.script always use this! remember"
+   - "wie kann man einen neuen typen einfügen?"
+   - "es soll die möglichkeit geben, den typen übers interface einzugeben als admin"
+   - "ja" (confirming commit and deploy of custom type feature)
+   - "wie geht das interface damit um, wenn jetzt zb 2027 wäre und die jahresdaten für 2026 schon vorhanden sind?"
+   - "ja, bau einen Jahresfilter ein"
+   - "update hilfe, readme, create release, add release to footer"
+   - "füge den typ filter auch in die gesamtübersicht ein. default ist alle zeigen"
+   - "update hilfe, readme, create v1 release and add to footer"
+   - "Bug OELink: the entries made in a bundesland shall stay there. Lets say you add one entry for Salzbug and have as repeater hermannskogel, then the entry shall stay in salzbug and not be added in oe1."
+
+7. Pending Tasks:
+   - Fix the OE-Link/BundMode bug where reports are grouped by repeater Bundesland instead of the bezirk's Bundesland
+
+8. Current Work:
+   The user reported a bug: "Bug OELink: the entries made in a bundesland shall stay there. Lets say you add one entry for Salzbug and have as repeater hermannskogel, then the entry shall stay in salzbug and not be added in oe1."
+   
+   I explored the BundMode code and read the full `client/src/components/BundMode.tsx` file. The bug is identified at line 215:
+   ```typescript
+   const blReports = reports.filter(r => r.repeater_bundesland_code === bl.code);
+   ```
+   This groups reports by the repeater's Bundesland (`repeater_bundesland_code`), not where the entry was made. When a user enters a report in the Salzburg section using Hermannskogel (an OE1/Wien repeater), the report appears under OE1 instead of Salzburg because `repeater_bundesland_code` is `01` (Wien).
+
+   The fix needs to group reports by the Bundesland derived from `bezirk_code` instead. Since each bezirk belongs to a Bundesland (via `bezirke` table with `bundesland_code`), reports should be matched through their `bezirk_code` → bezirk's `bundesland_code`. The `bezirke` array is already loaded in state (line 24, loaded at line 44).
+
+9. Optional Next Step:
+   Fix the BundMode.tsx bug by changing the report grouping logic on line 215 from `r.repeater_bundesland_code === bl.code` to instead match via the report's `bezirk_code` against the bezirke that belong to each Bundesland. The bezirke data is already available in the `bezirke` state variable. The fix would be something like:
+   ```typescript
+   const blBezirkCodes = new Set(bezirke.filter(b => b.bundesland_code === bl.code).map(b => b.code));
+   const blReports = reports.filter(r => r.bezirk_code && blBezirkCodes.has(r.bezirk_code));
+   ```
+   Also need to handle reports without a `bezirk_code` (unassigned reports). Then build, commit, push, and deploy via `./deploy-production.sh`.
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+Please continue the conversation from where we left it off without asking the user any further questions. Continue with the last task that you were asked to work on.
+
+---
+
+update hilfe, readme, create release, add a subrelease 1.0.1 to footer
+
+---
+
+all krikoms after 22.02. shall be configured to have Gerlitzen2m, Goldeck2m and 145.525
+
+---
+
+schau mal ob alle repeater konfiguriert sind? https://www.oevsv.at/funkbetrieb/ukw-referat/oe-link/. welche fehlen, was würde geändert werden, wenn wir die einfügen. analysiere, implementiere nichts!
+
+---
+
+kannst du die möglichen änderungen hier listen. vorher nachher
+
+---
+
+umsetzen
+
+---
+
+bist du dir sicher, dass du nichts kaput gemacht hast, ich sehe übungen wo schöckl und lachtal in frequenzen konfiguiert sind. war das vorher auch so?
+
+---
+
+die 2m frequenzen sind nicht im oe link verbund. nur die 70cm frequenzen. du musst das umstellen. die 2m relais können aber normal in den frequenzen verwendet werden
+
+---
+
+schau bitte auch alle datensätze durch, ob es dubletten gibt für eine übung + relais
+
+---
+
+https://bosarsalog.oeradio.at/exercises/0a2d0ba0-883e-460c-bcd7-1a2c828e21c5 sehe in dem report, dass zb oe8agv doppelt, opt doppelt, pck doppelt. warum?
+
+---
+
+aber ich sehe mehrere einträge auf magdalensberg
+
+---
+
+warum werden die dann in der oelink ansicht angezeigt?
+
+---
+
+in der rufzeichen innerhalb des bezirks soll auch noch der repeater zusätzlich zu rufzeichen, name, qth, rapport und sonstige angezeigt werden
