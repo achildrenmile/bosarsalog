@@ -211,9 +211,9 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
       {bundeslaender.filter(bl => !bl.is_international).map(bl => {
         const blBezirke = bezirke.filter(b => b.bundesland_code === bl.code);
         const defaultRepId = blRepSelection[bl.code] || 0;
-        // Match reports by bezirk's Bundesland (where the entry was made in the UI)
+        // Match reports by bezirk's Bundesland, only for linked repeaters
         const blBezirkCodes = new Set(blBezirke.map(b => b.code));
-        const blReports = reports.filter(r => r.bezirk_code && blBezirkCodes.has(r.bezirk_code));
+        const blReports = reports.filter(r => r.bezirk_code && blBezirkCodes.has(r.bezirk_code) && r.repeater_is_linked);
         const isCollapsed = collapsedBl.has(bl.code);
         const reportCount = blReports.filter(r => !r.is_op_marker && r.readability).length;
 

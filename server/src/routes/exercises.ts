@@ -53,7 +53,7 @@ exercisesRouter.get('/:id', (req, res) => {
 
   const reports = db.prepare(`
     SELECT sr.*, o.callsign, o.name as operator_name, o.qth as operator_qth, sr.bezirk_code, o.bundesland_code,
-      r.short_name as repeater_name, r.bundesland_code as repeater_bundesland_code,
+      r.short_name as repeater_name, r.bundesland_code as repeater_bundesland_code, r.is_linked as repeater_is_linked,
       ep.abbreviation as einstiegspunkt_abbr, ep.site_name as einstiegspunkt_name
     FROM signal_reports sr
     JOIN operators o ON o.id = sr.operator_id
