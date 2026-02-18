@@ -1,0 +1,73 @@
+# Session Context
+
+## User Prompts
+
+### Prompt 1
+
+Implement the following plan:
+
+# Übungstyp (Exercise Type) Field
+
+## Context
+Exercises currently have only a `name` field used both as type and title. The user needs a dedicated `exercise_type` field to distinguish between "Krisenkommunikationsübung" and "80m Notfunk Runde" (and future types). This enables filtering in Auswertungen by type (multi-select or all). Existing data must be backfilled correctly.
+
+## Changes
+
+### 1. Shared Constants
+**NEW `client/src/constants/exerciseTypes.ts`**
+
+```...
+
+### Prompt 2
+
+deploy
+
+### Prompt 3
+
+see deploy.script always use this! remember
+
+### Prompt 4
+
+wie kann man einen neuen typen einfügen?
+
+### Prompt 5
+
+es soll die möglichkeit geben, den typen übers interface einzugeben als admin
+
+### Prompt 6
+
+ja
+
+### Prompt 7
+
+ja, bau einen Jahresfilter ein
+
+### Prompt 8
+
+update hilfe, readme, create release, add release to footer
+
+### Prompt 9
+
+füge den typ filter auch in die gesamtübersicht ein. default ist alle zeigen
+
+### Prompt 10
+
+update hilfe, readme, create v1 release and add to footer
+
+### Prompt 11
+
+Bug OELink: the entries made in a bundesland shall stay there. Lets say you add one entry for Salzbug and have as repeater hermannskogel, then the entry shall stay in salzbug and not be added in oe1.
+
+### Prompt 12
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me chronologically analyze the conversation:
+
+1. **Initial request**: User asked to implement an "Übungstyp (Exercise Type) Field" plan with detailed specifications across 7 files.
+
+2. **Implementation of exercise_type feature**:
+   - Created `client/src/constants/exerciseTypes.ts` - shared constants
+   - Modified `server/src/db/s...
+
