@@ -188,7 +188,7 @@ const repeaters: any[][] = [
   ['Sandl 2m', 'Sandl', '2m', 'OE3XSA', 145.700, -0.6, null, null, 'repeater', 0, ++sortIdx, '03'],
   ['Frauenstaffel 2m', 'Frauenstaffel', '2m', 'OE3XES', 145.7875, -0.6, 79.7, null, 'repeater', 0, ++sortIdx, '03'],
   ['Frauenstaffel 70cm', 'Frauenstaffel', '70cm', 'OE3XEU', 439.025, -7.6, 136.5, null, 'repeater', 0, ++sortIdx, '03'],
-  ['Jauerling 70cm', 'Jauerling', '70cm', 'OE3XWJ', 438.425, -7.6, null, null, 'repeater', 1, ++sortIdx, '03'],
+  ['Jauerling 70cm', 'Jauerling', '70cm', 'OE3XWJ', 438.425, -7.6, 162.2, null, 'repeater', 1, ++sortIdx, '03'],
   ['Rittmannsberg 70cm', 'Rittmannsberg', '70cm', 'OE3XSU', 438.925, -7.6, null, null, 'repeater', 0, ++sortIdx, '03'],
   ['Jochgrabenberg 70cm', 'Jochgrabenberg', '70cm', 'OE3XFW', 438.975, -7.6, 162.2, null, 'repeater', 0, ++sortIdx, '03'],
   ['Hochkogel 70cm', 'Hochkogel', '70cm', 'OE3XDA', 438.850, -7.6, null, null, 'repeater', 0, ++sortIdx, '03'],
@@ -200,6 +200,7 @@ const repeaters: any[][] = [
   // ─── OE4 Burgenland ───
   ['Sonnenberg 70cm', 'Sonnenberg', '70cm', 'OE4XSB', 438.3625, -7.6, null, null, 'repeater', 0, ++sortIdx, '04'],
   ['Brentenriegel 2m', 'Brentenriegel', '2m', 'OE4XUB', 145.775, -0.6, 97.4, null, 'repeater', 0, ++sortIdx, '04'],
+  ['Brentenriegel 70cm', 'Brentenriegel', '70cm', 'OE4XBJ', 438.550, -7.6, 97.4, null, 'repeater', 1, ++sortIdx, '04'],
 
   // ─── OE5 Oberösterreich ───
   ['Grünberg 2m', 'Grünberg', '2m', 'OE5XGL', 145.750, -0.6, 123.0, null, 'repeater', 0, ++sortIdx, '05'],
@@ -217,16 +218,18 @@ const repeaters: any[][] = [
   ['Feuerkogel 70cm', 'Feuerkogel', '70cm', 'OE5XFK', 438.575, -7.6, 123.0, null, 'repeater', 1, ++sortIdx, '05'],
 
   // ─── OE6 Steiermark ───
-  ['Schöckl 2m', 'Schöckl', '2m', 'OE6XAG', 145.600, -0.6, 103.5, null, 'repeater', 1, ++sortIdx, '06'],
+  ['Schöckl 2m', 'Schöckl', '2m', 'OE6XAG', 145.600, -0.6, 103.5, null, 'repeater', 0, ++sortIdx, '06'],
   ['Grambach 70cm', 'Grambach', '70cm', 'OE6XCG', 438.775, -7.6, null, null, 'repeater', 0, ++sortIdx, '06'],
   ['Kindberg 70cm', 'Kindberg', '70cm', 'OE6XME', 438.525, -7.6, null, null, 'repeater', 0, ++sortIdx, '06'],
-  ['Lachtal 2m', 'Lachtal', '2m', 'OE6XDG', 145.700, -0.6, null, null, 'repeater', 1, ++sortIdx, '06'],
+  ['Lachtal 2m', 'Lachtal', '2m', 'OE6XDG', 145.700, -0.6, 103.5, null, 'repeater', 0, ++sortIdx, '06'],
   ['Dobl 2m', 'Dobl', '2m', 'OE6XDF', 145.6375, -0.6, null, null, 'repeater', 0, ++sortIdx, '06'],
+  ['Schöckl 70cm', 'Schöckl', '70cm', 'OE6XAG', 438.875, -7.6, 103.5, null, 'repeater', 1, ++sortIdx, '06'],
+  ['Lachtal 70cm', 'Lachtal', '70cm', 'OE6XDG', 438.675, -7.6, 103.5, null, 'repeater', 1, ++sortIdx, '06'],
   ['Zirbitzkogel 70cm', 'Zirbitzkogel', '70cm', null, 438.800, null, null, null, 'repeater', 0, ++sortIdx, '06'],
 
   // ─── OE7 Tirol ───
   ['Hochstein 2m', 'Hochstein', '2m', 'OE7XLI', 145.700, -0.6, 77.0, null, 'repeater', 0, ++sortIdx, '07'],
-  ['Hochstein 70cm', 'Hochstein', '70cm', 'OE7XLI', 438.575, -7.6, null, null, 'repeater', 1, ++sortIdx, '07'],
+  ['Hochstein 70cm', 'Hochstein', '70cm', 'OE7XLI', 438.575, -7.6, 77.0, null, 'repeater', 1, ++sortIdx, '07'],
   ['Wurmkogel 2m', 'Wurmkogel', '2m', 'OE7XGI', 145.7875, -0.6, null, null, 'repeater', 0, ++sortIdx, '07'],
   ['Hohe Salve 2m', 'Hohe Salve', '2m', 'OE7XKI', 145.775, -0.6, null, null, 'repeater', 0, ++sortIdx, '07'],
   ['Grünberg Silz 2m', 'Grünberg bei Silz', '2m', 'OE7XWH', 145.6625, -0.6, null, null, 'repeater', 0, ++sortIdx, '07'],
@@ -234,6 +237,7 @@ const repeaters: any[][] = [
   ['Harschbichl 70cm', 'Harschbichl', '70cm', 'OE7XFJ', 439.025, -7.6, 77.0, null, 'repeater', 0, ++sortIdx, '07'],
   ['Iselsberg 70cm', 'Iselsberg-Stronach', '70cm', 'OE7XLH', 438.625, -7.6, null, null, 'repeater', 0, ++sortIdx, '07'],
   ['Rangger Köpfl 70cm', 'Rangger Köpfl', '70cm', 'OE7XBI', 439.050, -7.6, null, null, 'repeater', 0, ++sortIdx, '07'],
+  ['Patscherkofel 70cm', 'Patscherkofel', '70cm', 'OE7XTI', 439.000, -7.6, 77.0, null, 'repeater', 1, ++sortIdx, '07'],
   ['Ahorn 70cm', 'Ahorn', '70cm', 'OE7XZT', 438.975, -7.6, 77.0, null, 'repeater', 1, ++sortIdx, '07'],
   ['Weinbergerhaus 70cm', 'Weinbergerhaus', '70cm', 'OE7XWT', 438.600, -7.6, 77.0, null, 'repeater', 0, ++sortIdx, '07'],
   ['Kaltenbach 70cm', 'Kaltenbach', '70cm', 'OE7XKT', 438.400, -7.6, null, null, 'repeater', 0, ++sortIdx, '07'],
@@ -251,6 +255,7 @@ const repeaters: any[][] = [
   ['Villach LKH 70cm', 'Villach LKH', '70cm', 'OE8XVK', 438.550, -7.6, 88.5, null, 'repeater', 0, ++sortIdx, '08'],
   ['Klagenfurt 70cm', 'Klagenfurt', '70cm', 'OE8XCK', 438.650, -7.6, null, null, 'repeater', 0, ++sortIdx, '08'],
   ['Pyramidenkogel 70cm', 'Pyramidenkogel', '70cm', 'OE8XKK', 438.8375, -7.6, null, null, 'repeater', 0, ++sortIdx, '08'],
+  ['Finkenstein 70cm', 'Finkenstein', '70cm', 'OE8XGK', 438.450, -7.6, null, null, 'repeater', 1, ++sortIdx, '08'],
   ['Dobratsch 23cm', 'Dobratsch', '23cm', null, 1298.150, -28, null, null, 'repeater', 0, ++sortIdx, '08'],
 
   // ─── OE9 Vorarlberg ───
