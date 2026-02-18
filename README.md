@@ -55,7 +55,7 @@ Part of the [oeradio.at](https://oeradio.at) ecosystem.
 ### Two Data Entry Modes
 
 - **Frequenzen (Land)** — Repeater-first entry. Select a repeater, enter reports grouped by Bezirk.
-- **OE-Link (Bund)** — Geography-first entry. Bundesland/Bezirk hierarchy with linked repeater selection per district. Only available when OE-Link mode is enabled for the exercise.
+- **OE-Link (Bund)** — Geography-first entry. Bundesland/Bezirk hierarchy with linked repeater selection per district. Reports stay in the Bundesland where they were entered, regardless of the repeater's physical location. Only available when OE-Link mode is enabled for the exercise.
 
 ### Exercise Setup
 

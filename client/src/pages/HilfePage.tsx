@@ -147,6 +147,8 @@ export default function HilfePage() {
         <p>
           Nur sichtbar wenn OE-Link aktiviert ist. Die Rapporte sind nach <b>Bundesland</b> gruppiert, dann nach <b>Bezirk</b>.
           Pro Bezirk kann der Einstiegspunkt (verlinkter Umsetzer) ausgewählt werden.
+          Ein Rapport bleibt immer in dem Bundesland, in dem er eingegeben wurde — auch wenn der gewählte
+          Umsetzer physisch in einem anderen Bundesland steht (z.B. Hermannskogel/OE1 bei einem Eintrag in Salzburg).
         </p>
 
         <h4 className="font-semibold text-[#1e3a5f] mt-3">Rapport eingeben</h4>
