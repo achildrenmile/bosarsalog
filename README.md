@@ -87,6 +87,7 @@ Part of the [oeradio.at](https://oeradio.at) ecosystem.
 - Socket.IO real-time sync — reports entered by one user appear instantly for all others
 - Running totals bar always visible: participant count, total reports, per-repeater counts
 - Optimized for speed: autofocus, enter-to-submit, auto-uppercase, keyboard shortcuts
+- **Two-step Enter flow** — Enter in the callsign field jumps to the rapport field (cursor at end); Enter in the rapport field submits the report
 
 ### Keyboard Shortcuts
 
@@ -94,7 +95,8 @@ Part of the [oeradio.at](https://oeradio.at) ecosystem.
 |----------|--------|
 | `Alt+1` through `Alt+9` | Insert "5/1" through "5/9" in rapport field |
 | `Ctrl+1` through `Ctrl+9` | Insert "OE1" through "OE9" in callsign field |
-| `Enter` | Submit report and clear fields |
+| `Enter` (in callsign) | Jump to rapport field |
+| `Enter` (in rapport/notes) | Submit report and clear fields |
 | `Arrow Up/Down` | Navigate autocomplete suggestions |
 | `Escape` | Close autocomplete dropdown |
 

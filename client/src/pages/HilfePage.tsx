@@ -161,7 +161,9 @@ export default function HilfePage() {
           <li><b>Bemerkung</b> — Optionale Notiz</li>
         </ul>
         <p>
-          Mit <b>Enter</b> oder dem <b>+</b>-Button wird der Rapport gespeichert.
+          Der Eingabeablauf ist zweistufig: Nachdem ein Rufzeichen eingegeben oder aus der Autovervollständigung ausgewählt wurde,
+          springt <b>Enter</b> automatisch ins <b>RST-Feld</b> (Cursor am Ende). Erst ein weiteres <b>Enter</b> im RST- oder Bemerkungsfeld
+          speichert den Rapport. Alternativ kann der <b>+</b>-Button verwendet werden.
           Die Felder werden automatisch geleert und der Fokus springt zurück zum Rufzeichen-Feld.
         </p>
 
@@ -197,7 +199,8 @@ export default function HilfePage() {
             <tbody>
               <Shortcut keys="Alt + 1 bis Alt + 9" desc='Trägt "5/1" bis "5/9" im RST-Feld ein' />
               <Shortcut keys="Strg + 1 bis Strg + 9" desc='Trägt "OE1" bis "OE9" im Rufzeichen-Feld ein' />
-              <Shortcut keys="Enter" desc="Rapport absenden und Felder leeren" />
+              <Shortcut keys="Enter (Rufzeichen)" desc="Zum RST-Feld springen" />
+              <Shortcut keys="Enter (RST/Sonst.)" desc="Rapport absenden und Felder leeren" />
               <Shortcut keys="Pfeil hoch / runter" desc="Autovervollständigungs-Vorschläge navigieren" />
               <Shortcut keys="Escape" desc="Autovervollständigung schließen" />
             </tbody>
@@ -378,7 +381,7 @@ export default function HilfePage() {
           </li>
           <li>
             <b>Schnelle Eingabe:</b> Nutzen Sie Alt+1-9 für schnelle RST-Eingabe und Strg+1-9 für OE-Präfixe.
-            Nach Enter springt der Fokus automatisch zum nächsten Rufzeichen-Feld.
+            Enter im Rufzeichen-Feld springt zum RST-Feld, Enter im RST-Feld sendet den Rapport ab und springt zurück zum Rufzeichen.
           </li>
           <li>
             <b>Unbekannte Rufzeichen:</b> Wenn ein Rufzeichen nicht in der Datenbank ist, wird es beim Speichern
