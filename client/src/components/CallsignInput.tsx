@@ -5,6 +5,7 @@ interface Props {
   value: string;
   onChange: (value: string) => void;
   onSelect: (operator: any) => void;
+  onEnter?: () => void;
   autoFocus?: boolean;
   className?: string;
 }
@@ -13,7 +14,7 @@ export interface CallsignInputRef {
   focus: () => void;
 }
 
-const CallsignInput = forwardRef<CallsignInputRef, Props>(({ value, onChange, onSelect, autoFocus, className }, ref) => {
+const CallsignInput = forwardRef<CallsignInputRef, Props>(({ value, onChange, onSelect, onEnter, autoFocus, className }, ref) => {
   const [suggestions, setSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [selectedIdx, setSelectedIdx] = useState(-1);
@@ -54,9 +55,14 @@ const CallsignInput = forwardRef<CallsignInputRef, Props>(({ value, onChange, on
     } else if (e.key === 'ArrowUp') {
       e.preventDefault();
       setSelectedIdx(prev => Math.max(prev - 1, -1));
-    } else if (e.key === 'Enter' && selectedIdx >= 0) {
+    } else if (e.key === 'Enter') {
       e.preventDefault();
-      selectSuggestion(suggestions[selectedIdx]);
+      if (selectedIdx >= 0) {
+        selectSuggestion(suggestions[selectedIdx]);
+      } else {
+        setShowSuggestions(false);
+        onEnter?.();
+      }
     } else if (e.key === 'Escape') {
       setShowSuggestions(false);
     }

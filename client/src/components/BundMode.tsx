@@ -486,6 +486,7 @@ function BezirkRow({ bezirk, reports, linkedRepeaters, defaultRepeaterId, onSubm
             setForm(f => ({ ...f, operator: op, callsign: op.callsign, opName: op.name || '', opQth: op.qth || '' }));
             setTimeout(() => { const el = rapportRef.current; if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }, 50);
           }}
+          onEnter={() => setTimeout(() => { const el = rapportRef.current; if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }, 50)}
           className="w-24 sm:w-28"
         />
         <input
