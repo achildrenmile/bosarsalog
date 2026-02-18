@@ -147,7 +147,7 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
           if (existing) {
             const updated = await apiFetch(`/api/v1/exercises/${exerciseId}/reports/${existing.id}`, {
               method: 'PATCH',
-              body: JSON.stringify({ ...parsed, notes: form.notes || null }),
+              body: JSON.stringify({ ...parsed, notes: form.notes || null, bezirk_code: (bezirkCode && bezirkCode !== '??') ? bezirkCode : null }),
             });
             onReportUpdated(updated);
           }
@@ -206,6 +206,8 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
     } catch {}
   };
 
+  const domesticBlCodes = new Set(bundeslaender.filter(b => !b.is_international).map(b => b.code));
+
   return (
     <div className="space-y-2">
       {bundeslaender.filter(bl => !bl.is_international).map(bl => {
@@ -213,7 +215,17 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
         const defaultRepId = blRepSelection[bl.code] || 0;
         // Match reports by bezirk's Bundesland, only for linked repeaters
         const blBezirkCodes = new Set(blBezirke.map(b => b.code));
-        const blReports = reports.filter(r => r.bezirk_code && blBezirkCodes.has(r.bezirk_code) && r.repeater_is_linked);
+        const blReports = reports.filter(r => {
+          if (!r.repeater_is_linked) return false;
+          // Primary: match by bezirk code
+          if (r.bezirk_code && blBezirkCodes.has(r.bezirk_code)) return true;
+          // Fallback for null bezirk_code: use operator BL (if domestic), else repeater BL
+          if (!r.bezirk_code) {
+            const effectiveBl = domesticBlCodes.has(r.bundesland_code) ? r.bundesland_code : r.repeater_bundesland_code;
+            return effectiveBl === bl.code;
+          }
+          return false;
+        });
         const isCollapsed = collapsedBl.has(bl.code);
         const reportCount = blReports.filter(r => !r.is_op_marker && r.readability).length;
 

@@ -263,7 +263,7 @@ exercisesRouter.post('/:id/reports', (req, res) => {
 
 exercisesRouter.patch('/:id/reports/:rid', (req, res) => {
   const db = getDb();
-  const { readability, strength, db_over_s9, einstiegspunkt_id, notes, is_op_marker } = req.body;
+  const { readability, strength, db_over_s9, einstiegspunkt_id, notes, is_op_marker, bezirk_code } = req.body;
   const updates: string[] = [];
   const params: any[] = [];
   if (readability !== undefined) { updates.push('readability = ?'); params.push(readability); }
@@ -272,6 +272,7 @@ exercisesRouter.patch('/:id/reports/:rid', (req, res) => {
   if (einstiegspunkt_id !== undefined) { updates.push('einstiegspunkt_id = ?'); params.push(einstiegspunkt_id); }
   if (notes !== undefined) { updates.push('notes = ?'); params.push(notes); }
   if (is_op_marker !== undefined) { updates.push('is_op_marker = ?'); params.push(is_op_marker ? 1 : 0); }
+  if (bezirk_code !== undefined) { updates.push('bezirk_code = ?'); params.push(bezirk_code); }
   updates.push("updated_at = datetime('now')");
   params.push(req.params.rid);
   db.prepare(`UPDATE signal_reports SET ${updates.join(', ')} WHERE id = ?`).run(...params);
