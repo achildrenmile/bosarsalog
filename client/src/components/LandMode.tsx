@@ -207,7 +207,7 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
             className="flex items-center gap-1.5 sm:gap-2 cursor-pointer hover:bg-gray-100 rounded px-1 -mx-1 min-w-0"
           >
             <span className="text-xs text-gray-400">{isCollapsed ? '▶' : '▼'}</span>
-            <span className="font-medium text-xs sm:text-sm truncate">{rep.short_name}</span>
+            <span className="font-medium text-xs sm:text-sm truncate">{rep.short_name}{rep.repeater_callsign ? ` (${rep.repeater_callsign})` : ''}</span>
             <span className="bg-[#0d6efd] text-white text-xs px-1.5 py-0.5 rounded-full flex-shrink-0">{reportCount}</span>
             {rep.frequency_mhz && (
               <span className="text-xs text-gray-400 hidden sm:inline">{rep.frequency_mhz} MHz</span>

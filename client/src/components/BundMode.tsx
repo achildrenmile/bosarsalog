@@ -445,7 +445,7 @@ function BezirkRow({ bezirk, reports, linkedRepeaters, defaultRepeaterId, onSubm
           >
             {linkedRepeaters.map(r => (
               <option key={r.id} value={r.id}>
-                {r.site_name || r.short_name}
+                {r.site_name || r.short_name}{r.callsign ? ` (${r.callsign})` : ''}
               </option>
             ))}
           </select>
