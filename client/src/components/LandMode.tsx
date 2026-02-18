@@ -197,7 +197,9 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
     const repReports = reports.filter(r => r.repeater_id === rep.repeater_id && !r.is_op_marker);
     const reportCount = repReports.filter(r => r.readability).length;
     const isCollapsed = collapsedReps.has(rep.repeater_id);
-    const repBezirke = bezirke.filter(b => b.bundesland_code === rep.bundesland_code);
+    const repBezirke = rep.type === 'simplex'
+      ? bezirke
+      : bezirke.filter(b => b.bundesland_code === rep.bundesland_code);
 
     return (
       <div key={rep.repeater_id} className="bg-white rounded-lg shadow-sm">
