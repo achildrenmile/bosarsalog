@@ -88,6 +88,8 @@ Part of the [oeradio.at](https://oeradio.at) ecosystem.
 - Running totals bar always visible: participant count, total reports, per-repeater counts
 - Optimized for speed: autofocus, enter-to-submit, auto-uppercase, keyboard shortcuts
 - **Two-step Enter flow** — Enter in the callsign field jumps to the rapport field (cursor at end); Enter in the rapport field submits the report
+- Repeater headers show callsign in parentheses (e.g. "Laaerberg 2m (OE1XFW)")
+- OE-Link Bundesland headers with OE prefix (e.g. "OE1 Wien", "OE8 Kärnten")
 
 ### Keyboard Shortcuts
 
