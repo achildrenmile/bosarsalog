@@ -109,6 +109,8 @@ export default function HilfePage() {
         <p>
           Die Checkbox <b>OE-Link</b> aktiviert den OE-Link-Modus.
           In diesem Modus erscheint auf der Übungsseite ein zusätzlicher Tab für die OE-Link-Erfassung.
+          Beim Aktivieren werden alle verlinkten OE-Link-Umsetzer automatisch zur Übung hinzugefügt.
+          OE-Link-Umsetzer werden nicht in der Frequenzen-Liste angezeigt, sondern nur im OE-Link-Tab.
         </p>
       </Section>
 
@@ -140,13 +142,15 @@ export default function HilfePage() {
         <ul className="list-disc ml-5 space-y-1">
           <li>Umsetzername, Frequenz, Offset, CTCSS</li>
           <li><b>OP-Rufzeichen</b> — Das Rufzeichen des zuständigen Operators für diesen Umsetzer</li>
-          <li>Pro Bezirk: Bezirk-Code (rot = Landeshauptstadt), vorhandene Rapporte, Eingabeformular</li>
+          <li>Pro Bezirk: Bezirk-Code (rot = Landeshauptstadt, grau = normaler Bezirk), vorhandene Rapporte, Eingabeformular</li>
+          <li><b>?? Sonstige</b> — Am Ende jedes Umsetzers gibt es eine gelbe Zeile für Rapporte von Operatoren außerhalb des Bundeslandes</li>
         </ul>
 
         <h4 className="font-semibold text-[#1e3a5f] mt-3">Modus: OE-Link (Bund)</h4>
         <p>
           Nur sichtbar wenn OE-Link aktiviert ist. Die Rapporte sind nach <b>Bundesland</b> gruppiert, dann nach <b>Bezirk</b>.
           Pro Bezirk kann der Einstiegspunkt (verlinkter Umsetzer) ausgewählt werden.
+          Am Ende jedes Bundeslandes gibt es ebenfalls eine <b>?? Sonstige</b>-Zeile für Rapporte ohne zugeordneten Bezirk.
           Ein Rapport bleibt immer in dem Bundesland, in dem er eingegeben wurde — auch wenn der gewählte
           Umsetzer physisch in einem anderen Bundesland steht (z.B. Hermannskogel/OE1 bei einem Eintrag in Salzburg).
         </p>

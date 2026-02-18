@@ -54,8 +54,8 @@ Part of the [oeradio.at](https://oeradio.at) ecosystem.
 
 ### Two Data Entry Modes
 
-- **Frequenzen (Land)** — Repeater-first entry. Select a repeater, enter reports grouped by Bezirk.
-- **OE-Link (Bund)** — Geography-first entry. Bundesland/Bezirk hierarchy with linked repeater selection per district. Reports stay in the Bundesland where they were entered, regardless of the repeater's physical location. Only available when OE-Link mode is enabled for the exercise.
+- **Frequenzen (Land)** — Repeater-first entry. Select a repeater, enter reports grouped by Bezirk. Each repeater card includes a "?? Sonstige" row for operators from outside the repeater's Bundesland.
+- **OE-Link (Bund)** — Geography-first entry. Bundesland/Bezirk hierarchy with linked repeater selection per district. Reports stay in the Bundesland where they were entered, regardless of the repeater's physical location. Each Bundesland includes a "?? Sonstige" row. Only available when OE-Link mode is enabled for the exercise. Linked repeaters are automatically added when OE-Link is toggled on and are hidden from the Frequenzen setup.
 
 ### Exercise Setup
 
@@ -319,8 +319,9 @@ The seed script (`npm run db:seed`) is **idempotent** — it only inserts data i
 - RST format: R/S with optional +dB modifier and location suffix
 - All timestamps in Europe/Vienna timezone
 - API prefix: `/api/v1/`
-- Bezirk badges: Hauptstadt = red, normal = gray
+- Bezirk badges: Landeshauptstadt = red, Statutarstadt/normal = gray, Sonstige (??) = yellow
 - Bundesland headers with blue badges
+- All 93 Austrian Bezirke with "C" suffix convention for Landeshauptstädte (e.g. GC=Graz, IC=Innsbruck)
 
 ## License
 
