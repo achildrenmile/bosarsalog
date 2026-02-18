@@ -1,0 +1,46 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "0c9f51224f9b",
+  "session_id": "33d8e7b4-37c8-4a39-9bf1-1d2b56aa8be3",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-18T12:37:26.914705989Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "README.md",
+    "client/src/components/BundMode.tsx",
+    "client/src/components/CallsignInput.tsx",
+    "client/src/components/LandMode.tsx",
+    "client/src/components/Layout.tsx",
+    "client/src/constants/exerciseTypes.ts",
+    "client/src/pages/AggregatedReportsPage.tsx",
+    "client/src/pages/DashboardPage.tsx",
+    "client/src/pages/ExerciseSetupPage.tsx",
+    "client/src/pages/HilfePage.tsx",
+    "package.json",
+    "server/src/db/schema.ts",
+    "server/src/db/seed.ts",
+    "server/src/routes/exercises.ts",
+    "server/src/routes/reports.ts"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "406f8ee9-74bb-4ab9-950d-a420950117a5",
+  "checkpoint_transcript_start": 2966,
+  "transcript_lines_at_start": 2966,
+  "token_usage": {
+    "input_tokens": 18,
+    "cache_creation_tokens": 11441,
+    "cache_read_tokens": 1250641,
+    "output_tokens": 1246,
+    "api_call_count": 14
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-18T12:37:25.935808312Z",
+    "agent_lines": 0,
+    "human_added": 14,
+    "human_modified": 2,
+    "human_removed": 0,
+    "total_committed": 14,
+    "agent_percentage": 0
+  }
+}
