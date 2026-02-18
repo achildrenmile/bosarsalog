@@ -384,6 +384,7 @@ function BezirkRow({ bezirk, reports, linkedRepeaters, defaultRepeaterId, onSubm
   const [form, setForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '5/9', notes: '', opName: '', opQth: '' });
   const [repeaterId, setRepeaterId] = useState(defaultRepeaterId);
   const callsignRef = useRef<CallsignInputRef>(null);
+  const rapportRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (defaultRepeaterId && !repeaterId) setRepeaterId(defaultRepeaterId);
@@ -481,7 +482,10 @@ function BezirkRow({ bezirk, reports, linkedRepeaters, defaultRepeaterId, onSubm
           ref={callsignRef}
           value={form.callsign}
           onChange={v => setForm(f => ({ ...f, callsign: v, operator: null, opName: '', opQth: '' }))}
-          onSelect={op => setForm(f => ({ ...f, operator: op, callsign: op.callsign, opName: op.name || '', opQth: op.qth || '' }))}
+          onSelect={op => {
+            setForm(f => ({ ...f, operator: op, callsign: op.callsign, opName: op.name || '', opQth: op.qth || '' }));
+            setTimeout(() => { const el = rapportRef.current; if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }, 50);
+          }}
           className="w-24 sm:w-28"
         />
         <input
@@ -501,6 +505,7 @@ function BezirkRow({ bezirk, reports, linkedRepeaters, defaultRepeaterId, onSubm
           className="border border-gray-300 rounded px-1.5 py-0.5 text-xs w-16 sm:w-20 focus:outline-none focus:ring-1 focus:ring-blue-500 hidden sm:block"
         />
         <input
+          ref={rapportRef}
           type="text"
           value={form.rapport}
           onChange={e => setForm(f => ({ ...f, rapport: e.target.value.toUpperCase() }))}

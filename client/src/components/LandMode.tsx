@@ -372,6 +372,7 @@ interface BezirkRowProps {
 function BezirkRow({ bezirk, reports, repeaterId, onSubmit, onEdit, onDelete, editingId, editForm, onEditChange, onEditSave, onEditCancel }: BezirkRowProps) {
   const [form, setForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '5/9', notes: '', opName: '', opQth: '' });
   const callsignRef = useRef<CallsignInputRef>(null);
+  const rapportRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -450,7 +451,10 @@ function BezirkRow({ bezirk, reports, repeaterId, onSubmit, onEdit, onDelete, ed
           ref={callsignRef}
           value={form.callsign}
           onChange={v => setForm(f => ({ ...f, callsign: v, operator: null, opName: '', opQth: '' }))}
-          onSelect={op => setForm(f => ({ ...f, operator: op, callsign: op.callsign, opName: op.name || '', opQth: op.qth || '' }))}
+          onSelect={op => {
+            setForm(f => ({ ...f, operator: op, callsign: op.callsign, opName: op.name || '', opQth: op.qth || '' }));
+            setTimeout(() => { const el = rapportRef.current; if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }, 50);
+          }}
           className="w-24 sm:w-28"
         />
         <input
@@ -470,6 +474,7 @@ function BezirkRow({ bezirk, reports, repeaterId, onSubmit, onEdit, onDelete, ed
           className="border border-gray-300 rounded px-1.5 py-0.5 text-xs w-16 sm:w-20 focus:outline-none focus:ring-1 focus:ring-blue-500 hidden sm:block"
         />
         <input
+          ref={rapportRef}
           type="text"
           value={form.rapport}
           onChange={e => setForm(f => ({ ...f, rapport: e.target.value.toUpperCase() }))}
@@ -513,6 +518,7 @@ interface FlatReportRowProps {
 function FlatReportRow({ reports, repeaterId, onSubmit, onEdit, onDelete, editingId, editForm, onEditChange, onEditSave, onEditCancel }: FlatReportRowProps) {
   const [form, setForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '5/9', notes: '', opName: '', opQth: '' });
   const callsignRef = useRef<CallsignInputRef>(null);
+  const rapportRef = useRef<HTMLInputElement>(null);
 
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
@@ -581,7 +587,10 @@ function FlatReportRow({ reports, repeaterId, onSubmit, onEdit, onDelete, editin
           ref={callsignRef}
           value={form.callsign}
           onChange={v => setForm(f => ({ ...f, callsign: v, operator: null, opName: '', opQth: '' }))}
-          onSelect={op => setForm(f => ({ ...f, operator: op, callsign: op.callsign, opName: op.name || '', opQth: op.qth || '' }))}
+          onSelect={op => {
+            setForm(f => ({ ...f, operator: op, callsign: op.callsign, opName: op.name || '', opQth: op.qth || '' }));
+            setTimeout(() => { const el = rapportRef.current; if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }, 50);
+          }}
           className="w-24 sm:w-28"
         />
         <input
@@ -601,6 +610,7 @@ function FlatReportRow({ reports, repeaterId, onSubmit, onEdit, onDelete, editin
           className="border border-gray-300 rounded px-1.5 py-0.5 text-xs w-16 sm:w-20 focus:outline-none focus:ring-1 focus:ring-blue-500 hidden sm:block"
         />
         <input
+          ref={rapportRef}
           type="text"
           value={form.rapport}
           onChange={e => setForm(f => ({ ...f, rapport: e.target.value.toUpperCase() }))}
