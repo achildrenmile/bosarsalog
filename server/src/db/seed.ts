@@ -218,10 +218,10 @@ const repeaters: any[][] = [
   ['Feuerkogel 70cm', 'Feuerkogel', '70cm', 'OE5XFK', 438.575, -7.6, 123.0, null, 'repeater', 1, ++sortIdx, '05'],
 
   // ─── OE6 Steiermark ───
-  ['Schöckl 2m', 'Schöckl', '2m', 'OE6XAG', 145.600, -0.6, 103.5, null, 'repeater', 0, ++sortIdx, '06'],
+  ['Schöckl 2m', 'Schöckl', '2m', 'OE6XAG', 145.600, -0.6, 103.5, null, 'repeater', 1, ++sortIdx, '06'],
   ['Grambach 70cm', 'Grambach', '70cm', 'OE6XCG', 438.775, -7.6, null, null, 'repeater', 0, ++sortIdx, '06'],
   ['Kindberg 70cm', 'Kindberg', '70cm', 'OE6XME', 438.525, -7.6, null, null, 'repeater', 0, ++sortIdx, '06'],
-  ['Lachtal 2m', 'Lachtal', '2m', 'OE6XDG', 145.700, -0.6, 103.5, null, 'repeater', 0, ++sortIdx, '06'],
+  ['Lachtal 2m', 'Lachtal', '2m', 'OE6XDG', 145.700, -0.6, 103.5, null, 'repeater', 1, ++sortIdx, '06'],
   ['Dobl 2m', 'Dobl', '2m', 'OE6XDF', 145.6375, -0.6, null, null, 'repeater', 0, ++sortIdx, '06'],
   ['Schöckl 70cm', 'Schöckl', '70cm', 'OE6XAG', 438.875, -7.6, 103.5, null, 'repeater', 1, ++sortIdx, '06'],
   ['Lachtal 70cm', 'Lachtal', '70cm', 'OE6XDG', 438.675, -7.6, 103.5, null, 'repeater', 1, ++sortIdx, '06'],
