@@ -235,6 +235,20 @@ export function runMigrations(db: Database.Database): void {
     db.exec("CREATE INDEX IF NOT EXISTS idx_signal_reports_bezirk ON signal_reports(bezirk_code)");
   }
 
+  // Migration: auto-assign bezirk_code for operators in single-bezirk Bundesländer (e.g. Wien → 'W')
+  const singleBzBls = db.prepare("SELECT bundesland_code, code FROM bezirke GROUP BY bundesland_code HAVING COUNT(*) = 1").all() as { bundesland_code: string; code: string }[];
+  for (const { bundesland_code, code } of singleBzBls) {
+    db.prepare("UPDATE operators SET bezirk_code = ? WHERE bundesland_code = ? AND bezirk_code IS NULL").run(code, bundesland_code);
+  }
+  // Backfill signal_reports bezirk_code from operator where null
+  db.prepare(`
+    UPDATE signal_reports SET bezirk_code = (
+      SELECT o.bezirk_code FROM operators o WHERE o.id = signal_reports.operator_id
+    ) WHERE bezirk_code IS NULL AND EXISTS (
+      SELECT 1 FROM operators o WHERE o.id = signal_reports.operator_id AND o.bezirk_code IS NOT NULL
+    )
+  `).run();
+
   // Migration: backfill operators with null bundesland_code using callsign prefix
   const nullBlOps = db.prepare("SELECT id, callsign FROM operators WHERE bundesland_code IS NULL").all() as { id: number; callsign: string }[];
   if (nullBlOps.length > 0) {
