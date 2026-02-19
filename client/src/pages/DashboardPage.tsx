@@ -237,7 +237,7 @@ export default function DashboardPage() {
                 try {
                   const ex = await apiFetch('/api/v1/exercises', {
                     method: 'POST',
-                    body: JSON.stringify({ date: newDate, name: newName || newType, exercise_type: newType }),
+                    body: JSON.stringify({ date: newDate, name: newName || `${newType} ${newDate}`, exercise_type: newType }),
                   });
                   navigate(`/exercises/${ex.id}/setup`);
                 } catch {

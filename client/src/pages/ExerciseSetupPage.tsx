@@ -32,6 +32,8 @@ export default function ExerciseSetupPage() {
   const [newRepOffset, setNewRepOffset] = useState('');
   const [newRepCtcss, setNewRepCtcss] = useState('');
   const [newRepCallsign, setNewRepCallsign] = useState('');
+  const [exerciseName, setExerciseName] = useState('');
+  const [nameSaveTimer, setNameSaveTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!id) return;
@@ -40,6 +42,7 @@ export default function ExerciseSetupPage() {
       apiFetch('/api/v1/repeaters'),
     ]).then(([ex, reps]) => {
       setExercise(ex);
+      setExerciseName(ex.name || '');
       setAllRepeaters(reps);
       setActiveRepeaters(ex.repeaters || []);
       // Determine which Bundesländer have active repeaters
@@ -214,12 +217,25 @@ export default function ExerciseSetupPage() {
               <label className="block text-xs text-gray-500 mb-1">Name (optional)</label>
               <input
                 type="text"
-                defaultValue={exercise.name || ''}
+                value={exerciseName}
                 placeholder="z.B. Sonntagsrunde KW 07"
-                onBlur={async (e) => {
+                onChange={(e) => {
+                  const val = e.target.value;
+                  setExerciseName(val);
+                  if (nameSaveTimer) clearTimeout(nameSaveTimer);
+                  setNameSaveTimer(setTimeout(async () => {
+                    await apiFetch(`/api/v1/exercises/${id}`, {
+                      method: 'PATCH',
+                      body: JSON.stringify({ name: val || null }),
+                    });
+                  }, 800));
+                }}
+                onBlur={async () => {
+                  if (nameSaveTimer) clearTimeout(nameSaveTimer);
+                  setNameSaveTimer(null);
                   await apiFetch(`/api/v1/exercises/${id}`, {
                     method: 'PATCH',
-                    body: JSON.stringify({ name: e.target.value || null }),
+                    body: JSON.stringify({ name: exerciseName || null }),
                   });
                 }}
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full max-w-md focus:outline-none focus:ring-2 focus:ring-blue-500"
