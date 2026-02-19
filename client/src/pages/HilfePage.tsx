@@ -68,6 +68,8 @@ export default function HilfePage() {
           Klicken Sie auf <b>+ Neue Übung</b>. Wählen Sie ein Datum und einen <b>Übungstyp</b>
           (Krisenkommunikationsübung, 80m Notfunk Runde oder „Eigener Typ..." für Freitext).
           Optional kann ein zusätzlicher <b>Name</b> vergeben werden (z.B. „Sonntagsrunde KW 07").
+          Wenn kein Name eingegeben wird, wird automatisch ein Standardname aus Typ und Datum erzeugt
+          (z.B. „Krisenkommunikationsübung 2026-02-22").
         </p>
       </Section>
 
@@ -111,6 +113,20 @@ export default function HilfePage() {
           In diesem Modus erscheint auf der Übungsseite ein zusätzlicher Tab für die OE-Link-Erfassung.
           Beim Aktivieren werden alle verlinkten OE-Link-Umsetzer automatisch zur Übung hinzugefügt.
           OE-Link-Umsetzer werden nicht in der Frequenzen-Liste angezeigt, sondern nur im OE-Link-Tab.
+        </p>
+        <h4 className="font-semibold text-[#1e3a5f] mt-3">Speicheranzeige</h4>
+        <p>
+          Alle Änderungen auf der Setup-Seite werden automatisch gespeichert. Oben rechts wird der Speicherstatus
+          angezeigt: <span className="text-amber-600">Speichern...</span> während des Speicherns,
+          <span className="text-green-600"> Gespeichert</span> bei Erfolg oder
+          <span className="text-red-600"> Fehler!</span> wenn etwas schiefgeht.
+        </p>
+        <h4 className="font-semibold text-[#1e3a5f] mt-3">Übung löschen (nur Admin)</h4>
+        <p>
+          Auf der Setup-Seite befindet sich oben rechts ein roter <b>Löschen</b>-Button.
+          Nach dem Klick erscheint eine Sicherheitsabfrage mit einer Zusammenfassung der betroffenen Daten.
+          Erst nach Bestätigung mit <b>Endgültig löschen</b> wird die Übung mit allen zugehörigen Rapporten,
+          Teilnehmern und Umsetzer-Zuordnungen unwiderruflich gelöscht. Danach wird automatisch zum Dashboard zurückgekehrt.
         </p>
       </Section>
 
@@ -358,6 +374,7 @@ export default function HilfePage() {
             </thead>
             <tbody className="divide-y divide-gray-100">
               <RoleRow label="Übung erstellen" admin operator={false} />
+              <RoleRow label="Übung löschen" admin operator={false} />
               <RoleRow label="Übungstyp/Name/Datum ändern" admin operator={false} />
               <RoleRow label="Umsetzer konfigurieren" admin operator={false} />
               <RoleRow label="OE-Link aktivieren" admin operator={false} />

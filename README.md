@@ -66,6 +66,8 @@ Part of the [oeradio.at](https://oeradio.at) ecosystem.
 - Custom repeater and simplex frequency creation
 - OE-Link toggle for linked repeater mode
 - Per-repeater operator (OP) callsign assignment
+- Auto-save with visual status indicator (Speichern / Gespeichert / Fehler)
+- **Exercise deletion** with danger-styled confirmation dialog (admin only)
 
 ### Interactive Austria Map with Neighbor Countries
 
@@ -155,6 +157,7 @@ Part of the [oeradio.at](https://oeradio.at) ecosystem.
 | Capability | Admin | Erfasser |
 |-----------|-------|----------|
 | Create exercises | ✓ | — |
+| Delete exercises | ✓ | — |
 | Configure repeaters | ✓ | — |
 | Change exercise type/name/date | ✓ | — |
 | Enable OE-Link | ✓ | — |
@@ -221,6 +224,7 @@ GET    /api/v1/exercises              List all (with summary stats)
 POST   /api/v1/exercises              Create { date, name, exercise_type }
 GET    /api/v1/exercises/:id          Full exercise with reports
 PATCH  /api/v1/exercises/:id          Update (name, exercise_type, organisator, oe_link)
+DELETE /api/v1/exercises/:id          Delete exercise + all related data (admin)
 GET    /api/v1/exercises/:id/stats    Live statistics
 GET    /api/v1/exercises/:id/reports  All signal reports
 POST   /api/v1/exercises/:id/reports  Create report
