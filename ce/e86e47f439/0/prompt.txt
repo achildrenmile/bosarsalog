@@ -1,0 +1,1117 @@
+Implement the following plan:
+
+# Übungstyp (Exercise Type) Field
+
+## Context
+Exercises currently have only a `name` field used both as type and title. The user needs a dedicated `exercise_type` field to distinguish between "Krisenkommunikationsübung" and "80m Notfunk Runde" (and future types). This enables filtering in Auswertungen by type (multi-select or all). Existing data must be backfilled correctly.
+
+## Changes
+
+### 1. Shared Constants
+**NEW `client/src/constants/exerciseTypes.ts`**
+
+```typescript
+export const EXERCISE_TYPES = [
+  { value: 'Krisenkommunikationsübung', label: 'Krisenkommunikationsübung', short: 'KriKom' },
+  { value: '80m Notfunk Runde', label: '80m Notfunk Runde', short: 'Notfunk' },
+];
+export const DEFAULT_EXERCISE_TYPE = 'Krisenkommunikationsübung';
+export function getShortLabel(type: string) { ... }
+```
+
+### 2. Schema Migration
+**`server/src/db/schema.ts`** — after line 207 (organisator migration)
+
+- `ALTER TABLE exercises ADD COLUMN exercise_type TEXT DEFAULT 'Krisenkommunikationsübung'`
+- Backfill: `UPDATE exercises SET exercise_type = '80m Notfunk Runde' WHERE name LIKE '%Notfunk%'`
+
+### 3. API: Exercises CRUD
+**`server/src/routes/exercises.ts`**
+
+- **GET /exercises**: Add `e.exercise_type` to SELECT (line 12)
+- **POST /exercises**: Accept `exercise_type` in body, include in INSERT (lines 22, 29)
+- **PATCH /exercises/:id**: Add `exercise_type` to dynamic updates (lines 80-86)
+
+### 4. API: Aggregated Reports Filter
+**`server/src/routes/reports.ts`**
+
+- Accept optional `types` query param (comma-separated)
+- Add `AND e.exercise_type IN (...)` to exercises query when provided
+- Include `e.exercise_type` in exercises SELECT
+
+### 5. Dashboard
+**`client/src/pages/DashboardPage.tsx`**
+
+- Import shared constants, remove inline `EXERCISE_TYPES` (lines 14-19)
+- Add `exercise_type` to `ExerciseSummary` interface
+- Creation form: add exercise type dropdown (separate from name)
+- POST: send both `exercise_type` and `name`
+- Exercise table: add "Typ" column (hidden on small screens) with short labels
+
+### 6. ExerciseSetupPage
+**`client/src/pages/ExerciseSetupPage.tsx`**
+
+- Add type dropdown (admin-only) after name input, using PATCH pattern
+
+### 7. AggregatedReportsPage
+**`client/src/pages/AggregatedReportsPage.tsx`**
+
+- Add `selectedTypes` state (Set, empty = all)
+- Add type filter checkboxes below date range selector
+- Pass `&types=...` to `/api/v1/reports/stats` when filtered
+- Add "Typ" column to exercise list table
+
+## Files
+| File | Action |
+|------|--------|
+| `client/src/constants/exerciseTypes.ts` | NEW — shared type definitions |
+| `server/src/db/schema.ts` | Migration: add column + backfill |
+| `server/src/routes/exercises.ts` | SELECT/INSERT/UPDATE exercise_type |
+| `server/src/routes/reports.ts` | Optional `types` filter param |
+| `client/src/pages/DashboardPage.tsx` | Type dropdown in form + "Typ" table column |
+| `client/src/pages/ExerciseSetupPage.tsx` | Type selector (admin-only) |
+| `client/src/pages/AggregatedReportsPage.tsx` | Type filter + "Typ" column |
+
+## Verification
+1. `nix-shell -p nodejs --run "npm run build"` compiles
+2. Existing exercises correctly backfilled (Notfunk → "80m Notfunk Runde", rest → "Krisenkommunikationsübung")
+3. Dashboard table shows "Typ" column with short labels
+4. New exercise creation sends exercise_type
+5. Auswertung type filter works (multi-select, all)
+6. Deploy to production
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.claude/projects/-home-achildrenmile-bosarsalog/fea1333a-a7e9-44e5-9a3d-9e6e2cf0c4e3.jsonl
+
+---
+
+deploy
+
+---
+
+see deploy.script always use this! remember
+
+---
+
+wie kann man einen neuen typen einfügen?
+
+---
+
+es soll die möglichkeit geben, den typen übers interface einzugeben als admin
+
+---
+
+ja
+
+---
+
+ja, bau einen Jahresfilter ein
+
+---
+
+update hilfe, readme, create release, add release to footer
+
+---
+
+füge den typ filter auch in die gesamtübersicht ein. default ist alle zeigen
+
+---
+
+update hilfe, readme, create v1 release and add to footer
+
+---
+
+Bug OELink: the entries made in a bundesland shall stay there. Lets say you add one entry for Salzbug and have as repeater hermannskogel, then the entry shall stay in salzbug and not be added in oe1.
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me chronologically analyze the conversation:
+
+1. **Initial request**: User asked to implement an "Übungstyp (Exercise Type) Field" plan with detailed specifications across 7 files.
+
+2. **Implementation of exercise_type feature**:
+   - Created `client/src/constants/exerciseTypes.ts` - shared constants
+   - Modified `server/src/db/schema.ts` - migration to add exercise_type column with backfill
+   - Modified `server/src/routes/exercises.ts` - GET/POST/PATCH to handle exercise_type
+   - Modified `server/src/routes/reports.ts` - optional `types` filter param
+   - Modified `client/src/pages/DashboardPage.tsx` - type dropdown in form + Typ table column
+   - Modified `client/src/pages/ExerciseSetupPage.tsx` - type selector (admin-only)
+   - Modified `client/src/pages/AggregatedReportsPage.tsx` - type filter + Typ column
+   - Build succeeded, committed and deployed
+
+3. **User said "deploy"** - I incorrectly used `docker compose up` locally.
+
+4. **User corrected**: "do not deploy it locally" and "see deploy.script always use this! remember"
+   - I found `deploy-production.sh`, updated MEMORY.md with deployment instructions
+   - Stopped local container, committed, pushed, then used `./deploy-production.sh`
+
+5. **User asked**: "wie kann man einen neuen typen einfügen?" - I explained editing the constants file.
+
+6. **User requested**: "es soll die möglichkeit geben, den typen übers interface einzugeben als admin"
+   - Added "Eigener Typ..." option to type dropdowns in DashboardPage and ExerciseSetupPage
+   - Both now show a free-text input when custom type is selected
+   - Deployed via `./deploy-production.sh`
+
+7. **User asked about year handling**: "wie geht das interface damit um, wenn jetzt zb 2027 wäre und die jahresdaten für 2026 schon vorhanden sind?"
+   - I explained the Dashboard shows all exercises without year filtering
+   - User confirmed: "ja, bau einen Jahresfilter ein"
+
+8. **Year filter implementation**:
+   - Added `selectedYear` state, derived `availableYears` from data
+   - Filter `exercises` by selected year
+   - Year buttons above the table
+   - Updated chart title, empty state message, yearly total label
+   - Deployed
+
+9. **User requested**: "update hilfe, readme, create release, add release to footer"
+   - Updated HilfePage with new features (year filter, exercise type, type filter)
+   - Updated README with Dashboard section, type filter, API docs
+   - Bumped version to v1.0.0-beta.7
+   - Updated footer in Layout.tsx
+   - Updated ADIF export version in reports.ts
+   - Created git tag and GitHub release
+   - Deployed
+
+10. **User requested**: "füge den typ filter auch in die gesamtübersicht ein. default ist alle zeigen"
+    - Added `selectedTypes` state to DashboardPage
+    - Added type filter checkboxes next to year buttons (only shown when >1 type exists)
+    - Filter exercises by type, reset on year change
+    - Deployed
+
+11. **User requested**: "update hilfe, readme, create v1 release and add to footer"
+    - Updated HilfePage Dashboard section to mention type filter
+    - Updated README Dashboard section with type filter
+    - Bumped version to v1.0.0 (no longer beta!)
+    - Updated footer, ADIF export version
+    - Created v1.0.0 git tag and GitHub release
+    - Deployed
+
+12. **User reported a bug**: "Bug OELink: the entries made in a bundesland shall stay there. Lets say you add one entry for Salzburg and have as repeater hermannskogel, then the entry shall stay in salzburg and not be added in oe1."
+    - I explored the OE-Link/BundMode code
+    - Read BundMode.tsx completely
+    - Identified the bug: line 215 filters by `r.repeater_bundesland_code === bl.code` - this groups reports by the repeater's Bundesland, not where the user entered the report
+    - The fix should group by the bezirk's Bundesland instead
+
+13. **Current state**: I was about to implement the fix in BundMode.tsx when the summary was requested.
+
+The bug is at line 215 of BundMode.tsx:
+```typescript
+const blReports = reports.filter(r => r.repeater_bundesland_code === bl.code);
+```
+
+This groups reports by the repeater's Bundesland. If someone enters a report in Salzburg's section using Hermannskogel (OE1 repeater), it shows under Wien/OE1 instead of Salzburg.
+
+The fix should use the bezirk_code to determine which Bundesland a report belongs to. The bezirk_code is set when submitting from a Bezirk row (line 140: `bezirk_code: (bezirkCode && bezirkCode !== '??') ? bezirkCode : null`). Since bezirke have a `bundesland_code` field, we can match reports to Bundesländer through their bezirk.
+
+Key environment notes:
+- NixOS system - use `nix-shell -p nodejs --run "..."` for npm/node
+- Always deploy with `./deploy-production.sh`, NEVER `docker compose up` locally
+- Monorepo: /client (React/Vite) + /server (Express/TypeScript)
+- SQLite database
+
+Summary:
+1. Primary Request and Intent:
+   The user requested a series of features for BOS-ARSA Log, a ham radio exercise logging app:
+   - Implement an `exercise_type` field to distinguish exercise types (Krisenkommunikationsübung, 80m Notfunk Runde)
+   - Allow admins to enter custom exercise types via free-text in the UI
+   - Add a year filter to the Dashboard
+   - Add a type filter to both the Auswertung (aggregated reports) page and the Dashboard
+   - Update documentation (Hilfe page, README) and create releases (v1.0.0-beta.7, then v1.0.0)
+   - Fix a bug in OE-Link (Bund) mode where reports are grouped by repeater Bundesland instead of the Bundesland where the entry was made
+
+2. Key Technical Concepts:
+   - NixOS environment: use `nix-shell -p nodejs --run "..."` for npm/node commands
+   - **Deployment: ALWAYS use `./deploy-production.sh`** — deploys via SSH to remote host, builds Docker there. NEVER use `docker compose up` locally
+   - Monorepo: `/client` (React 18, Vite, Tailwind) + `/server` (Express, TypeScript, SQLite)
+   - Schema migrations in `server/src/db/schema.ts` using `PRAGMA table_info` checks
+   - German UI text, English code convention
+   - Exercise type is a free TEXT column (no DB constraint), with shared constants for known types
+   - OE-Link/Bund mode groups reports by geography (Bundesland → Bezirk), vs Land mode by repeater
+   - `bezirk_code` on signal_reports = where the report was entered (independent from operator home bezirk)
+   - `repeater_bundesland_code` = the Bundesland where the repeater is physically located
+
+3. Files and Code Sections:
+
+   - **`client/src/constants/exerciseTypes.ts`** (NEW)
+     - Shared constants for exercise types used across Dashboard, ExerciseSetup, and Auswertung
+     ```typescript
+     export const EXERCISE_TYPES = [
+       { value: 'Krisenkommunikationsübung', label: 'Krisenkommunikationsübung', short: 'KriKom' },
+       { value: '80m Notfunk Runde', label: '80m Notfunk Runde', short: 'Notfunk' },
+     ];
+     export const DEFAULT_EXERCISE_TYPE = 'Krisenkommunikationsübung';
+     export function getShortLabel(type: string): string {
+       const found = EXERCISE_TYPES.find(t => t.value === type);
+       return found ? found.short : type;
+     }
+     ```
+
+   - **`server/src/db/schema.ts`**
+     - Added migration after the `organisator` migration (around line 207):
+     ```typescript
+     if (!cols.some((c: any) => c.name === 'exercise_type')) {
+       db.exec("ALTER TABLE exercises ADD COLUMN exercise_type TEXT DEFAULT 'Krisenkommunikationsübung'");
+       db.exec("UPDATE exercises SET exercise_type = '80m Notfunk Runde' WHERE name LIKE '%Notfunk%'");
+     }
+     ```
+
+   - **`server/src/routes/exercises.ts`**
+     - GET: Added `e.exercise_type` to SELECT
+     - POST: Accepts `exercise_type` in body, includes in INSERT with default fallback
+     - PATCH: Added `exercise_type` to dynamic updates
+
+   - **`server/src/routes/reports.ts`**
+     - GET /stats: Accepts optional `types` query param (comma-separated), adds `AND e.exercise_type IN (...)` filter
+     - Added `e.exercise_type` to exercises SELECT
+     - Version bumped to 1.0.0 in ADIF export header
+
+   - **`client/src/pages/DashboardPage.tsx`**
+     - Replaced inline `EXERCISE_TYPES` array with shared import
+     - Added `exercise_type` to `ExerciseSummary` interface
+     - Separated creation form into Type dropdown (with "Eigener Typ..." free-text option) + optional Name field
+     - Added year filter: `selectedYear` state, `availableYears` derived from data, year buttons
+     - Added type filter: `selectedTypes` state, checkboxes next to year buttons (shown when >1 type), "Alle" reset
+     - Added "Typ" column to table (hidden on small screens) with short labels
+     - Added empty `<td>` cells to quarter/year subtotal rows for correct column alignment
+
+   - **`client/src/pages/ExerciseSetupPage.tsx`**
+     - Replaced "Name der Übung" section with "Typ & Name der Übung" section
+     - Admin-only type dropdown with "Eigener Typ..." free-text option, saves via PATCH on change/blur
+     - Uses controlled `exercise.exercise_type` state
+
+   - **`client/src/pages/AggregatedReportsPage.tsx`**
+     - Added `exercise_type` to `ExerciseSummary` interface
+     - Added `selectedTypes` state with toggle helper
+     - Updated `fetchStats` to pass `&types=` query param
+     - Added type filter checkboxes below date range selector with "Alle anzeigen" reset
+     - Added "Typ" column to exercise list table
+
+   - **`client/src/components/Layout.tsx`**
+     - Footer version updated from `v1.0.0-beta.6` → `v1.0.0-beta.7` → `v1.0.0` with GitHub release link
+
+   - **`client/src/pages/HilfePage.tsx`**
+     - Section 2 (Dashboard): Updated with Jahres- und Typfilter docs, exercise type creation docs
+     - Section 3 (Setup): Added "Typ & Name" subsection documenting type selector
+     - Section 6 (Auswertung): Added Übungstyp-Filter bullet point
+     - Section 9 (Roles): Updated "Übungsname/Datum ändern" → "Übungstyp/Name/Datum ändern"
+
+   - **`README.md`**
+     - Added "Dashboard" feature section with year filter and type filter
+     - Added exercise type to "Exercise Setup" section
+     - Added exercise type filter to "Auswertung" section
+     - Updated API docs: POST exercises accepts `exercise_type`, PATCH accepts `exercise_type`, GET stats accepts `&types=`
+     - Updated roles table
+
+   - **`package.json`**
+     - Version bumped from `1.0.0-beta.6` → `1.0.0-beta.7` → `1.0.0`
+
+   - **`client/src/components/BundMode.tsx`** (READ for bug investigation)
+     - This is the OE-Link mode component. The bug is on line 215:
+     ```typescript
+     const blReports = reports.filter(r => r.repeater_bundesland_code === bl.code);
+     ```
+     - Reports are grouped by `repeater_bundesland_code` (the repeater's physical location), but should be grouped by the Bundesland of the report's `bezirk_code` (where the user entered the report in the UI)
+     - When `handleBezirkSubmit` is called (line 124), it passes `bezirk_code` from the UI context (line 140), which correctly represents where the entry was made
+     - But when displaying, the filter uses `repeater_bundesland_code` which is the repeater's location — causing the mismatch
+
+   - **`/home/achildrenmile/.claude/projects/-home-achildrenmile-bosarsalog/memory/MEMORY.md`**
+     - Updated with deployment instructions: always use `./deploy-production.sh`
+
+4. Errors and fixes:
+   - **Local Docker deploy instead of production**: I ran `docker compose up -d --build` locally when user said "deploy"
+     - User corrected: "do not deploy it locally" and "see deploy.script always use this! remember"
+     - Fix: Stopped local container with `docker compose down`, found `deploy-production.sh`, used it for all subsequent deploys
+     - Saved to MEMORY.md for future reference
+
+5. Problem Solving:
+   - Exercise type feature fully implemented across schema, API, and all 3 frontend pages
+   - Custom free-text types enabled for admins in both creation and edit flows
+   - Year filter added to Dashboard with automatic year detection
+   - Type filter added to both Dashboard and Auswertung
+   - Documentation and releases kept in sync
+   - OE-Link bug identified but not yet fixed
+
+6. All user messages:
+   - "Implement the following plan: [detailed exercise type plan]"
+   - "deploy"
+   - "do not deploy it locally"
+   - "see deploy.script always use this! remember"
+   - "wie kann man einen neuen typen einfügen?"
+   - "es soll die möglichkeit geben, den typen übers interface einzugeben als admin"
+   - "ja" (confirming commit and deploy of custom type feature)
+   - "wie geht das interface damit um, wenn jetzt zb 2027 wäre und die jahresdaten für 2026 schon vorhanden sind?"
+   - "ja, bau einen Jahresfilter ein"
+   - "update hilfe, readme, create release, add release to footer"
+   - "füge den typ filter auch in die gesamtübersicht ein. default ist alle zeigen"
+   - "update hilfe, readme, create v1 release and add to footer"
+   - "Bug OELink: the entries made in a bundesland shall stay there. Lets say you add one entry for Salzbug and have as repeater hermannskogel, then the entry shall stay in salzbug and not be added in oe1."
+
+7. Pending Tasks:
+   - Fix the OE-Link/BundMode bug where reports are grouped by repeater Bundesland instead of the bezirk's Bundesland
+
+8. Current Work:
+   The user reported a bug: "Bug OELink: the entries made in a bundesland shall stay there. Lets say you add one entry for Salzbug and have as repeater hermannskogel, then the entry shall stay in salzbug and not be added in oe1."
+   
+   I explored the BundMode code and read the full `client/src/components/BundMode.tsx` file. The bug is identified at line 215:
+   ```typescript
+   const blReports = reports.filter(r => r.repeater_bundesland_code === bl.code);
+   ```
+   This groups reports by the repeater's Bundesland (`repeater_bundesland_code`), not where the entry was made. When a user enters a report in the Salzburg section using Hermannskogel (an OE1/Wien repeater), the report appears under OE1 instead of Salzburg because `repeater_bundesland_code` is `01` (Wien).
+
+   The fix needs to group reports by the Bundesland derived from `bezirk_code` instead. Since each bezirk belongs to a Bundesland (via `bezirke` table with `bundesland_code`), reports should be matched through their `bezirk_code` → bezirk's `bundesland_code`. The `bezirke` array is already loaded in state (line 24, loaded at line 44).
+
+9. Optional Next Step:
+   Fix the BundMode.tsx bug by changing the report grouping logic on line 215 from `r.repeater_bundesland_code === bl.code` to instead match via the report's `bezirk_code` against the bezirke that belong to each Bundesland. The bezirke data is already available in the `bezirke` state variable. The fix would be something like:
+   ```typescript
+   const blBezirkCodes = new Set(bezirke.filter(b => b.bundesland_code === bl.code).map(b => b.code));
+   const blReports = reports.filter(r => r.bezirk_code && blBezirkCodes.has(r.bezirk_code));
+   ```
+   Also need to handle reports without a `bezirk_code` (unassigned reports). Then build, commit, push, and deploy via `./deploy-production.sh`.
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+Please continue the conversation from where we left it off without asking the user any further questions. Continue with the last task that you were asked to work on.
+
+---
+
+update hilfe, readme, create release, add a subrelease 1.0.1 to footer
+
+---
+
+all krikoms after 22.02. shall be configured to have Gerlitzen2m, Goldeck2m and 145.525
+
+---
+
+schau mal ob alle repeater konfiguriert sind? https://www.oevsv.at/funkbetrieb/ukw-referat/oe-link/. welche fehlen, was würde geändert werden, wenn wir die einfügen. analysiere, implementiere nichts!
+
+---
+
+kannst du die möglichen änderungen hier listen. vorher nachher
+
+---
+
+umsetzen
+
+---
+
+bist du dir sicher, dass du nichts kaput gemacht hast, ich sehe übungen wo schöckl und lachtal in frequenzen konfiguiert sind. war das vorher auch so?
+
+---
+
+die 2m frequenzen sind nicht im oe link verbund. nur die 70cm frequenzen. du musst das umstellen. die 2m relais können aber normal in den frequenzen verwendet werden
+
+---
+
+schau bitte auch alle datensätze durch, ob es dubletten gibt für eine übung + relais
+
+---
+
+https://bosarsalog.oeradio.at/exercises/0a2d0ba0-883e-460c-bcd7-1a2c828e21c5 sehe in dem report, dass zb oe8agv doppelt, opt doppelt, pck doppelt. warum?
+
+---
+
+aber ich sehe mehrere einträge auf magdalensberg
+
+---
+
+warum werden die dann in der oelink ansicht angezeigt?
+
+---
+
+in der rufzeichen innerhalb des bezirks soll auch noch der repeater zusätzlich zu rufzeichen, name, qth, rapport und sonstige angezeigt werden
+
+---
+
+wenn ich zur übung d3a46728-abf4-42a1-aece-9e7c3ef497a3 rapporte hinzufüge. werden die nur angezeigt, wenn ich refreshe und nicht direkt
+
+---
+
+wenn ich ein rufzeichen ausgewählt habe... egal bei welcher tabelle, soll automatisch ins rapport feld gesprungen werden und der cursor nach dem 9er positioniert (also am ende).
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me chronologically analyze the entire conversation:
+
+1. **Session start**: This is a continuation from a previous conversation. The summary indicates extensive prior work on exercise_type field, year filter, type filter, documentation, releases, and an OE-Link bug fix.
+
+2. **OE-Link BundMode bug fix**: The conversation starts with the assistant reading files and continuing to fix a bug where reports in OE-Link mode were grouped by repeater's Bundesland instead of the entry bezirk's Bundesland. The fix changed line 215 in BundMode.tsx from `r.repeater_bundesland_code === bl.code` to using bezirk-based grouping.
+
+3. **Release v1.0.1**: User asked to update Hilfe, README, create release, add v1.0.1 to footer. Updated HilfePage OE-Link section, README OE-Link description, Layout footer, package.json version, ADIF export version. Created GitHub release v1.0.1 and deployed.
+
+4. **Configure repeaters for KriKom exercises after 22.02**: User wanted Gerlitzen 2m (265), Goldeck 2m (269), and Direkte 145.525 (281) added to all KriKom exercises after 2026-02-22. Ran on production DB via SSH. 132 rows inserted across 44 exercises.
+
+5. **OEVSV OE-Link analysis**: User asked to compare DB repeaters against https://www.oevsv.at/funkbetrieb/ukw-referat/oe-link/. WebFetch extracted 13+1 OE-Link stations. Detailed analysis found frequency mismatches, missing entries, wrong linked flags, missing CTCSS values.
+
+6. **Listed before/after changes**: User asked for a clear before/after listing of all changes.
+
+7. **Implementation of OE-Link repeater corrections**: User said "umsetzen". Applied on production DB:
+   - Fixed Brentenriegel 70cm (285): callsign OE4XBJ, freq 438.550, ctcss 97.4
+   - Fixed Patscherkofel 70cm (286): callsign OE7XTI, freq 439.000, ctcss 77
+   - Added CTCSS to Jauerling (162.2), Hochstein (77), Lachtal 2m (103.5)
+   - Set Schöckl 2m and Lachtal 2m to is_linked=0
+   - Created Schöckl 70cm (287), Lachtal 70cm (288), Finkenstein 70cm (289)
+   - Updated seed.ts to match
+
+8. **Error: Schöckl/Lachtal appearing in Frequenzen**: User noticed Schöckl and Lachtal showing in exercises where they weren't before. The issue was setting is_linked=0 moved them from OE-Link tab to Frequenzen tab. I incorrectly restored is_linked=1.
+
+9. **User correction - 2m not in OE-Link**: User clarified "die 2m frequenzen sind nicht im oe link verbund. nur die 70cm frequenzen." Set them back to is_linked=0 (correct). Then user said data on 2m should be migrated to 70cm.
+
+10. **Data migration**: Migrated exercise_repeaters and signal_reports from Schöckl 2m (244) → 70cm (287) and Lachtal 2m (247) → 70cm (288). 7+5 exercise_repeaters and 83+10 signal_reports moved.
+
+11. **Duplicate check**: User asked to check for duplicates in exercise+repeater combinations. None found.
+
+12. **BundMode showing non-linked reports**: User saw duplicates - same callsign appearing in both OE-Link and Frequenzen tabs. Root cause: BundMode filtered reports only by bezirk_code, not by whether the repeater was linked. Fix: added `r.repeater_is_linked` to the API response and filtered in BundMode with `&& r.repeater_is_linked`.
+
+13. **Repeater name column in BundMode**: User asked to show repeater name in the bezirk report rows. Added a blue text column for `r.repeater_name` between callsign/name and rapport.
+
+14. **Reports not showing until refresh**: User reported new reports only visible after refresh. Root cause: POST and PATCH report endpoints didn't include `r.is_linked as repeater_is_linked` in their response queries, so new reports had `undefined` for that field and got filtered out by BundMode. Fixed all 4 report queries.
+
+15. **Current request**: User wants auto-focus to rapport field when a callsign is selected, with cursor positioned at the end (after "5/9"). This applies to both BundMode and LandMode. I had started reading the code for BundMode's BezirkRow and LandMode to understand the callsign selection flow.
+
+Key files examined for the current task:
+- BundMode.tsx: BezirkRow has `callsignRef` for CallsignInput, rapport input at line 503-514, onSelect callback at line 484
+- LandMode.tsx: Similar pattern, onSelect at lines 453 and 584
+- CallsignInput.tsx: onSelect callback at line 76
+
+The approach for the current task would be:
+1. Add a ref for the rapport input in BezirkRow (both BundMode and LandMode)
+2. In the onSelect callback, after setting form state, focus the rapport ref and position cursor at end
+
+Summary:
+1. Primary Request and Intent:
+   - Fix OE-Link BundMode bug where reports were grouped by repeater location instead of entry bezirk
+   - Release v1.0.1 with docs updates and footer version
+   - Configure Gerlitzen 2m, Goldeck 2m, 145.525 for all KriKom exercises after 2026-02-22 on production
+   - Compare DB repeaters against official OEVSV OE-Link list and implement corrections
+   - Fix multiple follow-up issues: wrong is_linked flags, data migration from 2m to 70cm, duplicate display in OE-Link, missing repeater_is_linked in API responses
+   - Add repeater name column to BundMode bezirk report rows
+   - **Most recent**: When a callsign is selected (from autocomplete) in any entry form, auto-focus to the rapport field with cursor at the end (after "5/9")
+
+2. Key Technical Concepts:
+   - NixOS environment: use `nix-shell -p nodejs --run "..."` for npm/node
+   - **Deployment: ALWAYS use `./deploy-production.sh`** via SSH to remote host-node-01
+   - Production DB accessed via: `ssh achildrenmile@host-node-01 'docker exec bosarsalog node -e "..."'`
+   - Monorepo: `/client` (React/Vite) + `/server` (Express/TypeScript/SQLite)
+   - `is_linked` flag on repeaters determines visibility: `is_linked=1` → OE-Link/BundMode tab, `is_linked=0` → Frequenzen/LandMode tab
+   - LandMode.tsx line 64: `if (r.is_linked) continue;` — skips linked repeaters
+   - BundMode.tsx line 45: `const linked = allReps.filter((r: any) => r.is_linked);` — only shows linked
+   - Reports need `repeater_is_linked` field from API for BundMode filtering
+   - OE-Link network: only 70cm frequencies are part of OE-Link, 2m are normal Frequenzen repeaters
+
+3. Files and Code Sections:
+
+   - **`client/src/components/BundMode.tsx`** — Core OE-Link data entry component
+     - Line 215-216: Report filtering changed from `r.repeater_bundesland_code === bl.code` to bezirk-based + linked filtering:
+       ```typescript
+       const blBezirkCodes = new Set(blBezirke.map(b => b.code));
+       const blReports = reports.filter(r => r.bezirk_code && blBezirkCodes.has(r.bezirk_code) && r.repeater_is_linked);
+       ```
+     - Lines 444-457: BezirkRow report display — added repeater_name column (blue text):
+       ```typescript
+       <td className="py-0.5 text-blue-600 text-xs cursor-pointer hidden sm:table-cell" onClick={() => onEdit(r)}>{r.repeater_name || ''}</td>
+       ```
+     - Edit colSpan changed from 5 to 6
+     - **BezirkRow component** (line 383-529): Entry form with callsignRef, rapport field at line 503-514. onSelect at line 484:
+       ```typescript
+       onSelect={op => setForm(f => ({ ...f, operator: op, callsign: op.callsign, opName: op.name || '', opQth: op.qth || '' }))}
+       ```
+     - Rapport field default is `'5/9'`, no ref currently exists for it
+
+   - **`server/src/routes/exercises.ts`** — All 4 report queries now include `r.is_linked as repeater_is_linked`:
+     - GET /:id (line 56): Full exercise load
+     - GET /:id/reports (line 209): Report list
+     - POST /:id/reports (line 245): Create report response
+     - PATCH /:id/reports/:rid (line 280): Update report response
+
+   - **`server/src/db/seed.ts`** — Updated repeater seed data:
+     - Brentenriegel: kept 2m (OE4XUB) + added 70cm (OE4XBJ, linked)
+     - Patscherkofel: kept Rangger Köpfl (OE7XBI) + added Patscherkofel (OE7XTI, linked)
+     - Schöckl 2m: is_linked=0, added Schöckl 70cm (is_linked=1)
+     - Lachtal 2m: is_linked=0, ctcss 103.5, added Lachtal 70cm (is_linked=1)
+     - Added Finkenstein 70cm (OE8XGK, linked)
+     - CTCSS additions: Jauerling 162.2, Hochstein 77
+
+   - **`client/src/components/LandMode.tsx`** — Frequenzen data entry, similar BezirkRow pattern. onSelect callbacks at lines 453 and 584.
+
+   - **`client/src/components/CallsignInput.tsx`** — Autocomplete component with onSelect callback (line 76)
+
+   - **`client/src/pages/HilfePage.tsx`** — Added OE-Link bezirk grouping note
+   - **`client/src/components/Layout.tsx`** — Footer updated to v1.0.1
+   - **`README.md`** — OE-Link mode description updated
+   - **`package.json`** — Version 1.0.1
+   - **`server/src/routes/reports.ts`** — ADIF PROGRAMVERSION bumped to 1.0.1
+
+4. Errors and fixes:
+   - **Schöckl/Lachtal is_linked flip-flop**: Initially set is_linked=0 for 2m variants. User noticed they appeared in Frequenzen tab where they weren't before. I incorrectly restored to is_linked=1. User then corrected: "die 2m frequenzen sind nicht im oe link verbund. nur die 70cm frequenzen." Set back to is_linked=0 (correct), and migrated existing exercise_repeaters and signal_reports from 2m IDs to 70cm IDs.
+   - **BundMode showing non-linked reports**: After bezirk-based filtering fix, BundMode showed ALL reports matching a bezirk, including non-linked repeater reports. Fixed by adding `&& r.repeater_is_linked` filter.
+   - **Reports not showing until refresh**: POST/PATCH/GET report endpoints didn't include `r.is_linked as repeater_is_linked` in their SQL queries. New reports had undefined for that field and got filtered out by BundMode. Fixed all 4 query endpoints.
+   - **Seed.ts replacing entries instead of adding**: The subagent replaced Brentenriegel 2m with 70cm and Rangger Köpfl with Patscherkofel instead of keeping both. Fixed by restoring original entries and adding new ones alongside them.
+
+5. Problem Solving:
+   - OE-Link repeater data alignment with OEVSV source
+   - Correct separation of linked (OE-Link/70cm) vs non-linked (Frequenzen/2m) repeaters
+   - Data migration from incorrectly-assigned 2m repeater IDs to correct 70cm IDs
+   - Real-time display of new reports in BundMode (repeater_is_linked field propagation)
+   - Still open: 5 frequency discrepancies between DB and OEVSV website need manual verification; Telfs is_linked status unclear
+
+6. All user messages:
+   - "update hilfe, readme, create release, add a subrelease 1.0.1 to footer"
+   - "all krikoms after 22.02. shall be configured to have Gerlitzen2m, Goldeck2m and 145.525"
+   - "should be on host-node-01"
+   - "schau mal ob alle repeater konfiguriert sind? https://www.oevsv.at/funkbetrieb/ukw-referat/oe-link/. welche fehlen, was würde geändert werden, wenn wir die einfügen. analysiere, implementiere nichts!"
+   - "kannst du die möglichen änderungen hier listen. vorher nachher"
+   - "umsetzen"
+   - "bist du dir sicher, dass du nichts kaput gemacht hast, ich sehe übungen wo schöckl und lachtal in frequenzen konfiguiert sind. war das vorher auch so?"
+   - "die 2m frequenzen sind nicht im oe link verbund. nur die 70cm frequenzen. du musst das umstellen. die 2m relais können aber normal in den frequenzen verwendet werden"
+   - "die daten müssten, sollten sie auf 2m eingetragen sein auf 70cm des jew. korrigiert werden!"
+   - "schau bitte auch alle datensätze durch, ob es dubletten gibt für eine übung + relais"
+   - "https://bosarsalog.oeradio.at/exercises/0a2d0ba0-883e-460c-bcd7-1a2c828e21c5 sehe in dem report, dass zb oe8agv doppelt, opt doppelt, pck doppelt. warum?"
+   - "aber ich sehe mehrere einträge auf magdalensberg"
+   - "warum werden die dann in der oelink ansicht angezeigt?"
+   - "in der rufzeichen innerhalb des bezirks soll auch noch der repeater zusätzlich zu rufzeichen, name, qth, rapport und sonstige angezeigt werden"
+   - "wenn ich zur übung d3a46728-abf4-42a1-aece-9e7c3ef497a3 rapporte hinzufüge. werden die nur angezeigt, wenn ich refreshe und nicht direkt"
+   - "wenn ich ein rufzeichen ausgewählt habe... egal bei welcher tabelle, soll automatisch ins rapport feld gesprungen werden und der cursor nach dem 9er positioniert (also am ende)."
+
+7. Pending Tasks:
+   - Implement auto-focus to rapport field when callsign is selected, in both BundMode and LandMode
+   - 5 frequency discrepancies still need manual verification (Gaisberg, Jauerling, Feuerkogel, Hochstein, Dornbirn)
+   - Telfs is_linked status needs decision
+
+8. Current Work:
+   User requested: "wenn ich ein rufzeichen ausgewählt habe... egal bei welcher tabelle, soll automatisch ins rapport feld gesprungen werden und der cursor nach dem 9er positioniert (also am ende)."
+
+   I was reading BundMode.tsx BezirkRow (lines 382-529) and LandMode.tsx to understand the form structure. The rapport input field currently has no ref. The `onSelect` callback in BundMode (line 484) and LandMode (lines 453, 584) sets the form state but doesn't focus the rapport field.
+
+   Key code in BundMode BezirkRow:
+   - Line 384: `const [form, setForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '5/9', notes: '', opName: '', opQth: '' });`
+   - Line 386: `const callsignRef = useRef<CallsignInputRef>(null);`
+   - Line 484: `onSelect={op => setForm(f => ({ ...f, operator: op, callsign: op.callsign, opName: op.name || '', opQth: op.qth || '' }))}`
+   - Lines 503-514: Rapport input field (no ref)
+
+9. Optional Next Step:
+   Implement the auto-focus feature for rapport field on callsign selection:
+   1. Add a `rapportRef = useRef<HTMLInputElement>(null)` in BezirkRow of both BundMode and LandMode
+   2. Attach `ref={rapportRef}` to the rapport `<input>` element
+   3. In the `onSelect` callback, after setting form state, use `setTimeout(() => { rapportRef.current?.focus(); rapportRef.current?.setSelectionRange(rapportRef.current.value.length, rapportRef.current.value.length); }, 50)` to focus and position cursor at end
+   4. Do the same for both BundMode.tsx (line 484) and LandMode.tsx (lines 453, 584)
+   5. Build, commit, deploy
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+Please continue the conversation from where we left it off without asking the user any further questions. Continue with the last task that you were asked to work on.
+
+---
+
+not working dpeloy again
+
+---
+
+okay. if i find the callsign and type enter, it should not be automatically added in that case, instead jump to the rapport. once in rapport field and type enter add.
+
+---
+
+adapt readme, help, create a new sub release, add to footer and roll out
+
+---
+
+on the imported data the linked repeaters are selected in the frequenzen
+
+---
+
+take favicon (1).zip from downloads and use this as favicon
+
+---
+
+for frequenzen we also can have rapports from outside of kärnten which are not assigned to a bezirk. how to deal with this
+
+---
+
+same we need also in oe-link.
+
+---
+
+villach ist rot! warum? nicht alle bezirke sind drin.. bspw. fehlt in tirol die landeshauptstadt, auch in steiermark
+
+---
+
+bei den simplex frequenzen fehlen die bezirke
+
+---
+
+remove it again. too much to add
+
+---
+
+update hilfe, readme, create a release, update footer with new release, deploy
+
+---
+
+in OE Link add OE Suffix before Bundesland... e.g. OE1 Wien
+
+---
+
+for the repeaters in general, it would be great to have in () the callsign of the repeater
+
+---
+
+also in the setup page for repeaters
+
+---
+
+check for duplicates in rapporte
+
+---
+
+finde die daten für vl ein wenig zu viel. kannst du diese mal analysieren und darstellen
+
+---
+
+update help, readme, create a new release add release to footer and deploy
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me chronologically analyze the conversation:
+
+1. **Auto-focus rapport field on callsign selection**: User wanted cursor to jump to rapport field when a callsign is selected. Added `rapportRef` to BezirkRow in both BundMode.tsx and LandMode.tsx, with `setTimeout` focus logic in `onSelect` callbacks.
+
+2. **Deployment issue**: Changes weren't deploying because they weren't committed/pushed first. The deploy script does `git pull` on remote. Fixed by committing and pushing before deploying.
+
+3. **Two-step Enter flow**: User wanted Enter in callsign field to jump to rapport instead of submitting. Modified CallsignInput.tsx to add `onEnter` prop, always prevent Enter default, and call onEnter when no suggestion selected. Wired up in BundMode and LandMode.
+
+4. **Release v1.0.2**: Updated README, HilfePage, Layout footer, package.json, ADIF version. Created GitHub release.
+
+5. **Linked repeaters in Frequenzen setup**: User noticed linked repeaters showing in ExerciseSetupPage's Frequenzen section. Fixed by filtering `!r.is_linked` in `repeatersForBl()` and activeCount. Added auto-add of linked repeaters when OE-Link is toggled on.
+
+6. **Favicon**: Extracted favicon (1).zip from Downloads to client/public/. Updated index.html with new favicon references, updated site.webmanifest with BOS-ARSA name. Removed old favicon-192.png.
+
+7. **Release v1.0.3**: Footer, package.json, ADIF version, GitHub release.
+
+8. **Sonstige (??) entry row in Frequenzen**: User wanted a way to enter reports for operators outside the repeater's Bundesland. Replaced the read-only unassigned reports block with a proper BezirkRow with `code: '??'` and entry form. Updated bezirk badge to always show (yellow for ??).
+
+9. **Sonstige row in OE-Link**: Same change applied to BundMode.tsx.
+
+10. **Bezirke fixes**: User reported Villach showing as red (capital). Found multiple issues: wrong is_capital flags (KS, SE, WE, VI), missing Landeshauptstädte (EC, LC, GC, IC, PC), missing bezirke (WY, KB, LA, BZ). Fixed on production DB and seed.ts. User specified "hauptstädte haben immer ein c am ende für city".
+
+11. **Simplex bezirke**: User asked about missing bezirke for simplex. Changed to show all bezirke for simplex frequencies. User said "remove it again. too much to add" - reverted.
+
+12. **Release v1.0.4**: Updated README, Hilfe, footer, GitHub release.
+
+13. **OE prefix in BundMode**: Added `OE{parseInt(bl.code)}` before Bundesland name in BundMode headers.
+
+14. **Repeater callsign in parentheses**: Added callsign display after repeater name in LandMode headers, BundMode dropdown, and ExerciseSetupPage.
+
+15. **VL data analysis**: User asked to analyze VL (Villach-Land) data. Found 80 reports, 10 operators, data looks plausible.
+
+16. **Release v1.0.5 (in progress)**: User asked to update help, readme, create release, add to footer, deploy. Edits were made to Layout.tsx, package.json, reports.ts, README.md, HilfePage.tsx but build/commit/push/release/deploy not yet done.
+
+Now let me document the current state precisely.
+
+Summary:
+1. Primary Request and Intent:
+   - Auto-focus rapport field when callsign is selected (both BundMode and LandMode)
+   - Two-step Enter flow: Enter in callsign → jump to rapport; Enter in rapport → submit
+   - Hide linked repeaters from Frequenzen setup page; auto-add when OE-Link enabled
+   - Replace favicon with custom icon set from Downloads
+   - Add "?? Sonstige" entry rows in both Frequenzen and OE-Link for reports without matching bezirk
+   - Fix all Austrian bezirke: correct is_capital flags, add missing Landeshauptstädte (C suffix convention), add missing bezirke
+   - Simplex frequencies: tried adding all bezirke but user said "too much" → reverted
+   - Add OE prefix to Bundesland headers in OE-Link (e.g. "OE1 Wien")
+   - Show repeater callsign in parentheses after name everywhere (Frequenzen, OE-Link, Setup page)
+   - Analyze VL (Villach-Land) report data
+   - Multiple releases: v1.0.2, v1.0.3, v1.0.4, and v1.0.5 (in progress)
+
+2. Key Technical Concepts:
+   - NixOS: use `nix-shell -p nodejs --run "..."` for npm/node
+   - Deploy: ALWAYS `./deploy-production.sh` (git pull on remote, Docker build)
+   - Must commit+push BEFORE deploying (deploy script does `git pull` on remote)
+   - `is_linked` flag: linked repeaters → OE-Link/BundMode only, non-linked → Frequenzen/LandMode
+   - Bezirk convention: Landeshauptstädte use "C" suffix (GC=Graz, IC=Innsbruck, KC=Klagenfurt, etc.)
+   - `is_capital` means Landeshauptstadt only (not Statutarstadt)
+   - CallsignInput `onEnter` prop for two-step Enter flow
+   - `rapportRef` for auto-focus after callsign selection
+
+3. Files and Code Sections:
+
+   - **`client/src/components/CallsignInput.tsx`**
+     - Added `onEnter?: () => void` prop
+     - Enter always prevented; calls `onEnter()` when no suggestion selected, `selectSuggestion()` when selected
+     ```typescript
+     } else if (e.key === 'Enter') {
+       e.preventDefault();
+       if (selectedIdx >= 0) {
+         selectSuggestion(suggestions[selectedIdx]);
+       } else {
+         setShowSuggestions(false);
+         onEnter?.();
+       }
+     }
+     ```
+
+   - **`client/src/components/BundMode.tsx`**
+     - Added `rapportRef` to BezirkRow; wired `onSelect` and `onEnter` to focus rapport
+     - Added OE prefix to Bundesland headers: `OE{parseInt(bl.code)} {bl.name}`
+     - Replaced inline unassigned reports block with BezirkRow `{code: '??', name: 'Sonstige'}`
+     - Updated bezirk badge to always show (yellow for '??')
+     - Added repeater callsign in dropdown: `{r.site_name || r.short_name}{r.callsign ? ` (${r.callsign})` : ''}`
+
+   - **`client/src/components/LandMode.tsx`**
+     - Same rapportRef/onSelect/onEnter changes as BundMode
+     - Replaced inline unassigned reports block with BezirkRow for '?? Sonstige'
+     - Updated bezirk badge: yellow for '??', red for capital, gray for normal
+     - Added repeater callsign in header: `{rep.short_name}{rep.repeater_callsign ? ` (${rep.repeater_callsign})` : ''}`
+     - Simplex: tried `bezirke` (all) for simplex, reverted back to `bezirke.filter(b => b.bundesland_code === rep.bundesland_code)`
+
+   - **`client/src/pages/ExerciseSetupPage.tsx`**
+     - `repeatersForBl`: added `&& !r.is_linked` filter
+     - activeCount excludes linked: `!rep?.is_linked`
+     - OE-Link toggle auto-adds linked repeaters when enabled
+     - Repeater name shows callsign: `{rep.short_name}{rep.callsign ? ` (${rep.callsign})` : ''}`
+
+   - **`client/src/pages/HilfePage.tsx`**
+     - Updated Frequenzen section: two-step Enter flow, Sonstige row, repeater callsign display
+     - Updated OE-Link section: Sonstige row, OE prefix, auto-add linked repeaters
+     - Updated keyboard shortcuts: Enter split into callsign vs rapport
+     - Updated tips: Enter flow description
+
+   - **`client/src/components/Layout.tsx`** — Footer version updates through v1.0.5
+
+   - **`client/index.html`** — Updated favicon references (SVG, PNG, ICO, Apple Touch Icon, manifest)
+
+   - **`client/public/`** — New favicon files: favicon.svg, favicon-96x96.png, favicon.ico, apple-touch-icon.png, web-app-manifest-192x192.png, web-app-manifest-512x512.png, site.webmanifest. Removed old favicon-192.png.
+
+   - **`server/src/routes/reports.ts`** — ADIF PROGRAMVERSION bumped through 1.0.5
+
+   - **`server/src/db/seed.ts`**
+     - Fixed Wien code: WC → W
+     - Added PC (St. Pölten Stadt, capital), PL renamed to "St. Pölten-Land" (not capital)
+     - Added EC (Eisenstadt, capital), LC (Linz, capital), GC (Graz, capital), IC (Innsbruck, capital)
+     - Added WY, KB, LA, BZ
+     - Fixed is_capital=0 for KS, SE, WE, VI
+
+   - **`README.md`** — Updated data entry modes, keyboard shortcuts, conventions, live features
+
+   - **`package.json`** — Version bumped through 1.0.5
+
+   - **Production DB changes** (via SSH):
+     - Fixed is_capital for KS, SE, WE, VI → 0
+     - Renamed PL → "St. Pölten-Land", is_capital=0
+     - Added PC, EC, LC, GC, IC (capitals), WY, KB, LA, BZ (regular)
+
+4. Errors and fixes:
+   - **Deploy not working**: Changes weren't committed/pushed. Deploy script does `git pull` on remote, so local-only changes don't reach production. Fix: always commit+push before `./deploy-production.sh`.
+   - **SSH quoting issues**: Node `-e` with complex JS using single quotes inside double-quoted SSH caused SyntaxError. Fixed by using parameterized queries (`?` placeholders) instead of inline string values, or by restructuring quoting.
+   - **Simplex bezirke too many**: User said "remove it again. too much to add" when all ~93 bezirke shown under simplex. Reverted immediately.
+
+5. Problem Solving:
+   - Two-step Enter flow required modifying CallsignInput to always intercept Enter and add onEnter callback
+   - Linked repeaters in Frequenzen setup solved by filtering in `repeatersForBl()` and auto-adding on OE-Link enable
+   - Sonstige rows solved by replacing read-only inline table with proper BezirkRow component with entry form
+   - Complete Austrian bezirke audit against official GRAWE KFZ-Kennzeichen list
+
+6. All user messages:
+   - "not working dpeloy again"
+   - "okay. if i find the callsign and type enter, it should not be automatically added in that case, instead jump to the rapport. once in rapport field and type enter add."
+   - "adapt readme, help, create a new sub release, add to footer and roll out"
+   - "on the imported data the linked repeaters are selected in the frequenzen"
+   - "take favicon (1).zip from downloads and use this as favicon"
+   - "add new release and add to footer and push"
+   - "for frequenzen we also can have rapports from outside of kärnten which are not assigned to a bezirk. how to deal with this" → selected "Eigene '??' Zeile"
+   - "und auch ??"
+   - "same we need also in oe-link."
+   - "villach ist rot! warum? nicht alle bezirke sind drin.. bspw. fehlt in tirol die landeshauptstadt, auch in steiermark"
+   - "check ob alle österreichischen bezirke vorhanden sind. wenn nicht hinzufügen. die hauptstädte haben immer ein c am ende für city"
+   - "bei den simplex frequenzen fehlen die bezirke"
+   - "remove it again. too much to add"
+   - "update hilfe, readme, create a release, update footer with new release, deploy"
+   - "in OE Link add OE Suffix before Bundesland... e.g. OE1 Wien"
+   - "for the repeaters in general, it would be great to have in () the callsign of the repeater"
+   - "also in the setup page for repeaters"
+   - "check for duplicates in rapporte"
+   - "finde die daten für vl ein wenig zu viel. kannst du diese mal analysieren und darstellen"
+   - "update help, readme, create a new release add release to footer and deploy"
+
+7. Pending Tasks:
+   - Complete v1.0.5 release: edits to Layout.tsx, package.json, reports.ts, README.md, HilfePage.tsx are done but need build, commit, push, GitHub release creation, and deploy
+
+8. Current Work:
+   User requested: "update help, readme, create a new release add release to footer and deploy"
+   
+   All file edits for v1.0.5 have been made:
+   - Layout.tsx: footer → v1.0.5
+   - package.json: version → 1.0.5
+   - reports.ts: ADIF PROGRAMVERSION → 1.0.5
+   - README.md: added repeater callsign display and OE prefix notes
+   - HilfePage.tsx: added repeater callsign in Frequenzen description, OE prefix in OE-Link description
+   
+   Still need to: build, commit, push, create GitHub release v1.0.5, deploy
+
+9. Optional Next Step:
+   Complete the v1.0.5 release cycle:
+   1. `nix-shell -p nodejs --run "npm run build"`
+   2. `git add` all changed files and commit
+   3. `git push`
+   4. `gh release create v1.0.5` with notes about OE prefix and repeater callsign display
+   5. `./deploy-production.sh`
+   
+   This directly continues the user's last request: "update help, readme, create a new release add release to footer and deploy"
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+Please continue the conversation from where we left it off without asking the user any further questions. Continue with the last task that you were asked to work on.
+
+---
+
+when I try to add a rapport to oelink on that e0178522-bc83-4cbf-a502-1a93bd5744b1 exercise... the entry will not be added or not shown. fix this
+
+---
+
+but why the are at sonstige... they should belong to wien
+
+---
+
+i created two exercises on one day. this fails somehow. the data i entered is not shown. the name is wrong etc. check
+
+---
+
+[Request interrupted by user]
+
+---
+
+i added krisenkommunikationsübung. after save it was not all reflected. it had oe8 in instead of my configured oe7. after reediting, it seems to work. name was also not changed. analyze
+
+---
+
+can you add a save indicator, for all the autosave actions. so that one sees that save is happening
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me analyze the conversation chronologically:
+
+1. **Context from previous session**: The conversation started with a summary of a previous session that covered many features (auto-focus, two-step Enter flow, linked repeaters, favicon, Sonstige rows, bezirke fixes, releases through v1.0.5). The v1.0.5 release was pending (edits done but not built/committed/pushed/released/deployed).
+
+2. **Completing v1.0.5 release**: I checked git status, built, committed, pushed, created GitHub release v1.0.5, and deployed to production. All successful.
+
+3. **OE-Link report bug**: User reported that adding reports to OE-Link for exercise e0178522 doesn't work - entries not added or not shown. Also mentioned 14 entries at Hermannskogel not visible.
+
+4. **Investigation of OE-Link bug**: 
+   - Explored the codebase (BundMode.tsx, exercises.ts, ExercisePage.tsx)
+   - Found the critical filter in BundMode.tsx line 216: `reports.filter(r => r.bezirk_code && blBezirkCodes.has(r.bezirk_code) && r.repeater_is_linked)`
+   - Queried production DB - found all 14 Hermannskogel reports had `bezirk_code: null`
+   - Reports with null bezirk_code were completely invisible in BundMode
+   
+5. **Fix 1 - BundMode filter**: Changed the filter to fall back to operator's bundesland_code (for domestic operators) or repeater's bundesland_code (for foreign operators) when bezirk_code is null. Also made PATCH endpoint accept bezirk_code so it gets updated when re-entering operators.
+
+6. **User feedback on Sonstige**: User said "but why the are at sonstige... they should belong to wien" and "update the data" and "not the logic". They wanted data backfill, not just logic changes.
+
+7. **Data backfill**: 
+   - Wien has only 1 bezirk ("W") but operators had null bezirk_code
+   - Backfilled 937 Wien operators with bezirk_code = "W"
+   - Backfilled 66 reports from operator bezirk_code
+   - 85 reports still null (operators in multi-bezirk BLs)
+   - Added migration to schema.ts for future deployments
+
+8. **Two exercises on same day issue**: User created two exercises on 2026-02-22 and reported data not shown, name wrong, OE8 showing instead of OE7.
+
+9. **Investigation**: Found THREE exercises on 2026-02-22:
+   - `41f97cd2` (auto-created, OE8 repeaters: Gerlitzen, Goldeck, oe_link=1)
+   - `81e184ee` (user's first, OE7: Rangger Köpfl, oe_link=0)
+   - `64953840` (user's re-create, OE7: Rangger Köpfl, oe_link=0)
+
+10. **Root cause analysis**:
+    - Name confusion: new exercise defaulted to "Krisenkommunikationsübung" without date, making it indistinguishable from pre-existing exercise
+    - Name field used `defaultValue` + `onBlur` - if user navigated away without blurring, save was lost
+    - User likely clicked wrong exercise in Dashboard
+
+11. **Fix 2 - Exercise name**: 
+    - Default name now includes date: `${newType} ${newDate}`
+    - Changed name field from `defaultValue` to controlled `value` with 800ms debounce + blur save
+
+12. **Save indicator**: User asked for save indicators on all autosave actions. Added:
+    - `saveStatus` state ('idle' | 'saving' | 'saved' | 'error')
+    - `withSave` wrapper function
+    - Visual indicator in header: "Speichern..." (amber, pulsing), "Gespeichert" (green, 2s), "Fehler!" (red, 3s)
+    - Applied to: ExerciseSetupPage (name, type, OE-Link, Bundesland toggle, repeater toggle, custom repeater)
+    - Applied to: ExercisePage (organisator field)
+
+Key files modified:
+- `client/src/components/BundMode.tsx` - filter fix + PATCH bezirk_code
+- `server/src/routes/exercises.ts` - PATCH accepts bezirk_code
+- `server/src/db/schema.ts` - Wien bezirk backfill migration
+- `client/src/pages/DashboardPage.tsx` - default name includes date
+- `client/src/pages/ExerciseSetupPage.tsx` - controlled name field + save indicator
+- `client/src/pages/ExercisePage.tsx` - organisator save indicator
+
+All changes were committed, pushed, and deployed successfully.
+
+Summary:
+1. Primary Request and Intent:
+   - Complete the pending v1.0.5 release (build, commit, push, GitHub release, deploy)
+   - Fix OE-Link (BundMode) reports not showing for exercise e0178522-bc83-4cbf-a502-1a93bd5744b1 — entries not added or not displayed, 14 Hermannskogel entries invisible
+   - User explicitly wanted DATA backfill ("update the data", "not the logic") to fix Wien reports showing in Sonstige instead of under "W Wien"
+   - Investigate and fix issues with creating two exercises on the same day (data not shown, wrong name, OE8 showing instead of configured OE7)
+   - Add save indicator for all autosave actions so users can see when saves are happening
+
+2. Key Technical Concepts:
+   - BundMode report filtering: reports need `bezirk_code` + `repeater_is_linked` to be visible; null bezirk_code causes invisibility
+   - Bundesland codes: Austrian BLs use "01"-"09", international use "10"-"18". Wien="01", only 1 bezirk "W"
+   - `defaultValue` vs `value` in React: `defaultValue` only sets initial value, doesn't update on re-render; `onBlur` can miss saves if user navigates without blurring
+   - Debounced autosave: 800ms debounce on name field onChange + immediate save on blur
+   - `withSave` wrapper pattern: wraps async operations with save status tracking (idle → saving → saved/error → idle)
+   - UNIQUE constraint on signal_reports: `(exercise_id, operator_id, repeater_id)` — re-entering same operator on same repeater triggers update path
+   - Production deployment: always commit+push before `./deploy-production.sh` (does `git pull` on remote)
+
+3. Files and Code Sections:
+
+   - **`client/src/components/BundMode.tsx`**
+     - Critical for OE-Link display — filters and groups reports by Bundesland/Bezirk
+     - Changed report filter from strict bezirk_code match to fallback logic:
+     ```typescript
+     const domesticBlCodes = new Set(bundeslaender.filter(b => !b.is_international).map(b => b.code));
+     // Inside the map loop:
+     const blReports = reports.filter(r => {
+       if (!r.repeater_is_linked) return false;
+       if (r.bezirk_code && blBezirkCodes.has(r.bezirk_code)) return true;
+       if (!r.bezirk_code) {
+         const effectiveBl = domesticBlCodes.has(r.bundesland_code) ? r.bundesland_code : r.repeater_bundesland_code;
+         return effectiveBl === bl.code;
+       }
+       return false;
+     });
+     ```
+     - Added bezirk_code to PATCH call when handling UNIQUE constraint:
+     ```typescript
+     const updated = await apiFetch(`/api/v1/exercises/${exerciseId}/reports/${existing.id}`, {
+       method: 'PATCH',
+       body: JSON.stringify({ ...parsed, notes: form.notes || null, bezirk_code: (bezirkCode && bezirkCode !== '??') ? bezirkCode : null }),
+     });
+     ```
+
+   - **`server/src/routes/exercises.ts`**
+     - Added `bezirk_code` to PATCH report handler:
+     ```typescript
+     const { readability, strength, db_over_s9, einstiegspunkt_id, notes, is_op_marker, bezirk_code } = req.body;
+     // ...
+     if (bezirk_code !== undefined) { updates.push('bezirk_code = ?'); params.push(bezirk_code); }
+     ```
+
+   - **`server/src/db/schema.ts`**
+     - Added migration for auto-assigning bezirk_code in single-bezirk Bundesländer (Wien → 'W'):
+     ```typescript
+     const singleBzBls = db.prepare("SELECT bundesland_code, code FROM bezirke GROUP BY bundesland_code HAVING COUNT(*) = 1").all() as { bundesland_code: string; code: string }[];
+     for (const { bundesland_code, code } of singleBzBls) {
+       db.prepare("UPDATE operators SET bezirk_code = ? WHERE bundesland_code = ? AND bezirk_code IS NULL").run(code, bundesland_code);
+     }
+     db.prepare(`
+       UPDATE signal_reports SET bezirk_code = (
+         SELECT o.bezirk_code FROM operators o WHERE o.id = signal_reports.operator_id
+       ) WHERE bezirk_code IS NULL AND EXISTS (
+         SELECT 1 FROM operators o WHERE o.id = signal_reports.operator_id AND o.bezirk_code IS NOT NULL
+       )
+     `).run();
+     ```
+
+   - **`client/src/pages/DashboardPage.tsx`**
+     - Fixed default exercise name to include date:
+     ```typescript
+     body: JSON.stringify({ date: newDate, name: newName || `${newType} ${newDate}`, exercise_type: newType }),
+     ```
+
+   - **`client/src/pages/ExerciseSetupPage.tsx`**
+     - Changed name field from `defaultValue` to controlled `value` with debounced autosave
+     - Added save indicator with `withSave` wrapper:
+     ```typescript
+     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+     const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+     const withSave = useCallback(async <T,>(fn: () => Promise<T>): Promise<T | undefined> => {
+       setSaveStatus('saving');
+       if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+       try {
+         const result = await fn();
+         setSaveStatus('saved');
+         savedTimerRef.current = setTimeout(() => setSaveStatus('idle'), 2000);
+         return result;
+       } catch {
+         setSaveStatus('error');
+         savedTimerRef.current = setTimeout(() => setSaveStatus('idle'), 3000);
+         return undefined;
+       }
+     }, []);
+     ```
+     - Save indicator in header:
+     ```tsx
+     {saveStatus === 'saving' && <span className="text-xs text-amber-600 animate-pulse">Speichern...</span>}
+     {saveStatus === 'saved' && <span className="text-xs text-green-600">Gespeichert</span>}
+     {saveStatus === 'error' && <span className="text-xs text-red-600">Fehler!</span>}
+     ```
+     - All save operations wrapped with `withSave`: type change, custom type blur, name debounce/blur, OE-Link toggle, toggleBundesland, toggleRepeater, addCustomRepeater
+
+   - **`client/src/pages/ExercisePage.tsx`**
+     - Added save indicator for organisator field:
+     ```typescript
+     const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+     const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+     ```
+     - Wrapped updateOrganisator with save status tracking
+     - Added inline indicator next to organisator input
+
+4. Errors and fixes:
+   - **OE-Link reports invisible**: BundMode filter `r.bezirk_code && blBezirkCodes.has(r.bezirk_code) && r.repeater_is_linked` required non-null bezirk_code. All 14 Hermannskogel reports had `bezirk_code: null`. Fixed by adding fallback to operator/repeater Bundesland code.
+   - **User feedback "not the logic"**: User wanted data backfill instead of (or in addition to) logic changes. Fixed by running SQL backfill on production: 937 Wien operators got bezirk_code='W', 66 reports backfilled from operators. Also added permanent migration in schema.ts.
+   - **Exercise name not saving**: `defaultValue` + `onBlur` pattern meant changes were lost if user navigated without blurring. Fixed by switching to controlled `value` input with 800ms debounce autosave.
+   - **Wrong exercise opened (OE8 vs OE7)**: Three exercises on same date with similar names caused confusion. Fixed by including date in default exercise name.
+   - **PATCH not updating bezirk_code**: When re-entering operator on same repeater (UNIQUE constraint → PATCH), bezirk_code wasn't included in the update. Fixed by adding bezirk_code to both client PATCH call and server PATCH handler.
+
+5. Problem Solving:
+   - Diagnosed OE-Link invisibility by querying production DB and tracing the filter logic
+   - Identified Wien has only 1 bezirk ("W") with bundesland_code "01" (not "W" as the explore agent incorrectly assumed)
+   - Traced the full creation → display flow for BundMode reports to find all failure points
+   - Analyzed three exercises on 2026-02-22 to determine which had OE7 vs OE8 repeaters and understand user's confusion
+   - Production DB backfills done via SSH + docker exec with parameterized queries
+
+6. All user messages:
+   - "when I try to add a rapport to oelink on that e0178522-bc83-4cbf-a502-1a93bd5744b1 exercise... the entry will not be added or not shown. fix this"
+   - "it also shows 14 entries at hermannskogel... nothing is visible"
+   - "but why the are at sonstige... they should belong to wien"
+   - "update the data"
+   - "not the logic"
+   - "i created two exercises on one day. this fails somehow. the data i entered is not shown. the name is wrong etc. check"
+   - "i added krisenkommunikationsübung. after save it was not all reflected. it had oe8 in instead of my configured oe7. after reediting, it seems to work. name was also not changed. analyze"
+   - "can you add a save indicator, for all the autosave actions. so that one sees that save is happening"
+
+7. Pending Tasks:
+   - None explicitly pending. All requested tasks (v1.0.5 release, OE-Link fix, data backfill, exercise name fix, save indicator) have been completed and deployed.
+
+8. Current Work:
+   The most recent task was adding save indicators for all autosave actions on the ExerciseSetupPage and ExercisePage. This has been completed — `withSave` wrapper added to ExerciseSetupPage covering name, type, OE-Link toggle, Bundesland toggle, repeater toggle, and custom repeater creation. ExercisePage got save indicator for organisator field. All changes committed (045d304), pushed, and deployed successfully.
+
+9. Optional Next Step:
+   No pending tasks. All user requests have been addressed and deployed. The user may want to test the save indicator and provide feedback, or may have new requests.
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+Please continue the conversation from where we left it off without asking the user any further questions. Continue with the last task that you were asked to work on.
+
+---
+
+add a delete function for an exercise. also add a do you want delete message, if one clicks this and danger
+
+---
+
+on dashboard page it should not be visible
+
+---
+
+❯ where can i delete a übung in einrichten?
+
+---
+
+not visible i am admin
