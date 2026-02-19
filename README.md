@@ -28,6 +28,8 @@ Part of the [oeradio.at](https://oeradio.at) ecosystem.
 - RESTful API for CRUD operations, WebSocket (Socket.IO) for real-time sync between concurrent users
 - Server serves the built client in production
 - SQLite keeps deployment simple — the data volume is small (~1,000 operators, ~200 reports/week)
+- SQLite tuned with WAL mode, `synchronous=NORMAL`, 64MB page cache, in-memory temp store
+- Critical multi-statement operations (report+attendance, exercise delete) wrapped in transactions
 
 ## Key Domain Concepts
 
