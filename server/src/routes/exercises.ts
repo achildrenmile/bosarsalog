@@ -103,10 +103,13 @@ exercisesRouter.delete('/:id', requireRole('admin'), (req, res) => {
     res.status(404).json({ error: 'Übung nicht gefunden' });
     return;
   }
-  db.prepare('DELETE FROM signal_reports WHERE exercise_id = ?').run(req.params.id);
-  db.prepare('DELETE FROM exercise_attendance WHERE exercise_id = ?').run(req.params.id);
-  db.prepare('DELETE FROM exercise_repeaters WHERE exercise_id = ?').run(req.params.id);
-  db.prepare('DELETE FROM exercises WHERE id = ?').run(req.params.id);
+  const deleteAll = db.transaction(() => {
+    db.prepare('DELETE FROM signal_reports WHERE exercise_id = ?').run(req.params.id);
+    db.prepare('DELETE FROM exercise_attendance WHERE exercise_id = ?').run(req.params.id);
+    db.prepare('DELETE FROM exercise_repeaters WHERE exercise_id = ?').run(req.params.id);
+    db.prepare('DELETE FROM exercises WHERE id = ?').run(req.params.id);
+  });
+  deleteAll();
   res.json({ success: true });
 });
 
@@ -246,14 +249,19 @@ exercisesRouter.post('/:id/reports', (req, res) => {
   }
 
   try {
-    const result = db.prepare(`
-      INSERT INTO signal_reports (exercise_id, operator_id, repeater_id, readability, strength, db_over_s9, einstiegspunkt_id, is_op_marker, notes, entered_by, bezirk_code)
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `).run(req.params.id, operator_id, repeater_id, readability || null, strength || null, db_over_s9 || null, einstiegspunkt_id || null, is_op_marker ? 1 : 0, notes || null, admin.username, bezirk_code || null);
+    const insertReportAndAttendance = db.transaction(() => {
+      const result = db.prepare(`
+        INSERT INTO signal_reports (exercise_id, operator_id, repeater_id, readability, strength, db_over_s9, einstiegspunkt_id, is_op_marker, notes, entered_by, bezirk_code)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(req.params.id, operator_id, repeater_id, readability || null, strength || null, db_over_s9 || null, einstiegspunkt_id || null, is_op_marker ? 1 : 0, notes || null, admin.username, bezirk_code || null);
 
-    // Auto-add attendance
-    db.prepare('INSERT OR IGNORE INTO exercise_attendance (exercise_id, operator_id, entered_by) VALUES (?, ?, ?)')
-      .run(req.params.id, operator_id, admin.username);
+      db.prepare('INSERT OR IGNORE INTO exercise_attendance (exercise_id, operator_id, entered_by) VALUES (?, ?, ?)')
+        .run(req.params.id, operator_id, admin.username);
+
+      return result;
+    });
+
+    const result = insertReportAndAttendance();
 
     const report = db.prepare(`
       SELECT sr.*, o.callsign, o.name as operator_name, sr.bezirk_code, o.bundesland_code,
