@@ -21,6 +21,8 @@ export default function ExercisePage() {
   const [reports, setReports] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [organisator, setOrganisator] = useState('');
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved'>('idle');
+  const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const socketRef = useRef(getSocket());
 
   const refreshStats = useCallback(async () => {
@@ -90,11 +92,19 @@ export default function ExercisePage() {
   }, [id, refreshStats]);
 
   const updateOrganisator = async (val: string) => {
-    await apiFetch(`/api/v1/exercises/${id}`, {
-      method: 'PATCH',
-      body: JSON.stringify({ organisator: val || null }),
-    });
-    setExercise((prev: any) => prev ? { ...prev, organisator: val || null } : null);
+    setSaveStatus('saving');
+    if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+    try {
+      await apiFetch(`/api/v1/exercises/${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ organisator: val || null }),
+      });
+      setExercise((prev: any) => prev ? { ...prev, organisator: val || null } : null);
+      setSaveStatus('saved');
+      savedTimerRef.current = setTimeout(() => setSaveStatus('idle'), 2000);
+    } catch {
+      setSaveStatus('idle');
+    }
   };
 
   if (loading) return <p className="text-gray-500 p-4">Laden...</p>;
@@ -119,6 +129,8 @@ export default function ExercisePage() {
               placeholder="Rufzeichen"
               className={`border rounded px-2 py-1 text-sm font-mono uppercase w-24 sm:w-28 focus:outline-none focus:ring-2 focus:ring-blue-500 ${organisator ? 'border-gray-300' : 'border-[#c8102e] placeholder-[#c8102e]/60'}`}
             />
+            {saveStatus === 'saving' && <span className="text-xs text-amber-600 animate-pulse">Speichern...</span>}
+            {saveStatus === 'saved' && <span className="text-xs text-green-600">Gespeichert</span>}
           </div>
           <Link to={`/exercises/${id}/setup`} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 sm:px-3 py-1 rounded text-xs sm:text-sm">
             Einrichten

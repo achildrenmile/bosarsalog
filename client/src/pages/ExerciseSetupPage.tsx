@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { apiFetch } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
@@ -34,6 +34,23 @@ export default function ExerciseSetupPage() {
   const [newRepCallsign, setNewRepCallsign] = useState('');
   const [exerciseName, setExerciseName] = useState('');
   const [nameSaveTimer, setNameSaveTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
+  const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
+  const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const withSave = useCallback(async <T,>(fn: () => Promise<T>): Promise<T | undefined> => {
+    setSaveStatus('saving');
+    if (savedTimerRef.current) clearTimeout(savedTimerRef.current);
+    try {
+      const result = await fn();
+      setSaveStatus('saved');
+      savedTimerRef.current = setTimeout(() => setSaveStatus('idle'), 2000);
+      return result;
+    } catch {
+      setSaveStatus('error');
+      savedTimerRef.current = setTimeout(() => setSaveStatus('idle'), 3000);
+      return undefined;
+    }
+  }, []);
 
   useEffect(() => {
     if (!id) return;
@@ -62,80 +79,86 @@ export default function ExerciseSetupPage() {
   const simplexRepeaters = allRepeaters.filter(r => r.type === 'simplex');
 
   const toggleBundesland = async (blCode: string) => {
-    const isActive = activeBundeslaender.has(blCode);
-    const newSet = new Set(activeBundeslaender);
-    const newExpanded = new Set(expandedBl);
+    await withSave(async () => {
+      const isActive = activeBundeslaender.has(blCode);
+      const newSet = new Set(activeBundeslaender);
+      const newExpanded = new Set(expandedBl);
 
-    if (isActive) {
-      // Deactivate all repeaters for this Bundesland
-      const blReps = repeatersForBl(blCode);
-      for (const rep of blReps) {
-        if (activeRepeaters.some(r => r.repeater_id === rep.id)) {
-          await apiFetch(`/api/v1/exercises/${id}/repeaters/${rep.id}`, { method: 'DELETE' });
+      if (isActive) {
+        const blReps = repeatersForBl(blCode);
+        for (const rep of blReps) {
+          if (activeRepeaters.some(r => r.repeater_id === rep.id)) {
+            await apiFetch(`/api/v1/exercises/${id}/repeaters/${rep.id}`, { method: 'DELETE' });
+          }
         }
+        newSet.delete(blCode);
+        newExpanded.delete(blCode);
+        setActiveRepeaters(prev => prev.filter(r => {
+          const rep = allRepeaters.find(ar => ar.id === r.repeater_id);
+          return rep?.bundesland_code !== blCode;
+        }));
+      } else {
+        newSet.add(blCode);
+        newExpanded.add(blCode);
       }
-      newSet.delete(blCode);
-      newExpanded.delete(blCode);
-      setActiveRepeaters(prev => prev.filter(r => {
-        const rep = allRepeaters.find(ar => ar.id === r.repeater_id);
-        return rep?.bundesland_code !== blCode;
-      }));
-    } else {
-      newSet.add(blCode);
-      newExpanded.add(blCode);
-    }
 
-    setActiveBundeslaender(newSet);
-    setExpandedBl(newExpanded);
+      setActiveBundeslaender(newSet);
+      setExpandedBl(newExpanded);
+    });
   };
 
   const toggleRepeater = async (repeaterId: number) => {
     const isActive = activeRepeaters.some(r => r.repeater_id === repeaterId);
     if (isActive) {
-      if (!isAdmin) return; // only admin can deactivate
-      await apiFetch(`/api/v1/exercises/${id}/repeaters/${repeaterId}`, { method: 'DELETE' });
-      setActiveRepeaters(prev => prev.filter(r => r.repeater_id !== repeaterId));
-    } else {
-      await apiFetch(`/api/v1/exercises/${id}/repeaters`, {
-        method: 'POST',
-        body: JSON.stringify({ repeater_id: repeaterId }),
+      if (!isAdmin) return;
+      await withSave(async () => {
+        await apiFetch(`/api/v1/exercises/${id}/repeaters/${repeaterId}`, { method: 'DELETE' });
+        setActiveRepeaters(prev => prev.filter(r => r.repeater_id !== repeaterId));
       });
-      const updated = await apiFetch(`/api/v1/exercises/${id}/repeaters`);
-      setActiveRepeaters(updated);
+    } else {
+      await withSave(async () => {
+        await apiFetch(`/api/v1/exercises/${id}/repeaters`, {
+          method: 'POST',
+          body: JSON.stringify({ repeater_id: repeaterId }),
+        });
+        const updated = await apiFetch(`/api/v1/exercises/${id}/repeaters`);
+        setActiveRepeaters(updated);
+      });
     }
   };
 
   const addCustomRepeater = async (bundeslandCode: string | null) => {
     if (!newRepName && !newRepFreq) return;
-    const type = bundeslandCode === null ? 'simplex' : 'repeater';
-    const name = newRepName || `Direkte ${newRepFreq}`;
-    const rep = await apiFetch('/api/v1/repeaters', {
-      method: 'POST',
-      body: JSON.stringify({
-        short_name: name,
-        frequency_mhz: newRepFreq ? parseFloat(newRepFreq) : null,
-        offset_mhz: newRepOffset ? parseFloat(newRepOffset) : null,
-        ctcss_hz: newRepCtcss ? parseFloat(newRepCtcss) : null,
-        callsign: newRepCallsign || null,
-        band: newRepFreq ? (parseFloat(newRepFreq) > 400 ? '70cm' : parseFloat(newRepFreq) > 200 ? '23cm' : '2m') : null,
-        type,
-        bundesland_code: bundeslandCode,
-      }),
+    await withSave(async () => {
+      const type = bundeslandCode === null ? 'simplex' : 'repeater';
+      const name = newRepName || `Direkte ${newRepFreq}`;
+      const rep = await apiFetch('/api/v1/repeaters', {
+        method: 'POST',
+        body: JSON.stringify({
+          short_name: name,
+          frequency_mhz: newRepFreq ? parseFloat(newRepFreq) : null,
+          offset_mhz: newRepOffset ? parseFloat(newRepOffset) : null,
+          ctcss_hz: newRepCtcss ? parseFloat(newRepCtcss) : null,
+          callsign: newRepCallsign || null,
+          band: newRepFreq ? (parseFloat(newRepFreq) > 400 ? '70cm' : parseFloat(newRepFreq) > 200 ? '23cm' : '2m') : null,
+          type,
+          bundesland_code: bundeslandCode,
+        }),
+      });
+      setAllRepeaters(prev => [...prev, rep]);
+      await apiFetch(`/api/v1/exercises/${id}/repeaters`, {
+        method: 'POST',
+        body: JSON.stringify({ repeater_id: rep.id }),
+      });
+      const updated = await apiFetch(`/api/v1/exercises/${id}/repeaters`);
+      setActiveRepeaters(updated);
+      setNewRepName('');
+      setNewRepFreq('');
+      setNewRepOffset('');
+      setNewRepCtcss('');
+      setNewRepCallsign('');
+      setShowAddForm(null);
     });
-    setAllRepeaters(prev => [...prev, rep]);
-    // Auto-activate it
-    await apiFetch(`/api/v1/exercises/${id}/repeaters`, {
-      method: 'POST',
-      body: JSON.stringify({ repeater_id: rep.id }),
-    });
-    const updated = await apiFetch(`/api/v1/exercises/${id}/repeaters`);
-    setActiveRepeaters(updated);
-    setNewRepName('');
-    setNewRepFreq('');
-    setNewRepOffset('');
-    setNewRepCtcss('');
-    setNewRepCallsign('');
-    setShowAddForm(null);
   };
 
   const toggleExpanded = (blCode: string) => {
@@ -158,7 +181,16 @@ export default function ExerciseSetupPage() {
           <span className="hidden sm:inline"> — </span>
           <span className="block sm:inline text-sm sm:text-xl">{new Date(exercise.date + 'T00:00:00').toLocaleDateString('de-AT')}</span>
         </h1>
-        <div className="flex gap-2 flex-shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
+          {saveStatus === 'saving' && (
+            <span className="text-xs text-amber-600 animate-pulse">Speichern...</span>
+          )}
+          {saveStatus === 'saved' && (
+            <span className="text-xs text-green-600">Gespeichert</span>
+          )}
+          {saveStatus === 'error' && (
+            <span className="text-xs text-red-600">Fehler!</span>
+          )}
           <Link to={`/exercises/${id}`} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 sm:px-3 py-1.5 rounded text-xs sm:text-sm">
             Zurück
           </Link>
@@ -179,11 +211,12 @@ export default function ExerciseSetupPage() {
                     if (e.target.value === '__custom__') {
                       setExercise((prev: any) => prev ? { ...prev, exercise_type: '' } : null);
                     } else {
-                      await apiFetch(`/api/v1/exercises/${id}`, {
+                      const val = e.target.value;
+                      await withSave(() => apiFetch(`/api/v1/exercises/${id}`, {
                         method: 'PATCH',
-                        body: JSON.stringify({ exercise_type: e.target.value }),
-                      });
-                      setExercise((prev: any) => prev ? { ...prev, exercise_type: e.target.value } : null);
+                        body: JSON.stringify({ exercise_type: val }),
+                      }));
+                      setExercise((prev: any) => prev ? { ...prev, exercise_type: val } : null);
                     }
                   }}
                   className="border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -200,10 +233,10 @@ export default function ExerciseSetupPage() {
                     onChange={e => setExercise((prev: any) => prev ? { ...prev, exercise_type: e.target.value } : null)}
                     onBlur={async (e) => {
                       if (e.target.value) {
-                        await apiFetch(`/api/v1/exercises/${id}`, {
+                        await withSave(() => apiFetch(`/api/v1/exercises/${id}`, {
                           method: 'PATCH',
                           body: JSON.stringify({ exercise_type: e.target.value }),
-                        });
+                        }));
                       }
                     }}
                     placeholder="Typ eingeben"
@@ -224,19 +257,19 @@ export default function ExerciseSetupPage() {
                   setExerciseName(val);
                   if (nameSaveTimer) clearTimeout(nameSaveTimer);
                   setNameSaveTimer(setTimeout(async () => {
-                    await apiFetch(`/api/v1/exercises/${id}`, {
+                    await withSave(() => apiFetch(`/api/v1/exercises/${id}`, {
                       method: 'PATCH',
                       body: JSON.stringify({ name: val || null }),
-                    });
+                    }));
                   }, 800));
                 }}
                 onBlur={async () => {
                   if (nameSaveTimer) clearTimeout(nameSaveTimer);
                   setNameSaveTimer(null);
-                  await apiFetch(`/api/v1/exercises/${id}`, {
+                  await withSave(() => apiFetch(`/api/v1/exercises/${id}`, {
                     method: 'PATCH',
                     body: JSON.stringify({ name: exerciseName || null }),
-                  });
+                  }));
                 }}
                 className="border border-gray-300 rounded-lg px-3 py-2 text-sm w-full max-w-md focus:outline-none focus:ring-2 focus:ring-blue-500"
               />
@@ -254,25 +287,26 @@ export default function ExerciseSetupPage() {
               checked={exercise.oe_link_enabled !== 0}
               onChange={async (e) => {
                 const val = e.target.checked;
-                await apiFetch(`/api/v1/exercises/${id}`, {
-                  method: 'PATCH',
-                  body: JSON.stringify({ oe_link_enabled: val }),
-                });
-                setExercise((prev: any) => prev ? { ...prev, oe_link_enabled: val ? 1 : 0 } : null);
-                if (val) {
-                  // Auto-add all linked repeaters
-                  const linkedReps = allRepeaters.filter(r => r.is_linked);
-                  for (const rep of linkedReps) {
-                    if (!activeRepeaters.some(r => r.repeater_id === rep.id)) {
-                      await apiFetch(`/api/v1/exercises/${id}/repeaters`, {
-                        method: 'POST',
-                        body: JSON.stringify({ repeater_id: rep.id }),
-                      });
+                await withSave(async () => {
+                  await apiFetch(`/api/v1/exercises/${id}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ oe_link_enabled: val }),
+                  });
+                  setExercise((prev: any) => prev ? { ...prev, oe_link_enabled: val ? 1 : 0 } : null);
+                  if (val) {
+                    const linkedReps = allRepeaters.filter(r => r.is_linked);
+                    for (const rep of linkedReps) {
+                      if (!activeRepeaters.some(r => r.repeater_id === rep.id)) {
+                        await apiFetch(`/api/v1/exercises/${id}/repeaters`, {
+                          method: 'POST',
+                          body: JSON.stringify({ repeater_id: rep.id }),
+                        });
+                      }
                     }
+                    const updated = await apiFetch(`/api/v1/exercises/${id}/repeaters`);
+                    setActiveRepeaters(updated);
                   }
-                  const updated = await apiFetch(`/api/v1/exercises/${id}/repeaters`);
-                  setActiveRepeaters(updated);
-                }
+                });
               }}
               className="w-5 h-5 accent-red-600"
             />
