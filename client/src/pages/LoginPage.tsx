@@ -67,7 +67,7 @@ export default function LoginPage() {
       <footer className="bg-gray-100 border-t text-center py-3 text-xs text-gray-500 flex items-center justify-center gap-2 sm:gap-4 flex-wrap px-2">
         <a href="https://oeradio.at" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700">oeradio.at</a>
         <span>·</span>
-        <a href="https://bos-arsa.at" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700">bos-arsa.at</a>
+        <a href="https://bosarsa.oeradio.at" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700">bosarsa.oeradio.at</a>
         <span>·</span>
         <Link to="/impressum" className="hover:text-gray-700">Impressum</Link>
         <span>·</span>

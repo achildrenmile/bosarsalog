@@ -53,7 +53,7 @@ export default function ReportsPage() {
     const footer = document.createElement('div');
     footer.setAttribute('data-export-inject', 'true');
     footer.style.cssText = 'text-align:center;padding:12px 0;margin-top:16px;border-top:1px solid #e5e7eb;font-size:12px;color:#6b7280;';
-    footer.textContent = 'oeradio.at  \u00B7  bos-arsa.at';
+    footer.textContent = 'oeradio.at  \u00B7  bosarsa.oeradio.at';
     return footer;
   };
 

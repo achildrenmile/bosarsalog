@@ -56,7 +56,7 @@ export default function Layout() {
       <footer className="bg-gray-100 border-t text-center py-3 text-xs text-gray-500 flex items-center justify-center gap-2 sm:gap-4 flex-wrap px-2">
         <a href="https://oeradio.at" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700">oeradio.at</a>
         <span>·</span>
-        <a href="https://bos-arsa.at" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700">bos-arsa.at</a>
+        <a href="https://bosarsa.oeradio.at" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700">bosarsa.oeradio.at</a>
         <span>·</span>
         <Link to="/impressum" className="hover:text-gray-700">Impressum</Link>
         <span>·</span>
@@ -66,7 +66,7 @@ export default function Layout() {
         <span>·</span>
         <a href="https://github.com/achildrenmile/bosarsalog" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700">GitHub</a>
         <span>·</span>
-        <a href="https://github.com/achildrenmile/bosarsalog/releases/tag/v1.0.7" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700">v1.0.7</a>
+        <a href="https://github.com/achildrenmile/bosarsalog/releases/tag/v1.0.8" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700">v1.0.8</a>
       </footer>
     </div>
   );
