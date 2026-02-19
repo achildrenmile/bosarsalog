@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useNavigate } from 'react-router-dom';
 import { apiFetch } from '../services/api';
 import { useAuth } from '../hooks/useAuth';
 import { EXERCISE_TYPES } from '../constants/exerciseTypes';
@@ -18,6 +18,7 @@ const BUNDESLAENDER = [
 
 export default function ExerciseSetupPage() {
   const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
   const { admin } = useAuth();
   const isAdmin = admin?.role === 'admin';
   const [exercise, setExercise] = useState<any>(null);
@@ -36,6 +37,8 @@ export default function ExerciseSetupPage() {
   const [nameSaveTimer, setNameSaveTimer] = useState<ReturnType<typeof setTimeout> | null>(null);
   const [saveStatus, setSaveStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
   const savedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [deleting, setDeleting] = useState(false);
 
   const withSave = useCallback(async <T,>(fn: () => Promise<T>): Promise<T | undefined> => {
     setSaveStatus('saving');
@@ -190,6 +193,14 @@ export default function ExerciseSetupPage() {
           )}
           {saveStatus === 'error' && (
             <span className="text-xs text-red-600">Fehler!</span>
+          )}
+          {isAdmin && (
+            <button
+              onClick={() => setShowDeleteConfirm(true)}
+              className="bg-red-100 hover:bg-red-200 text-red-700 px-2 sm:px-3 py-1.5 rounded text-xs sm:text-sm"
+            >
+              Löschen
+            </button>
           )}
           <Link to={`/exercises/${id}`} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 sm:px-3 py-1.5 rounded text-xs sm:text-sm">
             Zurück
@@ -474,6 +485,48 @@ export default function ExerciseSetupPage() {
           )}
         </div>
       </div>
+
+      {/* Delete confirmation modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6">
+            <h3 className="text-lg font-bold text-red-700 mb-2">Übung löschen?</h3>
+            <p className="text-sm text-gray-700 mb-1">
+              <span className="font-semibold">{exercise.name || 'Übung'}</span> vom {new Date(exercise.date + 'T00:00:00').toLocaleDateString('de-AT')}
+            </p>
+            <p className="text-sm text-gray-500 mb-4">
+              Alle Rapporte, Teilnehmer und Umsetzer-Zuordnungen werden unwiderruflich gelöscht.
+            </p>
+            <div className="bg-red-50 border border-red-200 rounded-lg p-3 mb-4">
+              <p className="text-xs text-red-800 font-medium">Diese Aktion kann nicht rückgängig gemacht werden!</p>
+            </div>
+            <div className="flex gap-3 justify-end">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                disabled={deleting}
+                className="px-4 py-2 text-sm text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg"
+              >
+                Abbrechen
+              </button>
+              <button
+                onClick={async () => {
+                  setDeleting(true);
+                  try {
+                    await apiFetch(`/api/v1/exercises/${id}`, { method: 'DELETE' });
+                    navigate('/');
+                  } catch {} finally {
+                    setDeleting(false);
+                  }
+                }}
+                disabled={deleting}
+                className="px-4 py-2 text-sm text-white bg-red-600 hover:bg-red-700 rounded-lg font-medium disabled:opacity-50"
+              >
+                {deleting ? 'Löschen...' : 'Endgültig löschen'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

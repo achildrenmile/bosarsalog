@@ -95,6 +95,21 @@ exercisesRouter.patch('/:id', requireRole('admin'), (req, res) => {
   res.json(exercise);
 });
 
+// Delete exercise (admin only)
+exercisesRouter.delete('/:id', requireRole('admin'), (req, res) => {
+  const db = getDb();
+  const exercise = db.prepare('SELECT id, name, date FROM exercises WHERE id = ?').get(req.params.id);
+  if (!exercise) {
+    res.status(404).json({ error: 'Übung nicht gefunden' });
+    return;
+  }
+  db.prepare('DELETE FROM signal_reports WHERE exercise_id = ?').run(req.params.id);
+  db.prepare('DELETE FROM exercise_attendance WHERE exercise_id = ?').run(req.params.id);
+  db.prepare('DELETE FROM exercise_repeaters WHERE exercise_id = ?').run(req.params.id);
+  db.prepare('DELETE FROM exercises WHERE id = ?').run(req.params.id);
+  res.json({ success: true });
+});
+
 // Get exercise stats
 exercisesRouter.get('/:id/stats', (req, res) => {
   const db = getDb();
