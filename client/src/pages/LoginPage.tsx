@@ -75,7 +75,9 @@ export default function LoginPage() {
         <span>·</span>
         <Link to="/hilfe" className="hover:text-gray-700">Hilfe</Link>
         <span>·</span>
-        <a href="https://github.com/achildrenmile/bosarsalog/releases/tag/v1.0.0-beta.2" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700">v1.0.0-beta.2</a>
+        <a href="https://github.com/achildrenmile/bosarsalog" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700">GitHub</a>
+        <span>·</span>
+        <a href="https://github.com/achildrenmile/bosarsalog/releases/tag/v1.0.9" target="_blank" rel="noopener noreferrer" className="hover:text-gray-700">v1.0.9</a>
       </footer>
     </div>
   );
