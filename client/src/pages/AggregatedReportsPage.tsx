@@ -179,7 +179,7 @@ export default function AggregatedReportsPage() {
     try {
       const url = await toPng(pageRef.current, {
         backgroundColor: '#f3f4f6',
-        pixelRatio: 2,
+        pixelRatio: 1,
         filter: (node) => {
           if (node instanceof HTMLElement && node.dataset.noExport === 'true') return false;
           return true;
