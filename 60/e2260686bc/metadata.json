@@ -1,0 +1,31 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "60e2260686bc",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "CHANGELOG-2026-02-24.md",
+    "client/src/components/LandMode.tsx",
+    "client/src/pages/ExercisePage.tsx",
+    "client/src/pages/ExerciseSetupPage.tsx",
+    "server/src/db/schema.ts",
+    "server/src/routes/exercises.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/60/e2260686bc/0/metadata.json",
+      "transcript": "/60/e2260686bc/0/full.jsonl",
+      "context": "/60/e2260686bc/0/context.md",
+      "content_hash": "/60/e2260686bc/0/content_hash.txt",
+      "prompt": "/60/e2260686bc/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 50,
+    "cache_creation_tokens": 117514,
+    "cache_read_tokens": 2693084,
+    "output_tokens": 4012,
+    "api_call_count": 42
+  }
+}

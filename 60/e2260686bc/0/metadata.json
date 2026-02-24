@@ -1,0 +1,34 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "60e2260686bc",
+  "session_id": "6a97a4cc-3b28-4ddc-90a0-a07287463f2a",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-24T19:35:53.110562373Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "CHANGELOG-2026-02-24.md",
+    "client/src/components/LandMode.tsx",
+    "client/src/pages/ExercisePage.tsx",
+    "client/src/pages/ExerciseSetupPage.tsx",
+    "server/src/db/schema.ts",
+    "server/src/routes/exercises.ts"
+  ],
+  "agent": "Claude Code",
+  "token_usage": {
+    "input_tokens": 50,
+    "cache_creation_tokens": 117514,
+    "cache_read_tokens": 2693084,
+    "output_tokens": 4012,
+    "api_call_count": 42
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-24T19:35:52.770907809Z",
+    "agent_lines": 53,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 53,
+    "agent_percentage": 100
+  }
+}
