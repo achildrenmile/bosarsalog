@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "49071495ca2b",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "server/src/services/pdf.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/49/071495ca2b/0/metadata.json",
+      "transcript": "/49/071495ca2b/0/full.jsonl",
+      "context": "/49/071495ca2b/0/context.md",
+      "content_hash": "/49/071495ca2b/0/content_hash.txt",
+      "prompt": "/49/071495ca2b/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 22,
+    "cache_creation_tokens": 31465,
+    "cache_read_tokens": 1914148,
+    "output_tokens": 390,
+    "api_call_count": 18
+  }
+}
