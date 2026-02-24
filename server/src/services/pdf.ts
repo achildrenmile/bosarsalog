@@ -7,6 +7,8 @@ const GRAY_50 = '#f9fafb';
 const GRAY_100 = '#f3f4f6';
 const GRAY_200 = '#e5e7eb';
 const GRAY_500 = '#6b7280';
+const TEXT_DARK = '#111827';
+const TEXT_MED = '#374151';
 const WHITE = '#ffffff';
 
 const PIE_COLORS = [
@@ -43,7 +45,6 @@ interface PdfStats {
 }
 
 // ── Austria SVG paths (from AustriaMap.tsx) ───────────────
-// Only Austrian Bundesländer — sufficient for the PDF map
 const BL_PATHS: Record<string, { d: string; labelX: number; labelY: number }> = {
   '04': {
     d: 'M604.79,109.01L606.55,111.66L605.05,112.76L606.03,114.9L604.65,116.16L606.1,117.31L604.71,118.94L606.46,120.21L608.13,119.01L612,121.87L606.72,126.22L608.45,127.44L606.52,130.43L608.26,131.53L606,137.55L600.57,138.38L599.97,139.53L603.29,141.98L602.92,143.17L605.03,145.48L603.27,147.33L604.74,155.1L606.35,157.35L589.78,159.71L588.86,159.53L588.38,155.86L585.3,160.37L579.02,160.52L576.67,154.45L571.66,153.46L569.81,151.37L567.67,151.11L562.94,152.28L562.38,157.01L558.89,158.07L557.06,160.59L554.89,158.72L554.56,161.48L552.97,162.43L557.63,164.24L558.19,165.45L561.41,165.16L565.44,167.94L569.3,166.82L571.21,167.45L572.77,169.6L573.11,172.7L572.16,173.97L576.26,177.29L574.16,180.77L571.21,181.99L572.6,185.05L571.96,187.17L566.14,191.06L565.23,192.92L560,192.69L558.9,194.99L557.98,192.98L554.85,192.85L556.07,195.88L555.31,198.84L553.81,199.33L556.2,201.38L558.24,207.82L556.47,211.06L553.6,211.16L554.18,215.21L552.34,216.63L553.33,219.03L555.37,218.67L556.14,220.99L555.43,224.02L560.39,223.35L561.43,225.87L559.21,226.23L559.09,227.85L556.07,229.7L556.91,232.08L560.71,233.96L554.46,236.26L554.2,237.2L554.92,238.01L556.41,237.1L560.11,240.42L557.82,241.35L555,240.06L554.84,241.31L553.53,241.52L552.05,240.08L548.88,240.87L547.04,239.53L546.38,241.19L543.23,240.85L542.46,239.06L541.04,245.03L539.36,245.04L536.86,248.07L534.88,247.67L533.45,251.44L529.73,255.14L526.41,256.6L523.88,259.57L518.99,259.93L518.99,259.93L520.34,254.24L524.08,250.86L524.85,248.4L526.61,248.09L528.82,242.03L531.66,241.55L529.45,239.31L528.21,236.92L528.86,235.58L526.28,231.51L528.41,223.5L525.36,214.21L526.15,213.34L525.31,210.43L525.31,210.43L525.59,210.03L525.59,210.03L521.83,200.26L521.83,200.26L521.83,199.06L521.83,199.06L521.68,196.11L524.37,195.54L525.82,192.91L526.73,193.06L525.71,194.28L526.59,195.08L527.87,192.15L532.67,191.09L532.67,191.09L536.99,190.55L541.57,187.24L546.25,180.17L543.91,176.63L544.23,174.25L545.54,170.36L548.8,167.45L548.95,165L547.25,161.78L547.7,160.77L543.71,159.87L542.31,155.09L543.37,148.4L540.57,147.41L541.97,145.26L544.18,145.83L543.65,147.72L545.1,147.9L550.13,141.48L547.12,138.74L550.11,136.72L552.09,136.92L552.65,134.81L552.65,134.81L552.99,134.13L552.99,134.13L552.5,133.41L554.95,130.58L560.61,129.54L565.45,136.23L569.61,131.18L569.5,129.22L574.99,126.82L575.67,121.25L579.51,121.28L582.8,119.28L585.39,119.47L586.64,116.34L590.33,113.86L592.47,114.64L592.59,116.72L596.8,117.84L596.53,119.58L597.48,119.94L600.27,113.9L596.6,111.27L597.04,110.26L597.99,109.44L599.5,110.9L600.81,110.32L599.4,111.87L601.88,112.51L604.45,108.6L604.45,108.6z',
@@ -88,20 +89,15 @@ const BL_SHORT: Record<string, string> = {
   '06': 'OE6', '07': 'OE7', '08': 'OE8', '09': 'OE9',
 };
 
-const BL_NAMES: Record<string, string> = {
-  '01': 'Wien', '02': 'Salzburg', '03': 'Niederösterreich', '04': 'Burgenland',
-  '05': 'Oberösterreich', '06': 'Steiermark', '07': 'Tirol', '08': 'Kärnten',
-  '09': 'Vorarlberg',
-};
+// ── Helper functions ─────────────────────────────────────
 
-// ── Helper: color interpolation (same as AustriaMap.tsx) ──
 function getHeatColor(value: number, max: number): string {
   if (max === 0 || value === 0) return '#e5e7eb';
   const t = value / max;
   const r = Math.round(194 + (30 - 194) * t);
   const g = Math.round(213 + (58 - 213) * t);
   const b = Math.round(236 + (95 - 236) * t);
-  return `rgb(${r},${g},${b})`;
+  return '#' + [r, g, b].map(c => c.toString(16).padStart(2, '0')).join('');
 }
 
 function formatDateDE(d: string): string {
@@ -109,7 +105,6 @@ function formatDateDE(d: string): string {
   return date.toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric' });
 }
 
-// ── Page break helper ──────────────────────────────────────
 function ensureSpace(doc: PDFKit.PDFDocument, needed: number) {
   const bottom = doc.page.height - doc.page.margins.bottom;
   if (doc.y + needed > bottom) {
@@ -117,20 +112,33 @@ function ensureSpace(doc: PDFKit.PDFDocument, needed: number) {
   }
 }
 
+/** Write text at fixed position without moving doc.y */
+function textAt(doc: PDFKit.PDFDocument, str: string, x: number, y: number, opts?: PDFKit.Mixins.TextOptions) {
+  doc.text(str, x, y, { lineBreak: false, ...opts });
+}
+
 // ── Render functions ─────────────────────────────────────
 
 function renderHeader(doc: PDFKit.PDFDocument, title: string, subtitle: string) {
   const pageW = doc.page.width;
   const m = doc.page.margins;
+  const barW = pageW - m.left - m.right;
+
   doc.save();
-  doc.rect(m.left, m.top, pageW - m.left - m.right, 50).fill(NAVY);
-  doc.fontSize(18).fillColor(WHITE).text('BOS-ARSA Log', m.left + 15, m.top + 10, { continued: false });
-  doc.fontSize(8).fillColor('#93c5fd').text('Im Sinne der Sicherheit', m.left + 15, m.top + 32);
+  doc.rect(m.left, m.top, barW, 50).fill(NAVY);
+  doc.fontSize(18).fillColor(WHITE);
+  textAt(doc, 'BOS-ARSA Log', m.left + 15, m.top + 10);
+  doc.fontSize(8).fillColor('#93c5fd');
+  textAt(doc, 'Im Sinne der Sicherheit', m.left + 15, m.top + 32);
   doc.restore();
+
   doc.y = m.top + 60;
-  doc.fontSize(14).fillColor(NAVY).text(title, m.left, doc.y);
-  doc.fontSize(9).fillColor(GRAY_500).text(subtitle, m.left, doc.y);
-  doc.moveDown(0.8);
+  doc.fontSize(14).fillColor(NAVY);
+  textAt(doc, title, m.left, doc.y);
+  doc.y += 18;
+  doc.fontSize(9).fillColor(GRAY_500);
+  textAt(doc, subtitle, m.left, doc.y);
+  doc.y += 16;
 }
 
 function renderSummaryCards(doc: PDFKit.PDFDocument, stats: PdfStats, exerciseCount?: number) {
@@ -139,7 +147,6 @@ function renderSummaryCards(doc: PDFKit.PDFDocument, stats: PdfStats, exerciseCo
   const usable = doc.page.width - m.left - m.right;
   const cols = exerciseCount !== undefined ? 4 : 2;
   const cardW = usable / cols - 8;
-  const startX = m.left;
   const startY = doc.y;
 
   const cards: { value: string | number; label: string }[] = [
@@ -153,11 +160,13 @@ function renderSummaryCards(doc: PDFKit.PDFDocument, stats: PdfStats, exerciseCo
   }
 
   cards.forEach((c, i) => {
-    const x = startX + i * (cardW + 8);
+    const x = m.left + i * (cardW + 8);
     doc.save();
     doc.roundedRect(x, startY, cardW, 40, 4).fill(GRAY_50);
-    doc.fontSize(18).fillColor(NAVY).text(String(c.value), x, startY + 5, { width: cardW, align: 'center' });
-    doc.fontSize(7).fillColor(GRAY_500).text(c.label, x, startY + 27, { width: cardW, align: 'center' });
+    doc.fontSize(18).fillColor(NAVY);
+    textAt(doc, String(c.value), x, startY + 5, { width: cardW, align: 'center' });
+    doc.fontSize(7).fillColor(GRAY_500);
+    textAt(doc, c.label, x, startY + 27, { width: cardW, align: 'center' });
     doc.restore();
   });
   doc.y = startY + 48;
@@ -170,15 +179,16 @@ function renderPerRepeater(doc: PDFKit.PDFDocument, perRepeater: PerRepeater[]) 
   const usable = doc.page.width - m.left - m.right;
   const cols = Math.min(perRepeater.length, 6);
   const cardW = usable / cols - 6;
-  const startX = m.left;
   const startY = doc.y;
 
   perRepeater.slice(0, 6).forEach((r, i) => {
-    const x = startX + i * (cardW + 6);
+    const x = m.left + i * (cardW + 6);
     doc.save();
     doc.roundedRect(x, startY, cardW, 28, 3).fill(GRAY_50);
-    doc.fontSize(12).fillColor(GRAY_500).text(String(r.count), x, startY + 2, { width: cardW, align: 'center' });
-    doc.fontSize(6).fillColor(GRAY_500).text(r.short_name, x, startY + 17, { width: cardW, align: 'center' });
+    doc.fontSize(12).fillColor(GRAY_500);
+    textAt(doc, String(r.count), x, startY + 2, { width: cardW, align: 'center' });
+    doc.fontSize(6).fillColor(GRAY_500);
+    textAt(doc, r.short_name, x, startY + 17, { width: cardW, align: 'center' });
     doc.restore();
   });
   doc.y = startY + 36;
@@ -191,43 +201,43 @@ function renderExerciseTable(doc: PDFKit.PDFDocument, exercises: ExerciseSummary
   const usable = doc.page.width - m.left - m.right;
 
   // Section header
-  doc.save();
   doc.rect(m.left, doc.y, usable, 18).fill(NAVY);
-  doc.fontSize(8).fillColor(WHITE).text(`Übungen (${exercises.length})`, m.left + 8, doc.y + 4);
-  doc.restore();
+  doc.fontSize(8).fillColor(WHITE);
+  textAt(doc, `Übungen (${exercises.length})`, m.left + 8, doc.y + 4);
   doc.y += 20;
 
-  // Column headers
+  // Column positions
   const colDate = m.left + 5;
   const colName = m.left + 80;
   const colPart = m.left + usable - 90;
   const colRap = m.left + usable - 40;
 
-  doc.save();
+  // Column headers
   doc.rect(m.left, doc.y, usable, 14).fill(GRAY_100);
   doc.fontSize(6).fillColor(GRAY_500);
-  doc.text('DATUM', colDate, doc.y + 4);
-  doc.text('NAME', colName, doc.y + 4);
-  doc.text('TEILN.', colPart, doc.y + 4, { width: 40, align: 'right' });
-  doc.text('RAPP.', colRap, doc.y + 4, { width: 40, align: 'right' });
-  doc.restore();
+  const hy = doc.y + 4;
+  textAt(doc, 'DATUM', colDate, hy);
+  textAt(doc, 'NAME', colName, hy);
+  textAt(doc, 'TEILN.', colPart, hy, { width: 40, align: 'right' });
+  textAt(doc, 'RAPP.', colRap, hy, { width: 40, align: 'right' });
   doc.y += 16;
 
   exercises.forEach((ex, i) => {
     ensureSpace(doc, 14);
+    const rowY = doc.y;
     if (i % 2 === 0) {
       doc.save();
-      doc.rect(m.left, doc.y, usable, 12).fill(GRAY_50);
+      doc.rect(m.left, rowY, usable, 12).fill(GRAY_50);
       doc.restore();
     }
-    doc.fontSize(7).fillColor('#111827');
-    doc.text(formatDateDE(ex.date), colDate, doc.y + 2);
-    doc.text(ex.name || '', colName, doc.y + 2, { width: colPart - colName - 10 });
-    doc.text(String(ex.participant_count), colPart, doc.y + 2, { width: 40, align: 'right' });
-    doc.text(String(ex.report_count), colRap, doc.y + 2, { width: 40, align: 'right' });
-    doc.y += 13;
+    doc.fontSize(7).fillColor(TEXT_DARK);
+    textAt(doc, formatDateDE(ex.date), colDate, rowY + 2);
+    textAt(doc, ex.name || '', colName, rowY + 2, { width: colPart - colName - 10 });
+    textAt(doc, String(ex.participant_count), colPart, rowY + 2, { width: 40, align: 'right' });
+    textAt(doc, String(ex.report_count), colRap, rowY + 2, { width: 40, align: 'right' });
+    doc.y = rowY + 13;
   });
-  doc.moveDown(0.5);
+  doc.y += 4;
 }
 
 function renderAustriaMap(doc: PDFKit.PDFDocument, blStats: BlStat[]) {
@@ -239,45 +249,38 @@ function renderAustriaMap(doc: PDFKit.PDFDocument, blStats: BlStat[]) {
   const mapW = Math.min(usable, 400);
   const mapH = mapW * 0.5;
   const offsetX = m.left + (usable - mapW) / 2;
-  const offsetY = doc.y;
 
-  // Section header
-  doc.save();
-  doc.fontSize(9).fillColor(NAVY).text('Teilnehmer nach Bundesland', m.left, doc.y);
-  doc.restore();
+  doc.fontSize(9).fillColor(NAVY);
+  textAt(doc, 'Teilnehmer nach Bundesland', m.left, doc.y);
   doc.y += 14;
   const mapStartY = doc.y;
 
   const dataMap = new Map(blStats.map(bl => [bl.bundesland_code, bl]));
   const maxP = Math.max(...blStats.map(bl => bl.participants), 1);
 
-  // SVG viewBox: roughly 0,0 to 620,300 for Austrian paths
-  // Scale to fit mapW x mapH
   const svgW = 620;
   const svgH = 300;
   const scale = Math.min(mapW / svgW, mapH / svgH);
 
-  // Parse and draw SVG paths
   for (const [code, pathData] of Object.entries(BL_PATHS)) {
     const bl = dataMap.get(code);
     const participants = bl?.participants ?? 0;
-    const fill = getHeatColor(participants, maxP);
+    const fillColor = getHeatColor(participants, maxP);
 
-    // Parse the SVG path and draw with PDFKit
     doc.save();
     doc.translate(offsetX, mapStartY);
     doc.scale(scale);
-
-    doc.path(pathData.d).fill(fill).stroke(WHITE);
+    doc.path(pathData.d).lineWidth(2 / scale).fillAndStroke(fillColor, WHITE);
     doc.restore();
 
-    // Draw label
+    // Label
     const lx = offsetX + pathData.labelX * scale;
     const ly = mapStartY + pathData.labelY * scale;
-    const label = BL_SHORT[code] || code;
     doc.save();
-    doc.fontSize(6).fillColor(NAVY).text(label, lx - 15, ly - 6, { width: 30, align: 'center' });
-    doc.fontSize(5).fillColor(NAVY).text(String(participants), lx - 15, ly + 1, { width: 30, align: 'center' });
+    doc.fontSize(6).fillColor(NAVY);
+    textAt(doc, BL_SHORT[code] || code, lx - 15, ly - 6, { width: 30, align: 'center' });
+    doc.fontSize(5).fillColor(NAVY);
+    textAt(doc, String(participants), lx - 15, ly + 1, { width: 30, align: 'center' });
     doc.restore();
   }
 
@@ -289,17 +292,17 @@ function renderBarChart(doc: PDFKit.PDFDocument, chartData: { label: string; par
   ensureSpace(doc, 180);
 
   const m = doc.page.margins;
-  const usable = doc.page.width - m.left - m.right;
-  const chartW = Math.min(usable, 500);
+  const chartW = Math.min(doc.page.width - m.left - m.right, 500);
   const chartH = 140;
   const startX = m.left;
-  const startY = doc.y + 15;
 
-  doc.fontSize(9).fillColor(NAVY).text('Stationen & Rapporte', m.left, doc.y);
-  doc.y = startY;
+  doc.fontSize(9).fillColor(NAVY);
+  textAt(doc, 'Stationen & Rapporte', m.left, doc.y);
+  doc.y += 15;
+  const startY = doc.y;
 
   const maxVal = Math.max(...chartData.map(d => Math.max(d.participants, d.reports)), 1);
-  const barAreaW = chartW - 30; // leave room for y-axis
+  const barAreaW = chartW - 30;
   const groupW = barAreaW / chartData.length;
   const barW = Math.min(groupW * 0.35, 20);
 
@@ -309,42 +312,32 @@ function renderBarChart(doc: PDFKit.PDFDocument, chartData: { label: string; par
     const val = Math.round(maxVal * i / 4);
     doc.save();
     doc.strokeColor(GRAY_200).lineWidth(0.5).moveTo(startX + 25, y).lineTo(startX + chartW, y).stroke();
-    doc.fontSize(5).fillColor(GRAY_500).text(String(val), startX, y - 3, { width: 22, align: 'right' });
+    doc.fontSize(5).fillColor(GRAY_500);
+    textAt(doc, String(val), startX, y - 3, { width: 22, align: 'right' });
     doc.restore();
   }
 
   // Bars
   chartData.forEach((d, i) => {
     const groupX = startX + 30 + i * groupW;
-
-    // Participants bar
     const pH = (d.participants / maxVal) * chartH;
-    doc.save();
     doc.rect(groupX, startY + chartH - pH, barW, pH).fill(NAVY);
-    doc.restore();
-
-    // Reports bar
     const rH = (d.reports / maxVal) * chartH;
-    doc.save();
     doc.rect(groupX + barW + 2, startY + chartH - rH, barW, rH).fill(RED);
-    doc.restore();
-
-    // Label
     doc.save();
     doc.fontSize(4).fillColor(GRAY_500);
-    doc.text(d.label, groupX - 2, startY + chartH + 3, { width: groupW, align: 'left' });
+    textAt(doc, d.label, groupX - 2, startY + chartH + 3, { width: groupW });
     doc.restore();
   });
 
   // Legend
   const legendY = startY + chartH + 14;
-  doc.save();
   doc.rect(startX + 30, legendY, 8, 6).fill(NAVY);
-  doc.fontSize(6).fillColor('#111827').text('Stationen', startX + 42, legendY);
+  doc.fontSize(6).fillColor(TEXT_DARK);
+  textAt(doc, 'Stationen', startX + 42, legendY);
   doc.rect(startX + 90, legendY, 8, 6).fill(RED);
-  doc.fontSize(6).fillColor('#111827').text('Rapporte', startX + 102, legendY);
-  doc.restore();
-
+  doc.fontSize(6).fillColor(TEXT_DARK);
+  textAt(doc, 'Rapporte', startX + 102, legendY);
   doc.y = legendY + 14;
 }
 
@@ -356,8 +349,9 @@ function renderPieChart(doc: PDFKit.PDFDocument, chartData: { label: string; val
   const m = doc.page.margins;
   const usable = doc.page.width - m.left - m.right;
 
-  doc.fontSize(9).fillColor(NAVY).text('Rapporte Verteilung', m.left, doc.y);
-  doc.moveDown(0.3);
+  doc.fontSize(9).fillColor(NAVY);
+  textAt(doc, 'Rapporte Verteilung', m.left, doc.y);
+  doc.y += 12;
 
   const cx = m.left + 100;
   const cy = doc.y + 70;
@@ -370,30 +364,25 @@ function renderPieChart(doc: PDFKit.PDFDocument, chartData: { label: string; val
     const endAngle = startAngle + sliceAngle;
     const color = PIE_COLORS[i % PIE_COLORS.length];
 
-    // Draw pie slice using path
     const x1 = cx + r * Math.cos(startAngle);
     const y1 = cy + r * Math.sin(startAngle);
     const x2 = cx + r * Math.cos(endAngle);
     const y2 = cy + r * Math.sin(endAngle);
     const largeArc = sliceAngle > Math.PI ? 1 : 0;
 
-    doc.save();
     doc.path(`M ${cx} ${cy} L ${x1} ${y1} A ${r} ${r} 0 ${largeArc} 1 ${x2} ${y2} Z`).fill(color);
-    doc.restore();
-
     startAngle = endAngle;
   });
 
-  // Legend on the right
+  // Legend
   const legendX = cx + r + 30;
   filtered.forEach((d, i) => {
     const ly = cy - r + i * 12;
     if (ly > doc.page.height - m.bottom) return;
     const color = PIE_COLORS[i % PIE_COLORS.length];
-    doc.save();
     doc.rect(legendX, ly, 8, 8).fill(color);
-    doc.fontSize(6).fillColor('#111827').text(`${d.label} (${d.value})`, legendX + 12, ly + 1, { width: usable - legendX + m.left - 12 });
-    doc.restore();
+    doc.fontSize(6).fillColor(TEXT_DARK);
+    textAt(doc, `${d.label} (${d.value})`, legendX + 12, ly + 1, { width: usable - legendX + m.left - 12 });
   });
 
   doc.y = cy + r + 15;
@@ -405,26 +394,23 @@ function renderBezirkTable(doc: PDFKit.PDFDocument, bezirkStats: BezirkStat[], s
 
   const m = doc.page.margins;
   const usable = doc.page.width - m.left - m.right;
-
-  // Section header
-  doc.save();
-  doc.rect(m.left, doc.y, usable, 18).fill(NAVY);
-  doc.fontSize(8).fillColor(WHITE).text('Nebenstationen nach Bezirk', m.left + 8, doc.y + 4);
-  doc.restore();
-  doc.y += 20;
-
-  // Column headers
   const colName = m.left + 5;
   const colPart = m.left + usable - 90;
   const colRap = m.left + usable - 40;
 
-  doc.save();
+  // Section header
+  doc.rect(m.left, doc.y, usable, 18).fill(NAVY);
+  doc.fontSize(8).fillColor(WHITE);
+  textAt(doc, 'Nebenstationen nach Bezirk', m.left + 8, doc.y + 4);
+  doc.y += 20;
+
+  // Column headers
   doc.rect(m.left, doc.y, usable, 14).fill(GRAY_100);
   doc.fontSize(6).fillColor(GRAY_500);
-  doc.text('BUNDESLAND / BEZIRK', colName, doc.y + 4);
-  doc.text('TEILN.', colPart, doc.y + 4, { width: 40, align: 'right' });
-  doc.text('RAPP.', colRap, doc.y + 4, { width: 40, align: 'right' });
-  doc.restore();
+  const hy = doc.y + 4;
+  textAt(doc, 'BUNDESLAND / BEZIRK', colName, hy);
+  textAt(doc, 'TEILN.', colPart, hy, { width: 40, align: 'right' });
+  textAt(doc, 'RAPP.', colRap, hy, { width: 40, align: 'right' });
   doc.y += 16;
 
   // Group by Bundesland
@@ -440,35 +426,34 @@ function renderBezirkTable(doc: PDFKit.PDFDocument, bezirkStats: BezirkStat[], s
 
   for (const [, bl] of Object.entries(byBl)) {
     ensureSpace(doc, 14);
-    // BL header row
-    doc.save();
-    doc.rect(m.left, doc.y, usable, 13).fill(GRAY_100);
-    doc.fontSize(7).fillColor('#111827').text(bl.name, colName, doc.y + 3, { bold: true } as any);
-    doc.text(String(bl.totalP), colPart, doc.y + 3, { width: 40, align: 'right' });
-    doc.text(String(bl.totalR), colRap, doc.y + 3, { width: 40, align: 'right' });
-    doc.restore();
-    doc.y += 14;
+    const rowY = doc.y;
+    doc.rect(m.left, rowY, usable, 13).fill(GRAY_100);
+    doc.fontSize(7).fillColor(TEXT_DARK);
+    textAt(doc, bl.name, colName, rowY + 3);
+    textAt(doc, String(bl.totalP), colPart, rowY + 3, { width: 40, align: 'right' });
+    textAt(doc, String(bl.totalR), colRap, rowY + 3, { width: 40, align: 'right' });
+    doc.y = rowY + 14;
 
-    // Bezirk rows
     bl.bezirke.forEach(bz => {
       ensureSpace(doc, 12);
-      doc.fontSize(6).fillColor('#374151');
-      doc.text(`    ${bz.bezirk_code}  ${bz.bezirk_name}`, colName, doc.y + 1);
-      doc.text(String(bz.participants), colPart, doc.y + 1, { width: 40, align: 'right' });
-      doc.text(String(bz.reports), colRap, doc.y + 1, { width: 40, align: 'right' });
-      doc.y += 11;
+      const ry = doc.y;
+      doc.fontSize(6).fillColor(TEXT_MED);
+      textAt(doc, `    ${bz.bezirk_code}  ${bz.bezirk_name}`, colName, ry + 1);
+      textAt(doc, String(bz.participants), colPart, ry + 1, { width: 40, align: 'right' });
+      textAt(doc, String(bz.reports), colRap, ry + 1, { width: 40, align: 'right' });
+      doc.y = ry + 11;
     });
   }
 
-  // Gesamt row
+  // Gesamt
   ensureSpace(doc, 18);
-  doc.save();
-  doc.rect(m.left, doc.y, usable, 16).fill(NAVY);
-  doc.fontSize(7).fillColor(WHITE).text('Gesamt', colName, doc.y + 4);
-  doc.text(String(stats.totalParticipants), colPart, doc.y + 4, { width: 40, align: 'right' });
-  doc.text(String(stats.totalReports), colRap, doc.y + 4, { width: 40, align: 'right' });
-  doc.restore();
-  doc.y += 20;
+  const gy = doc.y;
+  doc.rect(m.left, gy, usable, 16).fill(NAVY);
+  doc.fontSize(7).fillColor(WHITE);
+  textAt(doc, 'Gesamt', colName, gy + 4);
+  textAt(doc, String(stats.totalParticipants), colPart, gy + 4, { width: 40, align: 'right' });
+  textAt(doc, String(stats.totalReports), colRap, gy + 4, { width: 40, align: 'right' });
+  doc.y = gy + 20;
 }
 
 function renderBlTable(doc: PDFKit.PDFDocument, blStats: BlStat[], stats: PdfStats) {
@@ -477,50 +462,49 @@ function renderBlTable(doc: PDFKit.PDFDocument, blStats: BlStat[], stats: PdfSta
 
   const m = doc.page.margins;
   const usable = doc.page.width - m.left - m.right;
-
-  // Section header
-  doc.save();
-  doc.rect(m.left, doc.y, usable, 18).fill(NAVY);
-  doc.fontSize(8).fillColor(WHITE).text('Teilnehmer nach Bundesland / Land', m.left + 8, doc.y + 4);
-  doc.restore();
-  doc.y += 20;
-
   const colName = m.left + 5;
   const colPart = m.left + usable - 90;
   const colRap = m.left + usable - 40;
 
-  doc.save();
+  // Section header
+  doc.rect(m.left, doc.y, usable, 18).fill(NAVY);
+  doc.fontSize(8).fillColor(WHITE);
+  textAt(doc, 'Teilnehmer nach Bundesland / Land', m.left + 8, doc.y + 4);
+  doc.y += 20;
+
+  // Column headers
   doc.rect(m.left, doc.y, usable, 14).fill(GRAY_100);
   doc.fontSize(6).fillColor(GRAY_500);
-  doc.text('BUNDESLAND', colName, doc.y + 4);
-  doc.text('TEILNEHMER', colPart, doc.y + 4, { width: 40, align: 'right' });
-  doc.text('RAPPORTE', colRap, doc.y + 4, { width: 40, align: 'right' });
-  doc.restore();
+  const hy = doc.y + 4;
+  textAt(doc, 'BUNDESLAND', colName, hy);
+  textAt(doc, 'TEILNEHMER', colPart, hy, { width: 40, align: 'right' });
+  textAt(doc, 'RAPPORTE', colRap, hy, { width: 40, align: 'right' });
   doc.y += 16;
 
   blStats.forEach((bl, i) => {
     ensureSpace(doc, 12);
+    const rowY = doc.y;
     if (i % 2 === 0) {
       doc.save();
-      doc.rect(m.left, doc.y, usable, 12).fill(GRAY_50);
+      doc.rect(m.left, rowY, usable, 12).fill(GRAY_50);
       doc.restore();
     }
-    doc.fontSize(7).fillColor('#111827');
-    doc.text(bl.bundesland, colName, doc.y + 2);
-    doc.text(String(bl.participants), colPart, doc.y + 2, { width: 40, align: 'right' });
-    doc.text(String(bl.reports), colRap, doc.y + 2, { width: 40, align: 'right' });
-    doc.y += 13;
+    doc.fontSize(7).fillColor(TEXT_DARK);
+    textAt(doc, bl.bundesland, colName, rowY + 2);
+    textAt(doc, String(bl.participants), colPart, rowY + 2, { width: 40, align: 'right' });
+    textAt(doc, String(bl.reports), colRap, rowY + 2, { width: 40, align: 'right' });
+    doc.y = rowY + 13;
   });
 
   // Gesamt
   ensureSpace(doc, 18);
-  doc.save();
-  doc.rect(m.left, doc.y, usable, 16).fill(NAVY);
-  doc.fontSize(7).fillColor(WHITE).text('Gesamt', colName, doc.y + 4);
-  doc.text(String(stats.totalParticipants), colPart, doc.y + 4, { width: 40, align: 'right' });
-  doc.text(String(stats.totalReports), colRap, doc.y + 4, { width: 40, align: 'right' });
-  doc.restore();
-  doc.y += 20;
+  const gy = doc.y;
+  doc.rect(m.left, gy, usable, 16).fill(NAVY);
+  doc.fontSize(7).fillColor(WHITE);
+  textAt(doc, 'Gesamt', colName, gy + 4);
+  textAt(doc, String(stats.totalParticipants), colPart, gy + 4, { width: 40, align: 'right' });
+  textAt(doc, String(stats.totalReports), colRap, gy + 4, { width: 40, align: 'right' });
+  doc.y = gy + 20;
 }
 
 function renderParticipants(doc: PDFKit.PDFDocument, participants: Participant[]) {
@@ -531,13 +515,12 @@ function renderParticipants(doc: PDFKit.PDFDocument, participants: Participant[]
   const usable = doc.page.width - m.left - m.right;
 
   // Section header
-  doc.save();
   doc.rect(m.left, doc.y, usable, 18).fill(NAVY);
-  doc.fontSize(8).fillColor(WHITE).text(`Teilnehmer-Liste (${participants.length})`, m.left + 8, doc.y + 4);
-  doc.restore();
+  doc.fontSize(8).fillColor(WHITE);
+  textAt(doc, `Teilnehmer-Liste (${participants.length})`, m.left + 8, doc.y + 4);
   doc.y += 20;
 
-  // Column headers
+  // Column positions
   const colNum = m.left + 3;
   const colCall = m.left + 25;
   const colName = m.left + 90;
@@ -545,45 +528,50 @@ function renderParticipants(doc: PDFKit.PDFDocument, participants: Participant[]
   const colBl = m.left + usable - 90;
   const colRap = m.left + usable - 35;
 
-  doc.save();
+  // Column headers
   doc.rect(m.left, doc.y, usable, 14).fill(GRAY_100);
   doc.fontSize(6).fillColor(GRAY_500);
-  doc.text('#', colNum, doc.y + 4);
-  doc.text('RUFZEICHEN', colCall, doc.y + 4);
-  doc.text('NAME', colName, doc.y + 4);
-  doc.text('BEZ.', colBz, doc.y + 4);
-  doc.text('BUNDESLAND', colBl, doc.y + 4);
-  doc.text('RAPP.', colRap, doc.y + 4, { width: 35, align: 'right' });
-  doc.restore();
+  const hy = doc.y + 4;
+  textAt(doc, '#', colNum, hy);
+  textAt(doc, 'RUFZEICHEN', colCall, hy);
+  textAt(doc, 'NAME', colName, hy);
+  textAt(doc, 'BEZ.', colBz, hy);
+  textAt(doc, 'BUNDESLAND', colBl, hy);
+  textAt(doc, 'RAPP.', colRap, hy, { width: 35, align: 'right' });
   doc.y += 16;
 
   participants.forEach((p, i) => {
     ensureSpace(doc, 11);
+    const rowY = doc.y;
     if (i % 2 === 0) {
       doc.save();
-      doc.rect(m.left, doc.y, usable, 10).fill(GRAY_50);
+      doc.rect(m.left, rowY, usable, 10).fill(GRAY_50);
       doc.restore();
     }
-    doc.fontSize(6).fillColor(GRAY_500).text(String(i + 1), colNum, doc.y + 2);
-    doc.fontSize(6).fillColor('#111827').text(p.callsign, colCall, doc.y + 2);
-    doc.fontSize(6).fillColor('#374151').text(p.name || '', colName, doc.y + 2, { width: colBz - colName - 5 });
-    doc.fontSize(6).fillColor('#374151').text(p.bezirk_code || '', colBz, doc.y + 2);
-    doc.fontSize(6).fillColor('#374151').text(p.bundesland_name || '', colBl, doc.y + 2, { width: colRap - colBl - 5 });
-    doc.fontSize(6).fillColor('#111827').text(String(p.report_count), colRap, doc.y + 2, { width: 35, align: 'right' });
-    doc.y += 11;
+    const ty = rowY + 2;
+    doc.fontSize(6).fillColor(GRAY_500);
+    textAt(doc, String(i + 1), colNum, ty);
+    doc.fontSize(6).fillColor(TEXT_DARK);
+    textAt(doc, p.callsign, colCall, ty);
+    doc.fontSize(6).fillColor(TEXT_MED);
+    textAt(doc, p.name || '', colName, ty, { width: colBz - colName - 5 });
+    textAt(doc, p.bezirk_code || '', colBz, ty);
+    textAt(doc, p.bundesland_name || '', colBl, ty, { width: colRap - colBl - 5 });
+    doc.fontSize(6).fillColor(TEXT_DARK);
+    textAt(doc, String(p.report_count), colRap, ty, { width: 35, align: 'right' });
+    doc.y = rowY + 11;
   });
-  doc.moveDown(0.5);
+  doc.y += 4;
 }
 
 function renderFooter(doc: PDFKit.PDFDocument) {
   const m = doc.page.margins;
   const usable = doc.page.width - m.left - m.right;
   ensureSpace(doc, 25);
-  doc.save();
-  doc.moveTo(m.left, doc.y).lineTo(m.left + usable, doc.y).strokeColor(GRAY_200).lineWidth(0.5).stroke();
+  doc.strokeColor(GRAY_200).lineWidth(0.5).moveTo(m.left, doc.y).lineTo(m.left + usable, doc.y).stroke();
   doc.y += 8;
-  doc.fontSize(7).fillColor(GRAY_500).text('oeradio.at  ·  bosarsa.oeradio.at', m.left, doc.y, { width: usable, align: 'center' });
-  doc.restore();
+  doc.fontSize(7).fillColor(GRAY_500);
+  textAt(doc, 'oeradio.at  ·  bosarsa.oeradio.at', m.left, doc.y, { width: usable, align: 'center' });
 }
 
 // ── Public API ────────────────────────────────────────────
@@ -607,7 +595,6 @@ export function generateAggregatedPdf(
   renderPerRepeater(doc, stats.perRepeater);
   renderExerciseTable(doc, exercises);
 
-  // Visual section: map + charts
   if (stats.blStats.length > 0) {
     doc.addPage();
     renderAustriaMap(doc, stats.blStats);
@@ -622,7 +609,6 @@ export function generateAggregatedPdf(
     renderPieChart(doc, chartData.map(d => ({ label: d.label, value: d.reports })));
   }
 
-  // Tables
   if (stats.bezirkStats.length > 0) {
     doc.addPage();
     renderBezirkTable(doc, stats.bezirkStats, stats);
@@ -631,11 +617,10 @@ export function generateAggregatedPdf(
     renderBlTable(doc, stats.blStats, stats);
   }
 
-  // Participants
   doc.addPage();
   renderParticipants(doc, stats.participants);
-
   renderFooter(doc);
+
   doc.end();
   return doc;
 }
@@ -659,7 +644,6 @@ export function generateExercisePdf(
   renderSummaryCards(doc, stats);
   renderPerRepeater(doc, stats.perRepeater);
 
-  // Visual section
   if (stats.blStats.length > 0) {
     doc.addPage();
     renderAustriaMap(doc, stats.blStats);
@@ -674,7 +658,6 @@ export function generateExercisePdf(
     renderPieChart(doc, chartData.map(d => ({ label: d.label, value: d.reports })));
   }
 
-  // Tables
   if (stats.bezirkStats.length > 0) {
     doc.addPage();
     renderBezirkTable(doc, stats.bezirkStats, stats);
@@ -683,11 +666,10 @@ export function generateExercisePdf(
     renderBlTable(doc, stats.blStats, stats);
   }
 
-  // Participants
   doc.addPage();
   renderParticipants(doc, stats.participants);
-
   renderFooter(doc);
+
   doc.end();
   return doc;
 }
