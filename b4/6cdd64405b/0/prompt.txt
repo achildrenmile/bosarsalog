@@ -1,0 +1,62 @@
+Implement the following plan:
+
+# Issue #4: OP-Rufzeichen Echtzeit-Sync via WebSocket
+
+## Context
+Wenn ein User das OP-Rufzeichen bei einem Repeater ändert, sehen andere verbundene User die Änderung erst nach manuellem Reload. Das bestehende Pattern für Reports (emit → server broadcast → alle Clients updaten) soll auf OP-Callsigns angewendet werden.
+
+## Änderungen
+
+### 1. Server — `server/src/services/socket.ts`
+Neues Event `op_callsign_updated` (gleicher Pattern wie `report_updated` Zeile 43-49):
+```js
+socket.on('op_callsign_updated', (data) => {
+  // data: { exercise_id, repeater_id, operator_callsign }
+  validate exercise_id + broadcast to room
+});
+```
+
+### 2. LandMode — `client/src/components/LandMode.tsx`
+- Import `getSocket` from `../services/socket`
+- In `useEffect` (nach bezirke-Load): Socket-Listener `op_callsign_updated` → `setOpCallsigns` updaten
+- In `saveOpCallsign()` (Zeile 94-106): nach API-Call → `getSocket().emit('op_callsign_updated', { exercise_id: exerciseId, repeater_id, operator_callsign })`
+- Cleanup: `socket.off('op_callsign_updated')` im useEffect return
+
+### 3. BundMode — `client/src/components/BundMode.tsx`
+- Gleicher Pattern
+- Import `getSocket`
+- Listener → `setBlOpCallsigns` updaten (repeater_id → blCode via `blRepSelection` mappen)
+- Nach `saveOpCallsign()` (Zeile 65-81) → emit
+
+## Dateien
+| Datei | Aktion |
+|-------|--------|
+| `server/src/services/socket.ts` | Neues `op_callsign_updated` Event |
+| `client/src/components/LandMode.tsx` | Socket emit + listen |
+| `client/src/components/BundMode.tsx` | Socket emit + listen |
+
+## Verifikation
+1. `nix-shell -p nodejs --run "npm run build"` kompiliert sauber
+2. Zwei Browser-Tabs öffnen, gleiche Übung
+3. OP-Rufzeichen in Tab 1 ändern → Tab 2 zeigt es sofort
+4. Funktioniert in Frequenzen-Modus (LandMode) und OE-Link-Modus (BundMode)
+5. Deploy mit `./deploy-production.sh`
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+
+---
+
+deploy mit ./deploy-production.sh
+
+---
+
+close issue https://github.com/achildrenmile/bosarsalog/issues/5 document that multiple operators are done by listing oe1op1, oe2op2
+
+---
+
+https://github.com/achildrenmile/bosarsalog/issues/6
+
+---
+
+[Request interrupted by user for tool use]
