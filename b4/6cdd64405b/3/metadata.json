@@ -1,0 +1,34 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "b46cdd64405b",
+  "session_id": "013e9a46-7047-41cf-9e91-46c53d5aca1f",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-24T20:16:35.800474469Z",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "CHANGELOG-2026-02-24.md",
+    "client/src/pages/AggregatedReportsPage.tsx",
+    "client/src/pages/ReportsPage.tsx",
+    "server/src/index.ts",
+    "server/src/routes/pdf.ts",
+    "server/src/services/pdf.ts"
+  ],
+  "agent": "Claude Code",
+  "token_usage": {
+    "input_tokens": 65,
+    "cache_creation_tokens": 230530,
+    "cache_read_tokens": 5685171,
+    "output_tokens": 2268,
+    "api_call_count": 59
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-24T20:16:35.464418832Z",
+    "agent_lines": 925,
+    "human_added": 224,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 1149,
+    "agent_percentage": 80.5047867711053
+  }
+}

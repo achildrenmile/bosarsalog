@@ -1,0 +1,126 @@
+Implement the following plan:
+
+# Issue #8: Download Auswertung — Server-seitiges PDF
+
+## Context
+"Download Auswertung komplett" nutzt `html-to-image` (`toPng()`), das den gesamten DOM klont — inkl. SVG-Karte, Chart.js-Diagramme, große Tabellen. Bei umfangreichen Auswertungen crasht der Browser (500MB+ RAM, Main Thread blockiert). Lösung: PDF-Generierung auf dem Server mit PDFKit (pure JS, kein Chromium nötig, läuft auf Alpine).
+
+**Scope:** Nur die "Download Auswertung komplett"-Buttons auf beiden Seiten werden auf PDF umgestellt. Einzelne Chart-Downloads (Karte, Balken, Torte) bleiben als PNG via html-to-image.
+
+## Ansatz: PDFKit (pure JavaScript)
+
+- Kein Chromium/Puppeteer nötig → kein Dockerfile-Umbau
+- SVG-Pfade der Austria-Karte können direkt mit PDFKit gezeichnet werden
+- Bar-/Pie-Charts werden mit PDFKit-Zeichenprimitiven (Rechtecke/Kreissegmente) nachgebaut
+- Tabellen als strukturierter Text
+
+## Änderungen
+
+### 1. Dependency hinzufügen
+```
+cd server && npm install pdfkit @types/pdfkit
+```
+
+### 2. Neue Datei: `server/src/services/pdf.ts`
+
+Shared PDF-Generator mit Helper-Funktionen:
+
+- `renderHeader(doc, title, subtitle)` — BOS-ARSA Branding (dunkelblaue Leiste, Titel, Slogan)
+- `renderSummaryCards(doc, stats, exerciseCount?)` — Teilnehmer/Rapporte/Übungen Zahlen
+- `renderPerRepeater(doc, perRepeater)` — Repeater-Übersicht Grid
+- `renderExerciseTable(doc, exercises)` — Übungsliste (nur aggregiert)
+- `renderAustriaMap(doc, blStats)` — SVG-Pfade aus AustriaMap.tsx, Farben nach Teilnehmerzahl
+- `renderBarChart(doc, chartData)` — Balkendiagramm mit Rechtecken
+- `renderPieChart(doc, chartData)` — Tortendiagramm mit Kreissegmenten
+- `renderBezirkTable(doc, bezirkStats)` — Bezirk/BL Tabelle mit Hierarchie
+- `renderBlTable(doc, blStats)` — Bundesland-Tabelle (Fallback ohne Bezirke)
+- `renderParticipants(doc, participants)` — Teilnehmer-Liste
+- `renderFooter(doc)` — "oeradio.at · bosarsa.oeradio.at"
+
+Austria-Karte: SVG-Pfaddaten aus `AustriaMap.tsx` extrahieren und als Konstante in pdf.ts ablegen. PDFKit zeichnet die Pfade mit `doc.path(d).fill(color)`. Farblogik (Heatmap nach Teilnehmern) wird 1:1 übernommen.
+
+### 3. Neue Datei: `server/src/routes/pdf.ts`
+
+Zwei Endpunkte:
+
+**GET `/api/v1/pdf/reports?from=...&to=...&types=...`** — Aggregierte Auswertung
+- Nutzt gleiche DB-Queries wie `reports.ts:/stats`
+- Ruft PDF-Generator auf mit exercises + stats
+- Response: `application/pdf` mit Content-Disposition
+
+**GET `/api/v1/pdf/exercises/:id`** — Einzel-Übung Auswertung
+- Nutzt gleiche DB-Queries wie `exercises.ts:/:id/stats`
+- Ruft PDF-Generator auf mit exercise + stats
+- Response: `application/pdf` mit Content-Disposition
+
+### 4. Route registrieren: `server/src/index.ts`
+
+```ts
+import { pdfRouter } from './routes/pdf.js';
+app.use('/api/v1/pdf', authMiddleware, pdfRouter);
+```
+
+### 5. Client: `AggregatedReportsPage.tsx`
+
+- `downloadFullPage()` ersetzen: statt `toPng()` → `fetch('/api/v1/pdf/reports?from=...&to=...&types=...')` + Blob-Download
+- Dateiname: `BOS-ARSA_Auswertung_{from}_{to}.pdf`
+- `toPng`-Import kann bleiben (wird für einzelne Chart-Downloads weiter genutzt)
+
+### 6. Client: `ReportsPage.tsx`
+
+- `downloadFullPage()` ersetzen: statt `toPng()` → `fetch('/api/v1/pdf/exercises/${id}')` + Blob-Download
+- Dateiname: `BOS-ARSA_Auswertung_{date}.pdf`
+
+## PDF-Layout (A4 Querformat)
+
+```
+┌─────────────────────────────────────────────────┐
+│ ██ BOS-ARSA Log  ·  Im Sinne der Sicherheit    │  Header
+│    Auswertung 01.01.2026 – 31.03.2026          │
+├─────────────────────────────────────────────────┤
+│  [42 Teiln.]  [128 Rapp.]  [12 Übungen]  [Ø 3] │  Summary
+├─────────────────────────────────────────────────┤
+│  Schöckl 2m: 35  |  Lachtal: 28  |  OE-Link: 65│  Per-Repeater
+├─────────────────────────────────────────────────┤
+│  Übungsliste (Datum | Typ | Name | Teiln | Rap) │  Exercises
+├──────────────────────┬──────────────────────────┤
+│  [Austria Map SVG]   │  [Bar Chart]             │  Visuals
+│                      │  [Pie Chart]             │
+├──────────────────────┴──────────────────────────┤
+│  Bundesland/Bezirk | Teilnehmer | Rapporte      │  Table
+├─────────────────────────────────────────────────┤
+│  # | Rufzeichen | Name | Bezirk | BL | Rapp.   │  Participants
+├─────────────────────────────────────────────────┤
+│  oeradio.at · bosarsa.oeradio.at                │  Footer
+└─────────────────────────────────────────────────┘
+```
+
+## Dateien
+
+| Datei | Änderung |
+|-------|----------|
+| `server/package.json` | `pdfkit` + `@types/pdfkit` hinzufügen |
+| `server/src/services/pdf.ts` | **NEU** — PDF-Generator mit allen Render-Funktionen |
+| `server/src/routes/pdf.ts` | **NEU** — API-Endpunkte für PDF-Download |
+| `server/src/index.ts` | PDF-Route registrieren |
+| `client/src/pages/AggregatedReportsPage.tsx` | `downloadFullPage` → Server-PDF-Fetch |
+| `client/src/pages/ReportsPage.tsx` | `downloadFullPage` → Server-PDF-Fetch |
+
+## Verifikation
+1. `nix-shell -p nodejs --run "npm run build"` kompiliert sauber
+2. Aggregierte Auswertung: "Download Auswertung" → PDF wird sofort heruntergeladen, kein Browser-Freeze
+3. Einzel-Übung: "Download Auswertung" → PDF mit Übungsdaten
+4. Einzelne Chart-Downloads (Karte, Balken, Torte PNG) funktionieren weiterhin
+5. PDF enthält: Header, Summary, Karte, Charts, Tabellen, Teilnehmer, Footer
+6. Deploy mit `./deploy-production.sh`
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+
+---
+
+deploy mit ./deploy-production.sh
+
+---
+
+ja, commit, push und neu deployen

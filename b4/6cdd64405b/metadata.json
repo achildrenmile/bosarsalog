@@ -3,16 +3,21 @@
   "checkpoint_id": "b46cdd64405b",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 3,
+  "checkpoints_count": 5,
   "files_touched": [
     "CHANGELOG-2026-02-24.md",
     "client/src/components/BundMode.tsx",
     "client/src/components/LandMode.tsx",
+    "client/src/pages/AggregatedReportsPage.tsx",
     "client/src/pages/ExercisePage.tsx",
     "client/src/pages/ExerciseSetupPage.tsx",
+    "client/src/pages/ReportsPage.tsx",
     "client/src/services/api.ts",
     "server/src/db/schema.ts",
+    "server/src/index.ts",
     "server/src/routes/exercises.ts",
+    "server/src/routes/pdf.ts",
+    "server/src/services/pdf.ts",
     "server/src/services/socket.ts"
   ],
   "sessions": [
@@ -36,13 +41,20 @@
       "context": "/b4/6cdd64405b/2/context.md",
       "content_hash": "/b4/6cdd64405b/2/content_hash.txt",
       "prompt": "/b4/6cdd64405b/2/prompt.txt"
+    },
+    {
+      "metadata": "/b4/6cdd64405b/3/metadata.json",
+      "transcript": "/b4/6cdd64405b/3/full.jsonl",
+      "context": "/b4/6cdd64405b/3/context.md",
+      "content_hash": "/b4/6cdd64405b/3/content_hash.txt",
+      "prompt": "/b4/6cdd64405b/3/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 97,
-    "cache_creation_tokens": 241223,
-    "cache_read_tokens": 4563080,
-    "output_tokens": 11185,
-    "api_call_count": 71
+    "input_tokens": 162,
+    "cache_creation_tokens": 471753,
+    "cache_read_tokens": 10248251,
+    "output_tokens": 13453,
+    "api_call_count": 130
   }
 }
