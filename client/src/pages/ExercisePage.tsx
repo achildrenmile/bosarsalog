@@ -166,6 +166,7 @@ export default function ExercisePage() {
           repeaters={exercise.repeaters || []}
           reports={reports}
           simplexBezirke={!!exercise.simplex_bezirke}
+          simplexBlCodes={exercise.simplex_bl_codes || ''}
           onReportCreated={handleReportCreated}
           onReportUpdated={handleReportUpdated}
           onReportDeleted={handleReportDeleted}

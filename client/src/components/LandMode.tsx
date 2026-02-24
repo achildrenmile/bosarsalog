@@ -20,6 +20,7 @@ interface Props {
   repeaters: any[];
   reports: any[];
   simplexBezirke?: boolean;
+  simplexBlCodes?: string;
   onReportCreated: (report: any) => void;
   onReportUpdated: (report: any) => void;
   onReportDeleted: (reportId: number) => void;
@@ -35,7 +36,7 @@ interface EntryForm {
   bezirkCode: string;
 }
 
-export default function LandMode({ exerciseId, repeaters, reports, simplexBezirke, onReportCreated, onReportUpdated, onReportDeleted }: Props) {
+export default function LandMode({ exerciseId, repeaters, reports, simplexBezirke, simplexBlCodes, onReportCreated, onReportUpdated, onReportDeleted }: Props) {
   const [collapsedReps, setCollapsedReps] = useState<Set<number>>(new Set());
   const [opCallsigns, setOpCallsigns] = useState<Record<number, string>>({});
   const [bezirke, setBezirke] = useState<any[]>([]);
@@ -74,7 +75,7 @@ export default function LandMode({ exerciseId, repeaters, reports, simplexBezirk
     }
   }
 
-  const activeBlCodes = ['01', '02', '03', '04', '05', '06', '07', '08', '09'];
+  const activeBlCodes = simplexBlCodes ? simplexBlCodes.split(',').filter(Boolean) : ['01', '02', '03', '04', '05', '06', '07', '08', '09'];
 
   const sortedBlCodes = Object.keys(repeatersByBl).sort((a, b) => {
     if (a === '_other') return 1;

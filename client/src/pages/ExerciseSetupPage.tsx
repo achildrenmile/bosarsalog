@@ -339,11 +339,12 @@ export default function ExerciseSetupPage() {
               onChange={async (e) => {
                 const val = e.target.checked;
                 await withSave(async () => {
+                  const allCodes = val ? BUNDESLAENDER.map(b => b.code).join(',') : null;
                   await apiFetch(`/api/v1/exercises/${id}`, {
                     method: 'PATCH',
-                    body: JSON.stringify({ simplex_bezirke: val }),
+                    body: JSON.stringify({ simplex_bezirke: val, simplex_bl_codes: allCodes }),
                   });
-                  setExercise((prev: any) => prev ? { ...prev, simplex_bezirke: val ? 1 : 0 } : null);
+                  setExercise((prev: any) => prev ? { ...prev, simplex_bezirke: val ? 1 : 0, simplex_bl_codes: allCodes } : null);
                 });
               }}
               className="w-5 h-5 accent-red-600"
@@ -353,6 +354,42 @@ export default function ExerciseSetupPage() {
               <p className="text-xs text-gray-500">Simplex-Frequenzen nach Bundesland und Bezirk gruppieren</p>
             </div>
           </label>
+
+          {exercise.simplex_bezirke !== 0 && (
+            <div className="mt-3 pt-3 border-t border-gray-100">
+              <p className="text-xs text-gray-500 mb-2">Bundesländer für Simplex-Gruppierung:</p>
+              <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-1.5">
+                {BUNDESLAENDER.map(bl => {
+                  const currentCodes = exercise.simplex_bl_codes ? exercise.simplex_bl_codes.split(',') : BUNDESLAENDER.map(b => b.code);
+                  const isActive = currentCodes.includes(bl.code);
+                  return (
+                    <button
+                      key={bl.code}
+                      onClick={async () => {
+                        const codes = exercise.simplex_bl_codes ? exercise.simplex_bl_codes.split(',') : BUNDESLAENDER.map(b => b.code);
+                        const newCodes = isActive ? codes.filter((c: string) => c !== bl.code) : [...codes, bl.code];
+                        const val = newCodes.length > 0 ? newCodes.sort().join(',') : null;
+                        await withSave(async () => {
+                          await apiFetch(`/api/v1/exercises/${id}`, {
+                            method: 'PATCH',
+                            body: JSON.stringify({ simplex_bl_codes: val }),
+                          });
+                          setExercise((prev: any) => prev ? { ...prev, simplex_bl_codes: val } : null);
+                        });
+                      }}
+                      className={`flex flex-col items-center py-1.5 px-1 rounded border transition-colors text-xs ${
+                        isActive
+                          ? 'border-red-500 bg-red-50 text-[#1e3a5f] font-semibold'
+                          : 'border-gray-200 bg-gray-50 text-gray-400 hover:border-gray-300'
+                      }`}
+                    >
+                      <span>{bl.label}</span>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
       )}
 

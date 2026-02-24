@@ -27,7 +27,8 @@
   - **Schema-Migration:** Neue Spalte `simplex_bezirke INTEGER DEFAULT 0` in `exercises`-Tabelle (nicht-destruktiver ALTER TABLE ADD COLUMN).
   - **API:** GET/POST/PATCH Exercises-Routen unterstützen `simplex_bezirke`-Feld.
   - **LandMode-Gruppierung:** Wenn aktiviert, zeigen Simplex-Frequenzkarten Bundesland-Unterüberschriften mit Bezirk-Zeilen (BezirkRow) statt flacher Liste (FlatReportRow).
-  - Bezirke werden aus allen aktiven Bundesländern der Übung übernommen.
+  - Bezirke werden aus den gewählten Bundesländern übernommen.
+  - **BL-Auswahl konfigurierbar:** Unterhalb des Simplex-Bezirke-Toggles erscheint ein kompaktes Bundesländer-Grid. Admin kann pro Übung auswählen, welche BLs in der Simplex-Gruppierung angezeigt werden. Beim erstmaligen Aktivieren werden alle 9 BLs vorausgewählt. Schema: neue Spalte `simplex_bl_codes TEXT` (komma-separiert, NULL = alle).
   - Drag & Drop zwischen Bezirken funktioniert im gruppierten Modus.
   - Nicht zugeordnete Rapporte erscheinen im "Sonstige"-Bereich.
   - Toggle aus → Rapporte werden wieder flach angezeigt (Daten bleiben erhalten).
