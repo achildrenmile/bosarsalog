@@ -1,0 +1,48 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "b7a17e03d6e3",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "README.md",
+    "client/index.html",
+    "client/public/site.webmanifest",
+    "client/src/App.tsx",
+    "client/src/components/BundMode.tsx",
+    "client/src/components/CallsignInput.tsx",
+    "client/src/components/LandMode.tsx",
+    "client/src/components/Layout.tsx",
+    "client/src/constants/exerciseTypes.ts",
+    "client/src/pages/AggregatedReportsPage.tsx",
+    "client/src/pages/DashboardPage.tsx",
+    "client/src/pages/ExercisePage.tsx",
+    "client/src/pages/ExerciseSetupPage.tsx",
+    "client/src/pages/HilfePage.tsx",
+    "client/src/pages/LoginPage.tsx",
+    "client/src/pages/ReportsPage.tsx",
+    "docker-compose.yml",
+    "package.json",
+    "server/src/db/database.ts",
+    "server/src/db/schema.ts",
+    "server/src/db/seed.ts",
+    "server/src/routes/exercises.ts",
+    "server/src/routes/reports.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/b7/a17e03d6e3/0/metadata.json",
+      "transcript": "/b7/a17e03d6e3/0/full.jsonl",
+      "context": "/b7/a17e03d6e3/0/context.md",
+      "content_hash": "/b7/a17e03d6e3/0/content_hash.txt",
+      "prompt": "/b7/a17e03d6e3/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 86,
+    "cache_creation_tokens": 279393,
+    "cache_read_tokens": 7385032,
+    "output_tokens": 3413,
+    "api_call_count": 66
+  }
+}
