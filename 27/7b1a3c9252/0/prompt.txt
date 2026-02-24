@@ -1,0 +1,132 @@
+Implement the following plan:
+
+# Issue #2: Simplex Bezirk Grouping Toggle
+
+## Context
+GitHub Issue #2 — "Option Bezirkskenner in Simplex Frequenzen anzuzeigen". Currently, simplex frequencies in LandMode render as flat lists (FlatReportRow) without Bezirk grouping, because simplex repeaters have `bundesland_code=null` so `repBezirke` is always empty. The user wants an optional per-exercise toggle to group simplex frequency reports by Bundesland → Bezirk, matching how repeater reports are structured. The toggle must be off by default since "nicht überall braucht man bundesland bezirk."
+
+## Changes
+
+### 1. Schema Migration
+**`server/src/db/schema.ts`** — after line 211 (exercise_type migration)
+
+Add migration check + ALTER TABLE:
+```sql
+ALTER TABLE exercises ADD COLUMN simplex_bezirke INTEGER DEFAULT 0
+```
+Pattern: same as `oe_link_enabled` migration (line 202-204).
+
+### 2. API: Exercises CRUD
+**`server/src/routes/exercises.ts`**
+
+- **GET /exercises** (line 12): Add `e.simplex_bezirke` to SELECT
+- **POST /exercises** (line 22, 29): Accept `simplex_bezirke` in body, include in INSERT
+- **PATCH /exercises/:id** (line 80): Add `simplex_bezirke` to dynamic updates (same pattern as `oe_link_enabled` at line 85)
+
+### 3. ExerciseSetupPage — Toggle
+**`client/src/pages/ExerciseSetupPage.tsx`**
+
+Add admin-only checkbox toggle after the OE-Link toggle (line 330), copying the exact OE-Link pattern (lines 293-330):
+- Checkbox with label "Simplex Bezirke aktivieren"
+- Description: "Simplex-Frequenzen nach Bundesland und Bezirk gruppieren"
+- PATCH `simplex_bezirke: true/false` on toggle
+- Update local exercise state
+
+### 4. ExercisePage — Pass Prop
+**`client/src/pages/ExercisePage.tsx`**
+
+Pass `simplexBezirke` boolean prop to LandMode (line 164-171):
+```tsx
+<LandMode
+  exerciseId={id!}
+  repeaters={exercise.repeaters || []}
+  reports={reports}
+  simplexBezirke={!!exercise.simplex_bezirke}
+  onReportCreated={handleReportCreated}
+  onReportUpdated={handleReportUpdated}
+  onReportDeleted={handleReportDeleted}
+/>
+```
+
+### 5. LandMode — Conditional Grouping
+**`client/src/components/LandMode.tsx`**
+
+- Add `simplexBezirke` to Props interface (line 18-25)
+- Derive `activeBlCodes` from `Object.keys(repeatersByBl)` — these are the Bundesländer that have active repeaters
+- In simplex rendering section (lines 340-349): when `simplexBezirke` is true, instead of just listing simplex repeaters flat, group them by active Bundesland with BL sub-headers
+- In `renderRepeaterCard` (line 209): when `rep.type === 'simplex'` AND `simplexBezirke` is true:
+  - Set `repBezirke` to all bezirke from all active Bundesländer (not just `rep.bundesland_code`)
+  - This makes the card use BezirkRow components instead of FlatReportRow
+  - Group bezirke by BL with sub-headers for each BL
+
+Implementation detail for `renderRepeaterCard`:
+```tsx
+// Current: repBezirke is empty for simplex → FlatReportRow
+const repBezirke = bezirke.filter(b => b.bundesland_code === rep.bundesland_code);
+
+// New: when simplex_bezirke enabled AND this is a simplex repeater,
+// use bezirke from ALL active Bundesländer
+const isSimplexGrouped = simplexBezirke && rep.type === 'simplex';
+const repBezirke = isSimplexGrouped
+  ? bezirke.filter(b => activeBlCodes.includes(b.bundesland_code))
+  : bezirke.filter(b => b.bundesland_code === rep.bundesland_code);
+```
+
+When `isSimplexGrouped`, render BL sub-headers within the card:
+- Group `repBezirke` by `bundesland_code`
+- For each BL group, show a sub-header with BL name, then BezirkRow for each bezirk
+- Reports assigned to bezirke in that BL appear in their respective BezirkRow
+- Unassigned reports appear in "Sonstige" section at the bottom
+
+## Files
+| File | Action |
+|------|--------|
+| `server/src/db/schema.ts` | Migration: add `simplex_bezirke` column |
+| `server/src/routes/exercises.ts` | GET/POST/PATCH: handle `simplex_bezirke` |
+| `client/src/pages/ExerciseSetupPage.tsx` | Admin-only checkbox toggle |
+| `client/src/pages/ExercisePage.tsx` | Pass `simplexBezirke` prop to LandMode |
+| `client/src/components/LandMode.tsx` | Conditional BL→Bezirk grouping for simplex |
+
+## Verification
+1. `nix-shell -p nodejs --run "npm run build"` compiles clean
+2. Create new exercise → toggle is OFF by default → simplex shows flat list
+3. Enable toggle → simplex cards show BL sub-headers + Bezirk rows
+4. Reports can be entered per Bezirk in simplex when grouped
+5. Drag & drop between Bezirke works in simplex grouped mode
+6. Toggle OFF → reports revert to flat display (data preserved)
+7. Deploy with `./deploy-production.sh`
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+
+---
+
+if i deploy. is it ensured that the data consistency of the other data is given and nothing lost!
+
+---
+
+deploy
+
+---
+
+commit this
+
+---
+
+https://bosarsalog.oeradio.at/exercises/41f97cd2-fede-4a9d-b498-f142bdec9b64 warum kommt hier schöckl 70 for in frequenzen (landmode)... are there entries for 2m and 70cm schöckl existing? if only 70 entries existing then they should be not visible here. also lachtal schould not be visible. the execercise landmode had configured 2m goldeck, 2m gerlitzen and 145.525
+
+---
+
+but this is wrong. schöckl 70 is linked => it is a oe link repeater.
+
+---
+
+1.
+
+---
+
+for issue nr 2... where can i configure the bundesland, bezirk
+
+---
+
+kann ich das bei einer bestehenden nicht über einrichten ändern?
