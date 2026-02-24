@@ -86,31 +86,22 @@ export default function ReportsPage() {
   };
 
   const downloadFullPage = async () => {
-    if (!pageRef.current || !exercise) return;
+    if (!exercise) return;
     setExporting(true);
-    const header = createExportHeader();
-    const footer = createExportFooter();
-    // Inject header/footer into actual DOM
-    pageRef.current.style.padding = '24px';
-    pageRef.current.insertBefore(header, pageRef.current.firstChild);
-    pageRef.current.appendChild(footer);
     try {
-      const url = await toPng(pageRef.current, {
-        backgroundColor: '#f3f4f6',
-        pixelRatio: 1,
-        filter: (node) => {
-          if (node instanceof HTMLElement && node.dataset.noExport === 'true') return false;
-          return true;
-        },
+      const token = localStorage.getItem('token');
+      const res = await fetch(`/api/v1/pdf/exercises/${id}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
+      if (!res.ok) throw new Error();
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.download = `BOS-ARSA_Auswertung_${exercise.date}.png`;
       link.href = url;
+      link.download = `BOS-ARSA_Auswertung_${exercise.date}.pdf`;
       link.click();
+      URL.revokeObjectURL(url);
     } catch {} finally {
-      header.remove();
-      footer.remove();
-      if (pageRef.current) pageRef.current.style.padding = '';
       setExporting(false);
     }
   };
@@ -449,7 +440,7 @@ export default function ReportsPage() {
                 disabled={exporting}
                 className="bg-[#1e3a5f] hover:bg-[#2a4a7f] text-white px-4 py-2 rounded text-sm font-medium disabled:opacity-50"
               >
-                {exporting ? 'Exportieren...' : 'PNG — Download Auswertung'}
+                {exporting ? 'Exportieren...' : 'PDF — Download Auswertung'}
               </button>
               {exercise.oe_link_enabled !== 0 && (
                 <a

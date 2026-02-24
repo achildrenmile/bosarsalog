@@ -14,6 +14,7 @@ import { repeatersRouter } from './routes/repeaters.js';
 import { referenceRouter } from './routes/reference.js';
 import { reportsRouter } from './routes/reports.js';
 import { exportRouter } from './routes/export.js';
+import { pdfRouter } from './routes/pdf.js';
 import { setupSocket } from './services/socket.js';
 import { authMiddleware } from './middleware/auth.js';
 
@@ -57,6 +58,7 @@ app.use('/api/v1/repeaters', authMiddleware, repeatersRouter);
 app.use('/api/v1/reference', authMiddleware, referenceRouter);
 app.use('/api/v1/reports', authMiddleware, reportsRouter);
 app.use('/api/v1/export', authMiddleware, exportRouter);
+app.use('/api/v1/pdf', authMiddleware, pdfRouter);
 
 // Overview endpoint
 app.get('/api/v1/overview', authMiddleware, (_req, res) => {

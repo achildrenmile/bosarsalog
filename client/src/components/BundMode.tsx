@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, type FormEvent } from 'react';
 import { apiFetch, getOrCreateOperator } from '../services/api';
+import { getSocket } from '../services/socket';
 import CallsignInput, { type CallsignInputRef } from './CallsignInput';
 
 interface Props {
@@ -60,6 +61,22 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
       setBlRepSelection(defaults);
       setBlOpCallsigns(ops);
     }).catch(() => {});
+
+    const socket = getSocket();
+    const handleOpCallsignUpdated = (data: { exercise_id: string; repeater_id: number; operator_callsign: string }) => {
+      if (data.exercise_id !== exerciseId) return;
+      // Map repeater_id back to blCode via current blRepSelection
+      setBlRepSelection(sel => {
+        for (const [blCode, repId] of Object.entries(sel)) {
+          if (repId === data.repeater_id) {
+            setBlOpCallsigns(prev => ({ ...prev, [blCode]: data.operator_callsign || '' }));
+          }
+        }
+        return sel;
+      });
+    };
+    socket.on('op_callsign_updated', handleOpCallsignUpdated);
+    return () => { socket.off('op_callsign_updated', handleOpCallsignUpdated); };
   }, [exerciseId]);
 
   const saveOpCallsign = async (blCode: string, val: string) => {
@@ -78,6 +95,7 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
         body: JSON.stringify({ operator_callsign: val || null }),
       });
     }
+    getSocket().emit('op_callsign_updated', { exercise_id: exerciseId, repeater_id: repId, operator_callsign: val });
   };
 
   const addRepeater = async (blCode: string) => {
@@ -144,15 +162,13 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
         });
         onReportCreated(report);
       } catch (err: any) {
-        if (err.message?.includes('existiert')) {
-          const existing = reports.find(r => r.operator_id === operator.id && r.repeater_id === repeaterId);
-          if (existing) {
-            const updated = await apiFetch(`/api/v1/exercises/${exerciseId}/reports/${existing.id}`, {
-              method: 'PATCH',
-              body: JSON.stringify({ ...parsed, notes: form.notes || null, bezirk_code: (bezirkCode && bezirkCode !== '??') ? bezirkCode : null }),
-            });
-            onReportUpdated(updated);
-          }
+        if (err.message?.includes('existiert') && err.data?.existing_report) {
+          const existing = err.data.existing_report;
+          const updated = await apiFetch(`/api/v1/exercises/${exerciseId}/reports/${existing.id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ ...parsed, notes: form.notes || null, bezirk_code: (bezirkCode && bezirkCode !== '??') ? bezirkCode : null }),
+          });
+          onReportUpdated(updated);
         }
       }
     } catch {

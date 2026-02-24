@@ -56,6 +56,11 @@ export function setupSocket(io: Server): void {
       });
     });
 
+    socket.on('op_callsign_updated', (data) => {
+      if (typeof data?.exercise_id !== 'string' || !UUID_RE.test(data.exercise_id)) return;
+      socket.to(`exercise:${data.exercise_id}`).emit('op_callsign_updated', data);
+    });
+
     socket.on('attendance_updated', (data) => {
       if (typeof data?.exercise_id !== 'string' || !UUID_RE.test(data.exercise_id)) return;
       socket.to(`exercise:${data.exercise_id}`).emit('attendance_updated', {

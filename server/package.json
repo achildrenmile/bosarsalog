@@ -9,6 +9,7 @@
     "start": "node dist/index.js"
   },
   "dependencies": {
+    "@types/pdfkit": "^0.17.5",
     "bcryptjs": "^2.4.3",
     "better-sqlite3": "^11.7.0",
     "cors": "^2.8.5",
@@ -16,6 +17,7 @@
     "express-rate-limit": "^8.2.1",
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.2",
+    "pdfkit": "^0.17.2",
     "socket.io": "^4.8.1"
   },
   "devDependencies": {

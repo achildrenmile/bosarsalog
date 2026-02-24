@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, type FormEvent } from 'react';
 import { apiFetch, getOrCreateOperator } from '../services/api';
+import { getSocket } from '../services/socket';
 import CallsignInput, { type CallsignInputRef } from './CallsignInput';
 
 const BUNDESLAND_NAMES: Record<string, string> = {
@@ -59,6 +60,14 @@ export default function LandMode({ exerciseId, repeaters, reports, simplexBezirk
       }
       setOpCallsigns(ops);
     }).catch(() => {});
+
+    const socket = getSocket();
+    const handleOpCallsignUpdated = (data: { exercise_id: string; repeater_id: number; operator_callsign: string }) => {
+      if (data.exercise_id !== exerciseId) return;
+      setOpCallsigns(prev => ({ ...prev, [data.repeater_id]: data.operator_callsign || '' }));
+    };
+    socket.on('op_callsign_updated', handleOpCallsignUpdated);
+    return () => { socket.off('op_callsign_updated', handleOpCallsignUpdated); };
   }, [exerciseId]);
 
   // Group repeaters by Bundesland — exclude linked repeaters (those belong to BundMode)
@@ -103,6 +112,7 @@ export default function LandMode({ exerciseId, repeaters, reports, simplexBezirk
         body: JSON.stringify({ operator_callsign: val || null }),
       });
     }
+    getSocket().emit('op_callsign_updated', { exercise_id: exerciseId, repeater_id: repeaterId, operator_callsign: val });
   };
 
   const parseRapport = (raw: string) => {
@@ -135,15 +145,13 @@ export default function LandMode({ exerciseId, repeaters, reports, simplexBezirk
         });
         onReportCreated(report);
       } catch (err: any) {
-        if (err.message?.includes('existiert')) {
-          const existing = reports.find(r => r.operator_id === operator.id && r.repeater_id === repeaterId);
-          if (existing) {
-            const updated = await apiFetch(`/api/v1/exercises/${exerciseId}/reports/${existing.id}`, {
-              method: 'PATCH',
-              body: JSON.stringify({ ...parsed, notes: form.notes || null }),
-            });
-            onReportUpdated(updated);
-          }
+        if (err.message?.includes('existiert') && err.data?.existing_report) {
+          const existing = err.data.existing_report;
+          const updated = await apiFetch(`/api/v1/exercises/${exerciseId}/reports/${existing.id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({ ...parsed, notes: form.notes || null }),
+          });
+          onReportUpdated(updated);
         }
       }
     } catch {}

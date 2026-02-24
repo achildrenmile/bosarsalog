@@ -169,30 +169,22 @@ export default function AggregatedReportsPage() {
   };
 
   const downloadFullPage = async () => {
-    if (!pageRef.current) return;
     setExporting(true);
-    const header = createExportHeader();
-    const footer = createExportFooter();
-    pageRef.current.style.padding = '24px';
-    pageRef.current.insertBefore(header, pageRef.current.firstChild);
-    pageRef.current.appendChild(footer);
     try {
-      const url = await toPng(pageRef.current, {
-        backgroundColor: '#f3f4f6',
-        pixelRatio: 1,
-        filter: (node) => {
-          if (node instanceof HTMLElement && node.dataset.noExport === 'true') return false;
-          return true;
-        },
+      const token = localStorage.getItem('token');
+      const typesParam = selectedTypes.size > 0 ? `&types=${Array.from(selectedTypes).map(encodeURIComponent).join(',')}` : '';
+      const res = await fetch(`/api/v1/pdf/reports?from=${from}&to=${to}${typesParam}`, {
+        headers: token ? { Authorization: `Bearer ${token}` } : {},
       });
+      if (!res.ok) throw new Error();
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.download = `BOS-ARSA_Auswertung_${from}_${to}.png`;
       link.href = url;
+      link.download = `BOS-ARSA_Auswertung_${from}_${to}.pdf`;
       link.click();
+      URL.revokeObjectURL(url);
     } catch {} finally {
-      header.remove();
-      footer.remove();
-      if (pageRef.current) pageRef.current.style.padding = '';
       setExporting(false);
     }
   };

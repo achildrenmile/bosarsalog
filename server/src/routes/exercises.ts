@@ -279,7 +279,17 @@ exercisesRouter.post('/:id/reports', (req, res) => {
     res.status(201).json(report);
   } catch (e: any) {
     if (e.message?.includes('UNIQUE')) {
-      res.status(409).json({ error: 'Rapport für diesen Operator auf diesem Umsetzer existiert bereits' });
+      const existing = db.prepare(`
+        SELECT sr.*, o.callsign, o.name as operator_name, sr.bezirk_code, o.bundesland_code,
+          r.short_name as repeater_name, r.bundesland_code as repeater_bundesland_code, r.is_linked as repeater_is_linked,
+          ep.abbreviation as einstiegspunkt_abbr, ep.site_name as einstiegspunkt_name
+        FROM signal_reports sr
+        JOIN operators o ON o.id = sr.operator_id
+        JOIN repeaters r ON r.id = sr.repeater_id
+        LEFT JOIN einstiegspunkte ep ON ep.id = sr.einstiegspunkt_id
+        WHERE sr.exercise_id = ? AND sr.operator_id = ? AND sr.repeater_id = ?
+      `).get(req.params.id, operator_id, repeater_id);
+      res.status(409).json({ error: 'Rapport für diesen Operator auf diesem Umsetzer existiert bereits', existing_report: existing });
     } else {
       throw e;
     }

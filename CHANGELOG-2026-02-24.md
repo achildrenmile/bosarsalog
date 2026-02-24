@@ -34,6 +34,16 @@
   - Toggle aus → Rapporte werden wieder flach angezeigt (Daten bleiben erhalten).
   - **Geänderte Dateien:** `schema.ts`, `exercises.ts`, `ExerciseSetupPage.tsx`, `ExercisePage.tsx`, `LandMode.tsx`
 
+### #4 — Eingabe vom OP Rufzeichen wird nicht in Echtzeit übernommen
+- **Issue:** https://github.com/achildrenmile/bosarsalog/issues/4
+- **Status:** Erledigt und deployed
+- **Umsetzung:**
+  - **Neues WebSocket-Event `op_callsign_updated`:** Server empfängt das Event und broadcastet es an alle anderen Clients im selben Exercise-Room.
+  - **LandMode (Frequenzen-Modus):** Nach dem Speichern eines OP-Rufzeichens wird `op_callsign_updated` emittiert. Eingehende Events aktualisieren `opCallsigns`-State sofort.
+  - **BundMode (OE-Link-Modus):** Gleicher Pattern — nach API-Call wird emittiert. Eingehende Events mappen `repeater_id` zurück auf `blCode` via `blRepSelection` und aktualisieren `blOpCallsigns`.
+  - Cleanup: Socket-Listener werden beim Unmount/Re-Mount korrekt entfernt.
+  - **Geänderte Dateien:** `socket.ts` (Server), `LandMode.tsx`, `BundMode.tsx`
+
 ---
 
 ## Offene Issues
@@ -42,14 +52,27 @@
 - **Issue:** https://github.com/achildrenmile/bosarsalog/issues/3
 - Klärungsbedarf: benutzerdefinierte Repeater können bereits über Einrichtung hinzugefügt werden. Zu klären, ob weitere Funktionalität gewünscht.
 
-### #4 — Eingabe vom OP Rufzeichen wird nicht in Echtzeit übernommen
-- **Issue:** https://github.com/achildrenmile/bosarsalog/issues/4
-- OP-Rufzeichen-Änderungen werden erst nach Blur/Fokusverlust gespeichert, nicht in Echtzeit via WebSocket an andere Benutzer übertragen.
-
 ### #5 — Eventuell mehrere OPs bei Simplex
 - **Issue:** https://github.com/achildrenmile/bosarsalog/issues/5
-- Aktuell ein OP-Rufzeichen pro Repeater/Frequenz. Feature-Request für mehrere OPs bei Simplex.
+- **Status:** Geschlossen — bereits möglich
+- Mehrere OPs können kommagetrennt im OP-Feld eingetragen werden, z.B. `OE1OP1, OE2OP2`. Das Feld ist ein Freitext-Input ohne Beschränkung auf ein einzelnes Rufzeichen.
+
+### #8 — Download Auswertung komplett — Server-seitiges PDF
+- **Issue:** https://github.com/achildrenmile/bosarsalog/issues/8
+- **Status:** Erledigt und deployed
+- **Problem:** "Download Auswertung komplett" nutzte `html-to-image` (`toPng()`), das den gesamten DOM klonte — inkl. SVG-Karte, Chart.js-Diagramme, große Tabellen. Bei umfangreichen Auswertungen crashte der Browser (500MB+ RAM, Main Thread blockiert).
+- **Lösung:** PDF-Generierung auf dem Server mit PDFKit (pure JS, kein Chromium nötig).
+- **Umsetzung:**
+  - **Neue Datei `server/src/services/pdf.ts`:** PDF-Generator mit Render-Funktionen: Header (Navy-Leiste mit BOS-ARSA Branding), Summary-Cards, Per-Repeater-Grid, Übungstabelle, Austria-Karte (SVG-Pfade direkt via PDFKit gezeichnet mit Heatmap-Farben), Balkendiagramm (Rechtecke), Tortendiagramm (Kreissegmente), Bezirk/BL-Tabelle, Teilnehmer-Liste, Footer.
+  - **Neue Datei `server/src/routes/pdf.ts`:** Zwei Endpunkte: `GET /api/v1/pdf/reports?from=...&to=...&types=...` (aggregiert) und `GET /api/v1/pdf/exercises/:id` (Einzel-Übung).
+  - **Client:** `downloadFullPage()` in `AggregatedReportsPage.tsx` und `ReportsPage.tsx` ruft jetzt den Server-PDF-Endpunkt auf statt `toPng()`. Dateiname: `.pdf` statt `.png`.
+  - Einzelne Chart-Downloads (Karte, Balken, Torte) bleiben als PNG via `html-to-image` — **kein Funktionsverlust**.
+  - PDF: A4 Querformat, automatische Seitenumbrüche.
+- **Geänderte Dateien:** `server/src/services/pdf.ts` (NEU), `server/src/routes/pdf.ts` (NEU), `server/src/index.ts`, `server/package.json`, `client/src/pages/AggregatedReportsPage.tsx`, `client/src/pages/ReportsPage.tsx`
 
 ### #6 — Rufzeichen doppelt eingeben führt zu Problemen
 - **Issue:** https://github.com/achildrenmile/bosarsalog/issues/6
-- Doppelte Rufzeichen-Eingabe verursacht Anzeige- und Löschprobleme. Reproduzierbar bei OE9-Rufzeichen.
+- **Status:** Erledigt
+- **Problem:** Wenn ein Rufzeichen doppelt eingegeben wird (gleicher Operator + gleicher Repeater), greift die UNIQUE-Constraint der DB und der Server gibt 409 zurück. Der Client versuchte den existierenden Report per `reports.find()` im lokalen State zu finden, um ihn zu PATCHen. Bei veraltetem State passierte **gar nichts** — kein Feedback, kein Update.
+- **Fix:** Server liefert bei 409 den existierenden Report als `existing_report` im Response-Body mit. Client nutzt diesen direkt statt im lokalen State zu suchen. `apiFetch` hängt den vollen Response-Body als `error.data` am Error-Objekt an.
+- **Geänderte Dateien:** `exercises.ts` (Server), `api.ts`, `LandMode.tsx`, `BundMode.tsx`
