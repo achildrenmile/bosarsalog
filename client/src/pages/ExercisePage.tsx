@@ -165,6 +165,7 @@ export default function ExercisePage() {
           exerciseId={id!}
           repeaters={exercise.repeaters || []}
           reports={reports}
+          simplexBezirke={!!exercise.simplex_bezirke}
           onReportCreated={handleReportCreated}
           onReportUpdated={handleReportUpdated}
           onReportDeleted={handleReportDeleted}

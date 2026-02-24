@@ -19,6 +19,7 @@ interface Props {
   exerciseId: string;
   repeaters: any[];
   reports: any[];
+  simplexBezirke?: boolean;
   onReportCreated: (report: any) => void;
   onReportUpdated: (report: any) => void;
   onReportDeleted: (reportId: number) => void;
@@ -34,7 +35,7 @@ interface EntryForm {
   bezirkCode: string;
 }
 
-export default function LandMode({ exerciseId, repeaters, reports, onReportCreated, onReportUpdated, onReportDeleted }: Props) {
+export default function LandMode({ exerciseId, repeaters, reports, simplexBezirke, onReportCreated, onReportUpdated, onReportDeleted }: Props) {
   const [collapsedReps, setCollapsedReps] = useState<Set<number>>(new Set());
   const [opCallsigns, setOpCallsigns] = useState<Record<number, string>>({});
   const [bezirke, setBezirke] = useState<any[]>([]);
@@ -72,6 +73,8 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
       repeatersByBl[blCode].push(r);
     }
   }
+
+  const activeBlCodes = Object.keys(repeatersByBl).filter(c => c !== '_other');
 
   const sortedBlCodes = Object.keys(repeatersByBl).sort((a, b) => {
     if (a === '_other') return 1;
@@ -210,7 +213,19 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
     const repReports = reports.filter(r => r.repeater_id === rep.repeater_id && !r.is_op_marker);
     const reportCount = repReports.filter(r => r.readability).length;
     const isCollapsed = collapsedReps.has(rep.repeater_id);
-    const repBezirke = bezirke.filter(b => b.bundesland_code === rep.bundesland_code);
+    const isSimplexGrouped = simplexBezirke && rep.type === 'simplex';
+    const repBezirke = isSimplexGrouped
+      ? bezirke.filter(b => activeBlCodes.includes(b.bundesland_code))
+      : bezirke.filter(b => b.bundesland_code === rep.bundesland_code);
+
+    // Group bezirke by BL for simplex grouped rendering
+    const bezirkeByBl: Record<string, any[]> = {};
+    if (isSimplexGrouped) {
+      for (const bz of repBezirke) {
+        if (!bezirkeByBl[bz.bundesland_code]) bezirkeByBl[bz.bundesland_code] = [];
+        bezirkeByBl[bz.bundesland_code].push(bz);
+      }
+    }
 
     return (
       <div key={rep.repeater_id} className="bg-white rounded-lg shadow-sm">
@@ -249,55 +264,125 @@ export default function LandMode({ exerciseId, repeaters, reports, onReportCreat
           <div className="divide-y divide-gray-100">
             {repBezirke.length > 0 ? (
               <>
-                {repBezirke.map(bz => {
-                  const bzReports = repReports.filter(r => r.bezirk_code === bz.code);
-                  return (
-                    <BezirkRow
-                      key={bz.code}
-                      bezirk={bz}
-                      reports={bzReports}
-                      repeaterId={rep.repeater_id}
-                      availableBezirke={repBezirke}
-                      onSubmit={(form) => handleBezirkSubmit(bz.code, rep.repeater_id, form)}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                      onMoveToBezirk={handleMoveToBezirk}
-                      editingId={editingId}
-                      editForm={editForm}
-                      onEditChange={setEditForm}
-                      onEditSave={handleUpdate}
-                      onEditCancel={() => setEditingId(null)}
-                      dragReportId={dragReportId}
-                      onDragStart={setDragReportId}
-                      onDragEnd={() => setDragReportId(null)}
-                    />
-                  );
-                })}
-                {/* Sonstige — reports without matching bezirk + entry form */}
-                {(() => {
-                  const bzCodes = new Set(repBezirke.map(b => b.code));
-                  const unassigned = repReports.filter(r => !r.bezirk_code || !bzCodes.has(r.bezirk_code));
-                  return (
-                    <BezirkRow
-                      bezirk={{ code: '??', name: 'Sonstige', is_capital: false }}
-                      reports={unassigned}
-                      repeaterId={rep.repeater_id}
-                      availableBezirke={repBezirke}
-                      onSubmit={(form) => handleBezirkSubmit('??', rep.repeater_id, form)}
-                      onEdit={handleEdit}
-                      onDelete={handleDelete}
-                      onMoveToBezirk={handleMoveToBezirk}
-                      editingId={editingId}
-                      editForm={editForm}
-                      onEditChange={setEditForm}
-                      onEditSave={handleUpdate}
-                      onEditCancel={() => setEditingId(null)}
-                      dragReportId={dragReportId}
-                      onDragStart={setDragReportId}
-                      onDragEnd={() => setDragReportId(null)}
-                    />
-                  );
-                })()}
+                {isSimplexGrouped ? (
+                  /* Simplex grouped by BL → Bezirk */
+                  <>
+                    {activeBlCodes.sort().map(blCode => {
+                      const blBezirke = bezirkeByBl[blCode] || [];
+                      if (blBezirke.length === 0) return null;
+                      const blLabel = BUNDESLAND_NAMES[blCode] || blCode;
+                      return (
+                        <div key={blCode}>
+                          <div className="bg-gray-100 px-2 sm:px-3 py-1">
+                            <span className="text-xs font-semibold text-gray-600 uppercase tracking-wide">{blLabel}</span>
+                          </div>
+                          {blBezirke.map(bz => {
+                            const bzReports = repReports.filter(r => r.bezirk_code === bz.code);
+                            return (
+                              <BezirkRow
+                                key={bz.code}
+                                bezirk={bz}
+                                reports={bzReports}
+                                repeaterId={rep.repeater_id}
+                                availableBezirke={repBezirke}
+                                onSubmit={(form) => handleBezirkSubmit(bz.code, rep.repeater_id, form)}
+                                onEdit={handleEdit}
+                                onDelete={handleDelete}
+                                onMoveToBezirk={handleMoveToBezirk}
+                                editingId={editingId}
+                                editForm={editForm}
+                                onEditChange={setEditForm}
+                                onEditSave={handleUpdate}
+                                onEditCancel={() => setEditingId(null)}
+                                dragReportId={dragReportId}
+                                onDragStart={setDragReportId}
+                                onDragEnd={() => setDragReportId(null)}
+                              />
+                            );
+                          })}
+                        </div>
+                      );
+                    })}
+                    {/* Sonstige — reports without matching bezirk */}
+                    {(() => {
+                      const bzCodes = new Set(repBezirke.map(b => b.code));
+                      const unassigned = repReports.filter(r => !r.bezirk_code || !bzCodes.has(r.bezirk_code));
+                      return (
+                        <BezirkRow
+                          bezirk={{ code: '??', name: 'Sonstige', is_capital: false }}
+                          reports={unassigned}
+                          repeaterId={rep.repeater_id}
+                          availableBezirke={repBezirke}
+                          onSubmit={(form) => handleBezirkSubmit('??', rep.repeater_id, form)}
+                          onEdit={handleEdit}
+                          onDelete={handleDelete}
+                          onMoveToBezirk={handleMoveToBezirk}
+                          editingId={editingId}
+                          editForm={editForm}
+                          onEditChange={setEditForm}
+                          onEditSave={handleUpdate}
+                          onEditCancel={() => setEditingId(null)}
+                          dragReportId={dragReportId}
+                          onDragStart={setDragReportId}
+                          onDragEnd={() => setDragReportId(null)}
+                        />
+                      );
+                    })()}
+                  </>
+                ) : (
+                  /* Normal repeater with bezirke */
+                  <>
+                    {repBezirke.map(bz => {
+                      const bzReports = repReports.filter(r => r.bezirk_code === bz.code);
+                      return (
+                        <BezirkRow
+                          key={bz.code}
+                          bezirk={bz}
+                          reports={bzReports}
+                          repeaterId={rep.repeater_id}
+                          availableBezirke={repBezirke}
+                          onSubmit={(form) => handleBezirkSubmit(bz.code, rep.repeater_id, form)}
+                          onEdit={handleEdit}
+                          onDelete={handleDelete}
+                          onMoveToBezirk={handleMoveToBezirk}
+                          editingId={editingId}
+                          editForm={editForm}
+                          onEditChange={setEditForm}
+                          onEditSave={handleUpdate}
+                          onEditCancel={() => setEditingId(null)}
+                          dragReportId={dragReportId}
+                          onDragStart={setDragReportId}
+                          onDragEnd={() => setDragReportId(null)}
+                        />
+                      );
+                    })}
+                    {/* Sonstige — reports without matching bezirk + entry form */}
+                    {(() => {
+                      const bzCodes = new Set(repBezirke.map(b => b.code));
+                      const unassigned = repReports.filter(r => !r.bezirk_code || !bzCodes.has(r.bezirk_code));
+                      return (
+                        <BezirkRow
+                          bezirk={{ code: '??', name: 'Sonstige', is_capital: false }}
+                          reports={unassigned}
+                          repeaterId={rep.repeater_id}
+                          availableBezirke={repBezirke}
+                          onSubmit={(form) => handleBezirkSubmit('??', rep.repeater_id, form)}
+                          onEdit={handleEdit}
+                          onDelete={handleDelete}
+                          onMoveToBezirk={handleMoveToBezirk}
+                          editingId={editingId}
+                          editForm={editForm}
+                          onEditChange={setEditForm}
+                          onEditSave={handleUpdate}
+                          onEditCancel={() => setEditingId(null)}
+                          dragReportId={dragReportId}
+                          onDragStart={setDragReportId}
+                          onDragEnd={() => setDragReportId(null)}
+                        />
+                      );
+                    })()}
+                  </>
+                )}
               </>
             ) : (
               /* No Bezirke — flat list with input form */

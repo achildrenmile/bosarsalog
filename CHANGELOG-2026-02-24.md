@@ -19,13 +19,23 @@
 - Detaillierte Analyse der gemeldeten Verwirrung bei Schöckl 2m/70cm und Lachtal im Setup durchgeführt.
 - **Ergebnis:** Kein Datenfehler — die Filterlogik (linked → OE-Link, non-linked → Frequenzen) funktioniert korrekt wie vorgesehen.
 
+### #2 — Option Bezirkskenner in Simplex Frequenzen anzuzeigen
+- **Issue:** https://github.com/achildrenmile/bosarsalog/issues/2
+- **Status:** Erledigt und deployed
+- **Umsetzung:**
+  - **Neuer Toggle pro Übung:** Admin-only Checkbox "Simplex Bezirke aktivieren" in der Übungs-Einrichtung (nach OE-Link-Toggle). Standardmäßig deaktiviert.
+  - **Schema-Migration:** Neue Spalte `simplex_bezirke INTEGER DEFAULT 0` in `exercises`-Tabelle (nicht-destruktiver ALTER TABLE ADD COLUMN).
+  - **API:** GET/POST/PATCH Exercises-Routen unterstützen `simplex_bezirke`-Feld.
+  - **LandMode-Gruppierung:** Wenn aktiviert, zeigen Simplex-Frequenzkarten Bundesland-Unterüberschriften mit Bezirk-Zeilen (BezirkRow) statt flacher Liste (FlatReportRow).
+  - Bezirke werden aus allen aktiven Bundesländern der Übung übernommen.
+  - Drag & Drop zwischen Bezirken funktioniert im gruppierten Modus.
+  - Nicht zugeordnete Rapporte erscheinen im "Sonstige"-Bereich.
+  - Toggle aus → Rapporte werden wieder flach angezeigt (Daten bleiben erhalten).
+  - **Geänderte Dateien:** `schema.ts`, `exercises.ts`, `ExerciseSetupPage.tsx`, `ExercisePage.tsx`, `LandMode.tsx`
+
 ---
 
 ## Offene Issues
-
-### #2 — Option Bezirkskenner in Simplex Frequenzen anzuzeigen
-- **Issue:** https://github.com/achildrenmile/bosarsalog/issues/2
-- Simplex-Frequenzen zeigen aktuell keine Bezirk-Zuordnung.
 
 ### #3 — Bei den Repeatern bitte „eigener Repeater" dazufügen — Klärung
 - **Issue:** https://github.com/achildrenmile/bosarsalog/issues/3

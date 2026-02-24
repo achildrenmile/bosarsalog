@@ -209,6 +209,9 @@ export function runMigrations(db: Database.Database): void {
     db.exec("ALTER TABLE exercises ADD COLUMN exercise_type TEXT DEFAULT 'Krisenkommunikationsübung'");
     db.exec("UPDATE exercises SET exercise_type = '80m Notfunk Runde' WHERE name LIKE '%Notfunk%'");
   }
+  if (!cols.some((c: any) => c.name === 'simplex_bezirke')) {
+    db.exec("ALTER TABLE exercises ADD COLUMN simplex_bezirke INTEGER DEFAULT 0");
+  }
 
   const repCols = db.prepare("PRAGMA table_info(repeaters)").all() as any[];
   if (!repCols.some((c: any) => c.name === 'bundesland_code')) {

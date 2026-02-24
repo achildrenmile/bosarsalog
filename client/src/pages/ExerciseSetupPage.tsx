@@ -329,6 +329,33 @@ export default function ExerciseSetupPage() {
         </div>
       )}
 
+      {/* Simplex Bezirke toggle (admin only) */}
+      {isAdmin && (
+        <div className="bg-white rounded-xl shadow p-3 sm:p-4">
+          <label className="flex items-center gap-3 cursor-pointer">
+            <input
+              type="checkbox"
+              checked={exercise.simplex_bezirke !== 0}
+              onChange={async (e) => {
+                const val = e.target.checked;
+                await withSave(async () => {
+                  await apiFetch(`/api/v1/exercises/${id}`, {
+                    method: 'PATCH',
+                    body: JSON.stringify({ simplex_bezirke: val }),
+                  });
+                  setExercise((prev: any) => prev ? { ...prev, simplex_bezirke: val ? 1 : 0 } : null);
+                });
+              }}
+              className="w-5 h-5 accent-red-600"
+            />
+            <div>
+              <span className="font-semibold text-[#1e3a5f] text-sm sm:text-base">Simplex Bezirke aktivieren</span>
+              <p className="text-xs text-gray-500">Simplex-Frequenzen nach Bundesland und Bezirk gruppieren</p>
+            </div>
+          </label>
+        </div>
+      )}
+
       {/* Bundesländer selection */}
       <div className="bg-white rounded-xl shadow p-3 sm:p-4">
         <h2 className="text-base sm:text-lg font-semibold text-[#1e3a5f] mb-2 sm:mb-3">Bundesländer auswählen</h2>
