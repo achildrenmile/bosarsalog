@@ -74,7 +74,7 @@ export default function LandMode({ exerciseId, repeaters, reports, simplexBezirk
     }
   }
 
-  const activeBlCodes = Object.keys(repeatersByBl).filter(c => c !== '_other');
+  const activeBlCodes = ['01', '02', '03', '04', '05', '06', '07', '08', '09'];
 
   const sortedBlCodes = Object.keys(repeatersByBl).sort((a, b) => {
     if (a === '_other') return 1;
