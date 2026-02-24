@@ -17,6 +17,7 @@ interface EntryForm {
   notes: string;
   opName: string;
   opQth: string;
+  bezirkCode: string;
 }
 
 export default function BundMode({ exerciseId, reports, onReportCreated, onReportUpdated, onReportDeleted }: Props) {
@@ -31,7 +32,8 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
   const [newRepFreq, setNewRepFreq] = useState('');
   const [newRepCallsign, setNewRepCallsign] = useState('');
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editForm, setEditForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '', notes: '', opName: '', opQth: '' });
+  const [editForm, setEditForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '', notes: '', opName: '', opQth: '', bezirkCode: '' });
+  const [dragReportId, setDragReportId] = useState<number | null>(null);
 
   useEffect(() => {
     Promise.all([
@@ -166,6 +168,7 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
       notes: report.notes || '',
       opName: report.operator_name || '',
       opQth: report.operator_qth || '',
+      bezirkCode: report.bezirk_code || '',
     });
   };
 
@@ -189,12 +192,22 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
       }
       const updated = await apiFetch(`/api/v1/exercises/${exerciseId}/reports/${editingId}`, {
         method: 'PATCH',
-        body: JSON.stringify({ ...parsed, notes: editForm.notes || null }),
+        body: JSON.stringify({ ...parsed, notes: editForm.notes || null, bezirk_code: editForm.bezirkCode || null }),
       });
       if (editForm.opName !== undefined) updated.operator_name = editForm.opName || null;
       if (editForm.opQth !== undefined) updated.operator_qth = editForm.opQth || null;
       onReportUpdated(updated);
       setEditingId(null);
+    } catch {}
+  };
+
+  const handleMoveToBezirk = async (reportId: number, newBezirkCode: string | null) => {
+    try {
+      const updated = await apiFetch(`/api/v1/exercises/${exerciseId}/reports/${reportId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ bezirk_code: newBezirkCode }),
+      });
+      onReportUpdated(updated);
     } catch {}
   };
 
@@ -307,16 +320,21 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
                         key={bz.code}
                         bezirk={bz}
                         reports={bzReports}
+                        availableBezirke={blBezirke}
                         linkedRepeaters={linkedRepeaters}
                         defaultRepeaterId={defaultRepId}
                         onSubmit={(repeaterId, form) => handleBezirkSubmit(bz.code, repeaterId, form)}
                         onEdit={handleEdit}
                         onDelete={handleDelete}
+                        onMoveToBezirk={handleMoveToBezirk}
                         editingId={editingId}
                         editForm={editForm}
                         onEditChange={setEditForm}
                         onEditSave={handleUpdate}
                         onEditCancel={() => setEditingId(null)}
+                        dragReportId={dragReportId}
+                        onDragStart={setDragReportId}
+                        onDragEnd={() => setDragReportId(null)}
                       />
                     );
                   })}
@@ -328,16 +346,21 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
                       <BezirkRow
                         bezirk={{ code: '??', name: 'Sonstige', is_capital: false }}
                         reports={unassigned}
+                        availableBezirke={blBezirke}
                         linkedRepeaters={linkedRepeaters}
                         defaultRepeaterId={defaultRepId}
                         onSubmit={(repeaterId, form) => handleBezirkSubmit('??', repeaterId, form)}
                         onEdit={handleEdit}
                         onDelete={handleDelete}
+                        onMoveToBezirk={handleMoveToBezirk}
                         editingId={editingId}
                         editForm={editForm}
                         onEditChange={setEditForm}
                         onEditSave={handleUpdate}
                         onEditCancel={() => setEditingId(null)}
+                        dragReportId={dragReportId}
+                        onDragStart={setDragReportId}
+                        onDragEnd={() => setDragReportId(null)}
                       />
                     );
                   })()}
@@ -354,21 +377,27 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
 interface BezirkRowProps {
   bezirk: any;
   reports: any[];
+  availableBezirke: any[];
   linkedRepeaters: any[];
   defaultRepeaterId: number;
   onSubmit: (repeaterId: number, form: EntryForm) => void;
   onEdit: (report: any) => void;
   onDelete: (id: number) => void;
+  onMoveToBezirk: (reportId: number, bezirkCode: string | null) => void;
   editingId: number | null;
   editForm: EntryForm;
   onEditChange: (form: EntryForm) => void;
   onEditSave: () => void;
   onEditCancel: () => void;
+  dragReportId: number | null;
+  onDragStart: (reportId: number) => void;
+  onDragEnd: () => void;
 }
 
-function BezirkRow({ bezirk, reports, linkedRepeaters, defaultRepeaterId, onSubmit, onEdit, onDelete, editingId, editForm, onEditChange, onEditSave, onEditCancel }: BezirkRowProps) {
-  const [form, setForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '5/9', notes: '', opName: '', opQth: '' });
+function BezirkRow({ bezirk, reports, availableBezirke, linkedRepeaters, defaultRepeaterId, onSubmit, onEdit, onDelete, onMoveToBezirk, editingId, editForm, onEditChange, onEditSave, onEditCancel, dragReportId, onDragStart, onDragEnd }: BezirkRowProps) {
+  const [form, setForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '5/9', notes: '', opName: '', opQth: '', bezirkCode: '' });
   const [repeaterId, setRepeaterId] = useState(defaultRepeaterId);
+  const [dragOver, setDragOver] = useState(false);
   const callsignRef = useRef<CallsignInputRef>(null);
   const rapportRef = useRef<HTMLInputElement>(null);
 
@@ -381,8 +410,17 @@ function BezirkRow({ bezirk, reports, linkedRepeaters, defaultRepeaterId, onSubm
     if (!form.callsign && !form.operator) return;
     if (!repeaterId) return;
     onSubmit(repeaterId, form);
-    setForm({ callsign: '', operator: null, rapport: '5/9', notes: '', opName: '', opQth: '' });
+    setForm({ callsign: '', operator: null, rapport: '5/9', notes: '', opName: '', opQth: '', bezirkCode: '' });
     setTimeout(() => callsignRef.current?.focus(), 50);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    setDragOver(false);
+    if (dragReportId) {
+      const targetCode = bezirk.code === '??' ? null : bezirk.code;
+      onMoveToBezirk(dragReportId, targetCode);
+    }
   };
 
   const saveOperatorField = (field: 'name' | 'qth', value: string) => {
@@ -398,7 +436,12 @@ function BezirkRow({ bezirk, reports, linkedRepeaters, defaultRepeaterId, onSubm
   };
 
   return (
-    <div className="px-2 sm:px-3 py-1.5">
+    <div
+      className={`px-2 sm:px-3 py-1.5 transition-colors ${dragOver && dragReportId ? 'bg-blue-100 ring-2 ring-blue-400 ring-inset' : ''}`}
+      onDragOver={e => { if (dragReportId) { e.preventDefault(); setDragOver(true); } }}
+      onDragLeave={() => setDragOver(false)}
+      onDrop={handleDrop}
+    >
       <div className="flex items-center gap-1.5 sm:gap-2 mb-1">
         <span className={`text-xs font-mono px-1.5 py-0.5 rounded text-white ${bezirk.code === '??' ? 'bg-[#ffc107] text-gray-800' : bezirk.is_capital ? 'bg-[#dc3545]' : 'bg-[#6c757d]'}`}>
           {bezirk.code === '??' ? '??' : bezirk.code}
@@ -411,7 +454,13 @@ function BezirkRow({ bezirk, reports, linkedRepeaters, defaultRepeaterId, onSubm
         <table className="w-full text-xs mb-1">
           <tbody>
             {reports.map((r, idx) => (
-              <tr key={r.id} className="hover:bg-blue-50 group">
+              <tr
+                key={r.id}
+                className={`hover:bg-blue-50 group ${dragReportId === r.id ? 'opacity-40' : ''}`}
+                draggable={editingId !== r.id}
+                onDragStart={e => { e.dataTransfer.effectAllowed = 'move'; onDragStart(r.id); }}
+                onDragEnd={onDragEnd}
+              >
                 {editingId === r.id ? (
                   <td colSpan={6} className="py-0.5">
                     <div className="flex items-center gap-1 bg-blue-50 rounded p-1 flex-wrap" onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); onEditSave(); } }}>
@@ -420,13 +469,22 @@ function BezirkRow({ bezirk, reports, linkedRepeaters, defaultRepeaterId, onSubm
                       <input value={editForm.opQth} onChange={e => onEditChange({ ...editForm, opQth: e.target.value })} placeholder="QTH" className="border rounded px-1 py-0.5 text-xs w-14 sm:w-16 hidden sm:block" />
                       <input value={editForm.rapport} onChange={e => onEditChange({ ...editForm, rapport: e.target.value.toUpperCase() })} className="border rounded px-1 py-0.5 font-mono text-xs w-16 sm:w-20" autoFocus />
                       <input value={editForm.notes} onChange={e => onEditChange({ ...editForm, notes: e.target.value })} placeholder="Sonst." className="border rounded px-1 py-0.5 text-xs w-16 sm:w-20" />
+                      <select
+                        value={editForm.bezirkCode}
+                        onChange={e => onEditChange({ ...editForm, bezirkCode: e.target.value })}
+                        className="border rounded px-1 py-0.5 text-xs w-14 sm:w-16"
+                        title="Bezirk"
+                      >
+                        <option value="">??</option>
+                        {availableBezirke.map(bz => <option key={bz.code} value={bz.code}>{bz.code}</option>)}
+                      </select>
                       <button onClick={onEditSave} className="text-green-600 text-xs font-bold">OK</button>
                       <button onClick={onEditCancel} className="text-gray-400 text-xs">X</button>
                     </div>
                   </td>
                 ) : (
                   <>
-                    <td className="py-0.5 text-gray-400 w-4">{idx + 1}</td>
+                    <td className="py-0.5 text-gray-400 w-4 cursor-grab">{idx + 1}</td>
                     <td className="py-0.5 cursor-pointer" onClick={() => onEdit(r)}>
                       <span className="font-mono font-medium">{r.callsign}</span>
                       {r.operator_name && <span className="ml-1 text-gray-500 text-xs">{r.operator_name}</span>}
