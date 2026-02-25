@@ -132,16 +132,21 @@ exercisesRouter.get('/:id/stats', (req, res) => {
 
   // Bezirk breakdown: participants + reports per bezirk, grouped by bundesland
   const bezirkStats = db.prepare(`
-    SELECT bl.name as bundesland, bl.code as bundesland_code, bl.sort_order as bl_sort,
-      bz.code as bezirk_code, bz.name as bezirk_name, bz.is_capital,
+    SELECT COALESCE(bl.name, 'Sonstige') as bundesland,
+      COALESCE(bz.bundesland_code, o.bundesland_code, '99') as bundesland_code,
+      COALESCE(bl.sort_order, 999) as bl_sort,
+      COALESCE(sr.bezirk_code, '??') as bezirk_code,
+      COALESCE(bz.name, 'Sonstige') as bezirk_name,
+      COALESCE(bz.is_capital, 0) as is_capital,
       COUNT(DISTINCT sr.operator_id) as participants,
       COUNT(CASE WHEN sr.readability IS NOT NULL THEN 1 END) as reports
     FROM signal_reports sr
-    JOIN bezirke bz ON bz.code = sr.bezirk_code
-    JOIN bundeslaender bl ON bl.code = bz.bundesland_code
+    JOIN operators o ON o.id = sr.operator_id
+    LEFT JOIN bezirke bz ON bz.code = sr.bezirk_code
+    LEFT JOIN bundeslaender bl ON bl.code = bz.bundesland_code
     WHERE sr.exercise_id = ? AND sr.is_op_marker = 0
-    GROUP BY bz.code
-    ORDER BY bl.sort_order, bz.code
+    GROUP BY COALESCE(sr.bezirk_code, '??')
+    ORDER BY COALESCE(bl.sort_order, 999), COALESCE(sr.bezirk_code, '??')
   `).all(eid);
 
   // Bundesland breakdown
@@ -356,16 +361,20 @@ exercisesRouter.post('/:id/attendance', (req, res) => {
 exercisesRouter.get('/:id/nebenstationen', (req, res) => {
   const db = getDb();
   const data = db.prepare(`
-    SELECT bl.name as bundesland, bl.code as bundesland_code,
-      bz.code as bezirk_code, bz.name as bezirk_name, bz.is_capital,
+    SELECT COALESCE(bl.name, 'Sonstige') as bundesland,
+      COALESCE(bz.bundesland_code, o.bundesland_code, '99') as bundesland_code,
+      COALESCE(sr.bezirk_code, '??') as bezirk_code,
+      COALESCE(bz.name, 'Sonstige') as bezirk_name,
+      COALESCE(bz.is_capital, 0) as is_capital,
       COUNT(DISTINCT sr.operator_id) as count,
       COUNT(CASE WHEN sr.readability IS NOT NULL THEN 1 END) as reports
     FROM signal_reports sr
-    JOIN bezirke bz ON bz.code = sr.bezirk_code
-    JOIN bundeslaender bl ON bl.code = bz.bundesland_code
+    JOIN operators o ON o.id = sr.operator_id
+    LEFT JOIN bezirke bz ON bz.code = sr.bezirk_code
+    LEFT JOIN bundeslaender bl ON bl.code = bz.bundesland_code
     WHERE sr.exercise_id = ? AND sr.is_op_marker = 0
-    GROUP BY bz.code
-    ORDER BY bl.sort_order, bz.code
+    GROUP BY COALESCE(sr.bezirk_code, '??')
+    ORDER BY COALESCE(bl.sort_order, 999), COALESCE(sr.bezirk_code, '??')
   `).all(req.params.id);
   res.json(data);
 });
