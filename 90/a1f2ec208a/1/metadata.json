@@ -1,0 +1,41 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "90a1f2ec208a",
+  "session_id": "d40b7114-7701-4b28-b9dd-b300e7aa9394",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-25T07:48:45.401316891Z",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "CHANGELOG-2026-02-24.md",
+    "client/src/components/BundMode.tsx",
+    "client/src/pages/AggregatedReportsPage.tsx",
+    "client/src/pages/OperatorsPage.tsx",
+    "client/src/pages/ReportsPage.tsx",
+    "client/src/types/stats.ts",
+    "server/src/db/schema.ts",
+    "server/src/routes/exercises.ts",
+    "server/src/routes/operators.ts",
+    "server/src/routes/pdf.ts",
+    "server/src/routes/reports.ts",
+    "server/src/services/pdf.ts",
+    "server/src/services/socket.ts"
+  ],
+  "agent": "Claude Code",
+  "token_usage": {
+    "input_tokens": 45,
+    "cache_creation_tokens": 233498,
+    "cache_read_tokens": 4548384,
+    "output_tokens": 4117,
+    "api_call_count": 41
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-25T07:48:45.095621177Z",
+    "agent_lines": 100,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 100,
+    "agent_percentage": 100
+  }
+}
