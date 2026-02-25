@@ -1,0 +1,303 @@
+Implement the following plan:
+
+# Issue #10: Suffix-Checkboxen (/m /p /am /mm) statt Freitext im Rufzeichen
+
+## Context
+Operatoren geben aktuell Suffixe wie `/m` (mobil), `/p` (portabel) direkt im Rufzeichen-Feld ein (z.B. "OE8YML/m"). Das ist fehleranfällig und uneinheitlich. Stattdessen sollen Checkboxen/Toggles für `/m`, `/p`, `/am`, `/mm` neben dem Rufzeichen-Feld erscheinen. Der Suffix wird separat gespeichert und in den Auswertungen mitangezeigt.
+
+## Bestandsanalyse
+- `exercise_attendance` hat bereits `callsign_suffix TEXT` — **unbenutzt**
+- `signal_reports` hat **keinen** Suffix-Spalte
+- Suffix ist pro Report sinnvoll (Operator kann Status wechseln)
+- Auswertungen aggregieren Teilnehmer per `operator_id`, zeigen `callsign` an
+
+## Änderungen
+
+### 1. Schema-Migration: `server/src/db/schema.ts`
+- Neue Spalte `suffix TEXT DEFAULT NULL` in `signal_reports` (ALTER TABLE ADD COLUMN, nicht-destruktiv)
+- Gültige Werte: `'/m'`, `'/p'`, `'/am'`, `'/mm'`, `NULL`
+
+### 2. API: `server/src/routes/exercises.ts`
+- **POST** `/exercises/:id/reports`: `suffix` Feld akzeptieren und speichern
+- **PATCH** `/exercises/:id/reports/:rid`: `suffix` Feld akzeptieren
+- **GET** `/exercises/:id/reports`: `suffix` im SELECT mit zurückgeben
+- **GET** `/exercises/:id/stats` (Participants-Query): Suffix mit aggregieren — `GROUP_CONCAT(DISTINCT sr.suffix)` als `suffixes` oder einfach den häufigsten/letzten Suffix pro Operator
+
+### 3. API: `server/src/routes/reports.ts`
+- Stats-Participants-Query: Ebenfalls Suffix mitliefern (gleicher Pattern wie exercises stats)
+
+### 4. Client Types: `client/src/types/stats.ts`
+- `Participant` Interface: `suffix?: string | null` hinzufügen
+
+### 5. UI Eingabe: `client/src/components/LandMode.tsx` + `BundMode.tsx`
+- `EntryForm` Interface: `suffix: string` ('' | '/m' | '/p' | '/am' | '/mm')
+- **Toggle-Buttons** neben dem Rufzeichen-Feld (4 kleine Buttons: m, p, am, mm)
+  - Nur einer aktiv (Radio-Verhalten), nochmal klicken = deselect
+  - Visuell: grauer Button, bei aktiv blauer Hintergrund
+  - Kompakt: inline neben CallsignInput
+- `suffix` wird im POST/PATCH mitgesendet
+- In der Report-Anzeige (jede Zeile): Callsign + Suffix anzeigen (z.B. "OE8YML/m")
+
+### 6. Auswertung Web: `client/src/pages/ReportsPage.tsx` + `AggregatedReportsPage.tsx`
+- Teilnehmer-Tabelle: Suffix neben Rufzeichen anzeigen
+- Falls ein Operator mehrere Suffixe hat (unwahrscheinlich): alle zeigen
+
+### 7. Auswertung PDF: `server/src/services/pdf.ts`
+- `Participant` Interface: `suffix` Feld hinzufügen
+- `renderParticipants()`: Callsign + Suffix anzeigen
+
+### 8. CHANGELOG: `CHANGELOG-2026-02-24.md`
+- Issue #10 Eintrag
+
+## Dateien
+
+| Datei | Änderung |
+|-------|----------|
+| `server/src/db/schema.ts` | ALTER TABLE ADD COLUMN `suffix` |
+| `server/src/routes/exercises.ts` | POST/PATCH/GET reports: suffix Feld |
+| `server/src/routes/reports.ts` | Stats participants: suffix mitliefern |
+| `server/src/routes/pdf.ts` | Suffix in PDF-Stats Query |
+| `client/src/types/stats.ts` | Participant.suffix |
+| `client/src/components/LandMode.tsx` | Suffix-Toggles + form submit |
+| `client/src/components/BundMode.tsx` | Suffix-Toggles + form submit |
+| `client/src/pages/ReportsPage.tsx` | Suffix in Teilnehmer-Tabelle |
+| `client/src/pages/AggregatedReportsPage.tsx` | Suffix in Teilnehmer-Tabelle |
+| `server/src/services/pdf.ts` | Suffix in PDF Teilnehmer |
+| `CHANGELOG-2026-02-24.md` | Dokumentation |
+
+## Verifikation
+1. `nix-shell -p nodejs --run "npm run build"` kompiliert sauber
+2. Neuer Report: Suffix-Toggles sichtbar, /m auswählen → Report zeigt "OE8YML/m"
+3. Auswertung (Einzel-Übung): Teilnehmer-Liste zeigt Suffix
+4. Auswertung (Aggregiert): Teilnehmer-Liste zeigt Suffix
+5. PDF-Download: Teilnehmer mit Suffix
+6. Bestehende Reports ohne Suffix: funktionieren weiterhin (NULL = kein Suffix)
+7. Deploy mit `./deploy-production.sh`
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+
+---
+
+deploy with ./deploy-production.sh
+
+---
+
+no change visible
+
+---
+
+https://github.com/achildrenmile/bosarsalog/issues/3
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me chronologically analyze the conversation:
+
+1. **Initial Request**: User provided a detailed implementation plan for Issue #10: Suffix-Checkboxen (/m /p /am /mm) statt Freitext im Rufzeichen. The plan was to add suffix toggle buttons for callsigns in the BOS-ARSA Log application.
+
+2. **Implementation Phase (Issue #10)**:
+   - I read all necessary files in parallel
+   - Made changes to schema, API routes, client types, UI components, report pages, and PDF service
+   - User interjected with "suffix is of optional" - I changed `suffix: string` to `suffix?: string` in EntryForm
+   - User interjected with "only one suffix can be selected at one time" - I confirmed this was already the radio-button behavior I was implementing
+   - Build compiled cleanly
+
+3. **First Deploy Attempt**: User said "deploy with ./deploy-production.sh" - I ran it but it failed silently because I hadn't committed/pushed changes. The git pull showed "Already up to date." and all Docker layers were cached.
+
+4. **User reported "no change visible"**: I realized the issue - changes weren't committed. I committed, pushed, and redeployed successfully.
+
+5. **User said "document in markdown"**: I provided a markdown summary of the deployment.
+
+6. **Issue #3 Request**: User sent GitHub link to issue #3: "Bei den Repeatern bitte „eigener Repeater" im bund mode dazufügen. ziel ist des repeater des operators zu definieren."
+
+7. **Planning Phase (Issue #3)**: I entered plan mode and launched exploration agents.
+
+8. **User Clarifications during planning**:
+   - I asked about the scope - user chose "Festes Feld pro Operator" (fixed field per operator in stammdaten)
+   - User clarified: "eigener repeater ist optional. soll bei den auswertungen (listen) als zusätzliches feld pro zeile angezeigt werden, wenn leer, dann halt leer"
+
+9. **Plan Writing**: I read operators.ts and OperatorsPage.tsx to understand the current operator management. I decided on a TEXT field (Freitext) rather than FK to repeaters table for flexibility. I tried to write the plan file but got an error because I hadn't read it first.
+
+Now let me trace through the specific technical details:
+
+**Schema changes made (Issue #10)**:
+- Added `suffix TEXT DEFAULT NULL` to signal_reports via ALTER TABLE migration in schema.ts
+
+**API changes (Issue #10)**:
+- exercises.ts POST reports: accepts `suffix`, includes in INSERT
+- exercises.ts PATCH reports: accepts `suffix`, includes in UPDATE
+- exercises.ts GET stats: `GROUP_CONCAT(DISTINCT sr.suffix) as suffixes` in participants query
+- reports.ts GET stats: same GROUP_CONCAT in participants query
+- pdf.ts: both participants queries updated with GROUP_CONCAT
+
+**Client changes (Issue #10)**:
+- stats.ts: Added `suffixes: string | null` to Participant interface
+- LandMode.tsx: Added `suffix?: string` to EntryForm, SUFFIXES const, toggle buttons in BezirkRow and FlatReportRow forms, display suffix in report rows
+- BundMode.tsx: Same pattern as LandMode
+- ReportsPage.tsx: Shows suffixes in participant table
+- AggregatedReportsPage.tsx: Same
+- pdf.ts (service): Shows suffixes in renderParticipants
+
+**Issue #3 Planning**:
+- Decided on `home_repeater TEXT` field (Freitext, not FK)
+- Plan written but Write tool failed because file wasn't read first
+- Plan covers: schema migration, operators.ts PATCH, all 4 participants queries, client types, both report pages, PDF, OperatorsPage, changelog
+
+The plan file write failed - that's where we left off.
+
+Summary:
+1. Primary Request and Intent:
+   - **Issue #10 (Completed & Deployed)**: Implement suffix toggle checkboxes (/m, /p, /am, /mm) next to the callsign input field instead of freetext entry. Suffix stored per report in `signal_reports.suffix`, displayed in all evaluations (web + PDF participant lists).
+   - **Issue #3 (In Planning)**: Add an "eigener Repeater" (home repeater) field to operator master data (Stammdaten). Optional freetext field shown in evaluation lists as an additional column per row. If empty, column stays empty.
+   - User also requested deployment via `./deploy-production.sh` and markdown documentation.
+
+2. Key Technical Concepts:
+   - NixOS environment — use `nix-shell -p nodejs --run "..."` for npm/node
+   - Monorepo: `/client` (React/Vite/Tailwind) + `/server` (Express/TypeScript/SQLite)
+   - SQLite migrations via `PRAGMA table_info` checks and `ALTER TABLE ADD COLUMN`
+   - Deploy via `./deploy-production.sh` (SSH + Docker on remote host) — requires git commit+push first
+   - `GROUP_CONCAT(DISTINCT sr.suffix)` for aggregating per-operator suffixes in stats queries
+   - Radio-button toggle behavior: only one suffix active at a time, click again to deselect
+   - German UI text, English code convention
+   - `apiFetch()` wrapper from `client/src/services/api.ts`
+   - Dynamic SQL UPDATE builder pattern in routes (fields array → loop → SET clauses)
+
+3. Files and Code Sections:
+
+   - **`server/src/db/schema.ts`** — Database migrations
+     - Added suffix migration for Issue #10
+     - Issue #3 will need `home_repeater TEXT` migration for operators table
+     ```typescript
+     // Added before bezirk_code migration:
+     const srColsSuffix = db.prepare("PRAGMA table_info(signal_reports)").all() as any[];
+     if (!srColsSuffix.some((c: any) => c.name === 'suffix')) {
+       db.exec("ALTER TABLE signal_reports ADD COLUMN suffix TEXT DEFAULT NULL");
+     }
+     ```
+
+   - **`server/src/routes/exercises.ts`** — Exercise and report CRUD
+     - POST reports: Added `suffix` to destructuring, INSERT statement (12 params now)
+     - PATCH reports: Added `suffix` to destructuring and dynamic update builder
+     - GET stats participants: Added `GROUP_CONCAT(DISTINCT sr.suffix) as suffixes`
+     ```typescript
+     // POST - line ~244
+     const { operator_id, repeater_id, readability, strength, db_over_s9, einstiegspunkt_id, is_op_marker, notes, bezirk_code, suffix } = req.body;
+     // INSERT includes suffix as 12th param
+     // PATCH - added:
+     if (suffix !== undefined) { updates.push('suffix = ?'); params.push(suffix || null); }
+     // Stats participants query:
+     GROUP_CONCAT(DISTINCT sr.suffix) as suffixes
+     ```
+
+   - **`server/src/routes/reports.ts`** — Aggregated stats
+     - Participants query updated with `GROUP_CONCAT(DISTINCT sr.suffix) as suffixes`
+
+   - **`server/src/routes/pdf.ts`** — PDF generation endpoints
+     - Both participants queries (aggregated + single exercise) updated with `GROUP_CONCAT(DISTINCT sr.suffix) as suffixes`
+
+   - **`server/src/services/pdf.ts`** — PDF rendering service
+     - `Participant` interface: added `suffixes: string | null`
+     - `renderParticipants()`: displays callsign + suffix
+     ```typescript
+     const suffixStr = p.suffixes ? p.suffixes.split(',').filter(Boolean).map(s => s.startsWith('/') ? s : `/${s}`).join('') : '';
+     textAt(doc, p.callsign + suffixStr, colCall, ty);
+     ```
+
+   - **`client/src/types/stats.ts`** — TypeScript interfaces
+     - Added `suffixes: string | null` to `Participant` interface
+
+   - **`client/src/components/LandMode.tsx`** — Frequenzen mode UI
+     - Added `suffix?: string` to `EntryForm` interface
+     - Added `SUFFIXES` constant: `['/m', '/p', '/am', '/mm'] as const`
+     - All form state defaults include `suffix: ''`
+     - Toggle buttons added in BezirkRow and FlatReportRow forms
+     - Report display shows `{r.callsign}{r.suffix || ''}`
+     - Suffix sent in POST/PATCH API calls
+     ```tsx
+     <div className="flex gap-0.5">
+       {SUFFIXES.map(s => (
+         <button
+           key={s}
+           type="button"
+           onClick={() => setForm(f => ({ ...f, suffix: f.suffix === s ? '' : s }))}
+           className={`px-1 py-0.5 rounded text-xs font-mono border ${form.suffix === s ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'}`}
+           title={s}
+         >
+           {s.slice(1)}
+         </button>
+       ))}
+     </div>
+     ```
+
+   - **`client/src/components/BundMode.tsx`** — OE-Link mode UI
+     - Same pattern as LandMode: EntryForm suffix field, SUFFIXES const, toggle buttons, display, API calls
+
+   - **`client/src/pages/ReportsPage.tsx`** — Single exercise evaluation
+     - Participant table callsign cell shows suffixes:
+     ```tsx
+     <td className="px-2 sm:px-4 py-1 font-mono font-medium">{p.callsign}{p.suffixes ? p.suffixes.split(',').filter(Boolean).map(s => s.startsWith('/') ? s : `/${s}`).join('') : ''}</td>
+     ```
+
+   - **`client/src/pages/AggregatedReportsPage.tsx`** — Aggregated evaluation
+     - Same suffix display pattern as ReportsPage
+
+   - **`server/src/routes/operators.ts`** — Read for Issue #3 planning
+     - PATCH uses dynamic fields array (line 103): easy to add `'home_repeater'`
+     - POST creates with callsign, name, qth, bezirk_code, bundesland_code
+
+   - **`client/src/pages/OperatorsPage.tsx`** — Read for Issue #3 planning
+     - Table with inline editing, add form, delete
+     - Currently shows: Rufzeichen, Name, QTH, Bezirk, BL, Ausstattung
+     - `newOp` state: `{ callsign: '', name: '', qth: '', bezirk_code: '', bundesland_code: '' }`
+
+   - **`CHANGELOG-2026-02-24.md`** — Added Issue #10 entry documenting all changes
+
+4. Errors and fixes:
+   - **First deploy showed no changes**: Ran `./deploy-production.sh` without committing/pushing first. Git pull on remote showed "Already up to date." and all Docker layers were cached. Fix: committed all 11 files, pushed to origin/main, then redeployed successfully.
+   - **Plan file write failed**: Attempted to `Write` to `/home/achildrenmile/.claude/plans/synchronous-enchanting-island.md` without reading it first. Got error: "File has not been read yet. Read it first before writing to it." This was the last action before the summary request.
+   - **User feedback on suffix type**: User said "suffix is of optional" — changed `suffix: string` to `suffix?: string` in EntryForm interface.
+   - **User feedback on suffix behavior**: User said "only one suffix can be selected at one time" — confirmed already implementing radio behavior (click to select, click again to deselect, only one active).
+
+5. Problem Solving:
+   - **Issue #10 fully implemented and deployed**: Schema migration, API routes, client types, UI toggle buttons, report display, PDF display — all working.
+   - **Deploy workflow lesson**: Must commit and push before running `./deploy-production.sh` since it syncs via git pull on the remote host.
+   - **Issue #3 in planning phase**: Decided on Freitext (`TEXT`) instead of FK to repeaters table for flexibility — operators may use repeaters not in the system.
+
+6. All user messages:
+   - "Implement the following plan: [detailed Issue #10 plan]"
+   - "suffix is of optional"
+   - "only one suffix can be selected at one time"
+   - "deploy with ./deploy-production.sh"
+   - "no change visible"
+   - "document in markdown"
+   - "https://github.com/achildrenmile/bosarsalog/issues/3"
+   - (In response to AskUserQuestion about scope): Selected "Festes Feld pro Operator"
+   - "eigener repeater ist optional. soll bei den auswertungen (listen) als zusätzliches feld pro zeile angezeigt werden, wenn leer, dann halt leer"
+
+7. Pending Tasks:
+   - **Issue #3 implementation**: Plan is designed but the plan file write failed (need to read file first, then write). After plan approval, need to implement:
+     - Schema migration: `ALTER TABLE operators ADD COLUMN home_repeater TEXT`
+     - operators.ts PATCH: add `'home_repeater'` to fields array
+     - 4 participants queries: add `o.home_repeater` select
+     - client types: add `home_repeater: string | null` to Participant
+     - ReportsPage + AggregatedReportsPage: new "Repeater" column in participant table
+     - pdf.ts service: new "REP." column in renderParticipants
+     - OperatorsPage: new column + edit/add fields for home_repeater
+     - Changelog entry
+     - Build, commit, push, deploy
+
+8. Current Work:
+   I was in **plan mode for Issue #3** (eigener Repeater pro Operator). I had completed exploration, received user clarification ("Festes Feld pro Operator", optional, shown in evaluation lists), read the operators route and OperatorsPage, and designed the full plan. I attempted to write the plan to `/home/achildrenmile/.claude/plans/synchronous-enchanting-island.md` but got an error because the file hadn't been read first. The plan content was ready — a Freitext `home_repeater TEXT` column on the operators table, displayed in all participant lists (web + PDF) and editable in OperatorsPage.
+
+9. Optional Next Step:
+   Read the plan file at `/home/achildrenmile/.claude/plans/synchronous-enchanting-island.md`, then write the Issue #3 plan to it, then call `ExitPlanMode` for user approval. This directly continues the work that failed on the last action. The user's most recent explicit request was issue #3: "eigener repeater ist optional. soll bei den auswertungen (listen) als zusätzliches feld pro zeile angezeigt werden, wenn leer, dann halt leer".
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+Please continue the conversation from where we left it off without asking the user any further questions. Continue with the last task that you were asked to work on.
+
+---
+
+[Request interrupted by user for tool use]
