@@ -1,0 +1,32 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "b9fee90dc6e4",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "CHANGELOG-2026-02-25.md",
+    "CHANGELOG-v1.1.0.md",
+    "client/src/App.tsx",
+    "client/src/components/Layout.tsx",
+    "client/src/pages/HilfePage.tsx",
+    "client/src/pages/LoginPage.tsx",
+    "package.json"
+  ],
+  "sessions": [
+    {
+      "metadata": "/b9/fee90dc6e4/0/metadata.json",
+      "transcript": "/b9/fee90dc6e4/0/full.jsonl",
+      "context": "/b9/fee90dc6e4/0/context.md",
+      "content_hash": "/b9/fee90dc6e4/0/content_hash.txt",
+      "prompt": "/b9/fee90dc6e4/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 41,
+    "cache_creation_tokens": 42742,
+    "cache_read_tokens": 3325295,
+    "output_tokens": 6838,
+    "api_call_count": 37
+  }
+}
