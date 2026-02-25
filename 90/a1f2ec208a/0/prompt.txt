@@ -1,0 +1,99 @@
+Implement the following plan:
+
+# Issue #3: Eigener Repeater pro Operator (Stammdaten)
+
+## Context
+Operatoren sollen ihren "eigenen Repeater" (Heimat-Repeater) in den Stammdaten hinterlegen können. Das Feld ist optional (Freitext). Wenn befüllt, wird es in allen Auswertungen (Web + PDF) als zusätzliche Spalte in der Teilnehmer-Liste angezeigt. Wenn leer, bleibt die Spalte leer.
+
+## Bestandsanalyse
+- `operators` Tabelle: `id`, `callsign`, `name`, `qth`, `bezirk_code`, `bundesland_code` — kein `home_repeater`
+- `server/src/routes/operators.ts`: PATCH nutzt dynamisches `fields`-Array (Zeile ~103), einfach erweiterbar
+- `client/src/pages/OperatorsPage.tsx`: Inline-Edit-Tabelle mit Add-Form
+- Participants-Queries in 4 Dateien: `exercises.ts`, `reports.ts`, `pdf.ts` (Routes), `pdf.ts` (Service)
+- Freitext statt FK auf repeaters-Tabelle — Operator kann Repeater nutzen, die nicht im System sind
+
+## Änderungen
+
+### 1. Schema-Migration: `server/src/db/schema.ts`
+- `ALTER TABLE operators ADD COLUMN home_repeater TEXT DEFAULT NULL`
+- PRAGMA table_info Check wie üblich
+
+### 2. API: `server/src/routes/operators.ts`
+- **POST** `/operators`: `home_repeater` akzeptieren und speichern
+- **PATCH** `/operators/:id`: `'home_repeater'` zum `fields`-Array hinzufügen
+- **GET** `/operators`: `home_repeater` wird automatisch mit SELECT * zurückgegeben
+
+### 3. Stats-Queries: Participants mit `home_repeater`
+4 Stellen anpassen — überall wo `o.callsign`, `o.name` selektiert wird, auch `o.home_repeater` hinzufügen:
+- `server/src/routes/exercises.ts` — GET `/exercises/:id/stats` participants query
+- `server/src/routes/reports.ts` — GET `/reports/stats` participants query
+- `server/src/routes/pdf.ts` — beide participants queries (aggregated + single exercise)
+
+### 4. PDF Service: `server/src/services/pdf.ts`
+- `Participant` Interface: `home_repeater: string | null` hinzufügen
+- `renderParticipants()`: Neue Spalte "REP." zwischen Callsign und QTH (oder am Ende)
+- Spaltenbreiten anpassen
+
+### 5. Client Types: `client/src/types/stats.ts`
+- `Participant` Interface: `home_repeater: string | null` hinzufügen
+
+### 6. Auswertung Web: `client/src/pages/ReportsPage.tsx` + `AggregatedReportsPage.tsx`
+- Neue Spalte "Repeater" in der Teilnehmer-Tabelle
+- Zeigt `p.home_repeater || ''`
+
+### 7. Stammdaten UI: `client/src/pages/OperatorsPage.tsx`
+- Neue Spalte "Repeater" in der Operatoren-Tabelle
+- Inline-Edit: Text-Input für `home_repeater`
+- Add-Form: Optionales `home_repeater` Feld
+- `newOp` State: `home_repeater: ''` hinzufügen
+
+### 8. CHANGELOG: `CHANGELOG-2026-02-24.md`
+- Issue #3 Eintrag
+
+## Dateien
+
+| Datei | Änderung |
+|-------|----------|
+| `server/src/db/schema.ts` | ALTER TABLE ADD COLUMN `home_repeater` |
+| `server/src/routes/operators.ts` | POST/PATCH: home_repeater Feld |
+| `server/src/routes/exercises.ts` | Stats participants: o.home_repeater |
+| `server/src/routes/reports.ts` | Stats participants: o.home_repeater |
+| `server/src/routes/pdf.ts` | PDF participants: o.home_repeater |
+| `server/src/services/pdf.ts` | Neue Spalte in renderParticipants |
+| `client/src/types/stats.ts` | Participant.home_repeater |
+| `client/src/pages/ReportsPage.tsx` | Repeater-Spalte in Teilnehmer-Tabelle |
+| `client/src/pages/AggregatedReportsPage.tsx` | Repeater-Spalte in Teilnehmer-Tabelle |
+| `client/src/pages/OperatorsPage.tsx` | Repeater-Spalte + Edit/Add |
+| `CHANGELOG-2026-02-24.md` | Dokumentation |
+
+## Verifikation
+1. `nix-shell -p nodejs --run "npm run build"` kompiliert sauber
+2. OperatorsPage: Repeater-Feld sichtbar, editierbar, speichern funktioniert
+3. Auswertung (Einzel-Übung): Teilnehmer-Liste zeigt Repeater-Spalte
+4. Auswertung (Aggregiert): Teilnehmer-Liste zeigt Repeater-Spalte
+5. PDF-Download: Teilnehmer mit Repeater-Spalte
+6. Operatoren ohne Repeater: Spalte bleibt leer
+7. Deploy mit `./deploy-production.sh`
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+
+---
+
+deploy mit ./deploy-production.sh
+
+---
+
+commit this
+
+---
+
+where do i see the input field
+
+---
+
+it should not be in the rufzeichen register. it shall be done, directly during an execercise like adding the op callsign in bundmode.
+
+---
+
+[Request interrupted by user for tool use]

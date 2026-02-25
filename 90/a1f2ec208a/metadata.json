@@ -1,0 +1,36 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "90a1f2ec208a",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "CHANGELOG-2026-02-24.md",
+    "client/src/pages/AggregatedReportsPage.tsx",
+    "client/src/pages/OperatorsPage.tsx",
+    "client/src/pages/ReportsPage.tsx",
+    "client/src/types/stats.ts",
+    "server/src/db/schema.ts",
+    "server/src/routes/exercises.ts",
+    "server/src/routes/operators.ts",
+    "server/src/routes/pdf.ts",
+    "server/src/routes/reports.ts",
+    "server/src/services/pdf.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/90/a1f2ec208a/0/metadata.json",
+      "transcript": "/90/a1f2ec208a/0/full.jsonl",
+      "context": "/90/a1f2ec208a/0/context.md",
+      "content_hash": "/90/a1f2ec208a/0/content_hash.txt",
+      "prompt": "/90/a1f2ec208a/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 14,
+    "cache_creation_tokens": 28873,
+    "cache_read_tokens": 1389812,
+    "output_tokens": 1305,
+    "api_call_count": 10
+  }
+}
