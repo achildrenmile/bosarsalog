@@ -63,7 +63,8 @@
   - **Schema-Migration:** Neue Spalte `home_repeater TEXT DEFAULT NULL` in `exercise_repeaters`-Tabelle.
   - **API:** POST/PATCH `/:id/repeaters/:rid` akzeptieren `home_repeater`. PATCH unterstützt partielle Updates (operator_callsign und/oder home_repeater).
   - **Socket:** Neues Event `home_repeater_updated` — Server broadcastet an Exercise-Room.
-  - **BundMode UI:** REP-Input neben OP-Input im BL-Header. Speichert on blur (POST-dann-PATCH Pattern wie OP). Socket-Sync zwischen Clients.
+  - **BundMode UI:** REP-Dropdown neben OP-Input im BL-Header. Zeigt nur OE-Link-Repeater (is_linked). Labels: `site_name + band` (z.B. "Magdalensberg 70cm"). Aktuelle BL-Repeater zuerst, dann andere BLs mit Trennlinie. Speichert on change (POST-dann-PATCH Pattern wie OP). Socket-Sync zwischen Clients.
+- **Bezirk-Dropdown beim Bearbeiten:** Zeigt jetzt alle Bundesländer mit ihren Bezirken (gruppiert als `<optgroup>`), nicht nur die Bezirke des aktuellen BL-Abschnitts. Ermöglicht z.B. das Verschieben eines Rufzeichens von Wien direkt nach Salzburg oder Kärnten.
 - **Geänderte Dateien:** `schema.ts`, `operators.ts`, `exercises.ts`, `reports.ts`, `pdf.ts` (Routes), `pdf.ts` (Service), `socket.ts`, `stats.ts`, `OperatorsPage.tsx`, `ReportsPage.tsx`, `AggregatedReportsPage.tsx`, `BundMode.tsx`
 
 ### #5 — Eventuell mehrere OPs bei Simplex

@@ -398,6 +398,8 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
                         bezirk={bz}
                         reports={bzReports}
                         availableBezirke={blBezirke}
+                        allBezirke={bezirke}
+                        allBundeslaender={bundeslaender}
                         linkedRepeaters={linkedRepeaters}
                         defaultRepeaterId={defaultRepId}
                         onSubmit={(repeaterId, form) => handleBezirkSubmit(bz.code, repeaterId, form)}
@@ -424,6 +426,8 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
                         bezirk={{ code: '??', name: 'Sonstige', is_capital: false }}
                         reports={unassigned}
                         availableBezirke={blBezirke}
+                        allBezirke={bezirke}
+                        allBundeslaender={bundeslaender}
                         linkedRepeaters={linkedRepeaters}
                         defaultRepeaterId={defaultRepId}
                         onSubmit={(repeaterId, form) => handleBezirkSubmit('??', repeaterId, form)}
@@ -455,6 +459,8 @@ interface BezirkRowProps {
   bezirk: any;
   reports: any[];
   availableBezirke: any[];
+  allBezirke: any[];
+  allBundeslaender: any[];
   linkedRepeaters: any[];
   defaultRepeaterId: number;
   onSubmit: (repeaterId: number, form: EntryForm) => void;
@@ -471,7 +477,7 @@ interface BezirkRowProps {
   onDragEnd: () => void;
 }
 
-function BezirkRow({ bezirk, reports, availableBezirke, linkedRepeaters, defaultRepeaterId, onSubmit, onEdit, onDelete, onMoveToBezirk, editingId, editForm, onEditChange, onEditSave, onEditCancel, dragReportId, onDragStart, onDragEnd }: BezirkRowProps) {
+function BezirkRow({ bezirk, reports, availableBezirke, allBezirke, allBundeslaender, linkedRepeaters, defaultRepeaterId, onSubmit, onEdit, onDelete, onMoveToBezirk, editingId, editForm, onEditChange, onEditSave, onEditCancel, dragReportId, onDragStart, onDragEnd }: BezirkRowProps) {
   const [form, setForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '5/9', notes: '', opName: '', opQth: '', bezirkCode: '', suffix: '' });
   const [repeaterId, setRepeaterId] = useState(defaultRepeaterId);
   const [dragOver, setDragOver] = useState(false);
@@ -549,11 +555,19 @@ function BezirkRow({ bezirk, reports, availableBezirke, linkedRepeaters, default
                       <select
                         value={editForm.bezirkCode}
                         onChange={e => onEditChange({ ...editForm, bezirkCode: e.target.value })}
-                        className="border rounded px-1 py-0.5 text-xs w-14 sm:w-16"
+                        className="border rounded px-1 py-0.5 text-xs w-20 sm:w-24"
                         title="Bezirk"
                       >
                         <option value="">??</option>
-                        {availableBezirke.map(bz => <option key={bz.code} value={bz.code}>{bz.code}</option>)}
+                        {allBundeslaender.filter(b => !b.is_international).map(b => {
+                          const blBz = allBezirke.filter(bz => bz.bundesland_code === b.code);
+                          if (blBz.length === 0) return null;
+                          return (
+                            <optgroup key={b.code} label={`OE${parseInt(b.code)} ${b.name}`}>
+                              {blBz.map(bz => <option key={bz.code} value={bz.code}>{bz.code} {bz.name}</option>)}
+                            </optgroup>
+                          );
+                        })}
                       </select>
                       <button onClick={onEditSave} className="text-green-600 text-xs font-bold">OK</button>
                       <button onClick={onEditCancel} className="text-gray-400 text-xs">X</button>
