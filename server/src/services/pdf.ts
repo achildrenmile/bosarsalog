@@ -100,6 +100,16 @@ function getHeatColor(value: number, max: number): string {
   return '#' + [r, g, b].map(c => c.toString(16).padStart(2, '0')).join('');
 }
 
+/** Return white for dark backgrounds, navy for light backgrounds */
+function getLabelColor(hexBg: string): string {
+  const r = parseInt(hexBg.slice(1, 3), 16);
+  const g = parseInt(hexBg.slice(3, 5), 16);
+  const b = parseInt(hexBg.slice(5, 7), 16);
+  // Relative luminance (perceived brightness)
+  const lum = (0.299 * r + 0.587 * g + 0.114 * b);
+  return lum < 150 ? WHITE : NAVY;
+}
+
 function formatDateDE(d: string): string {
   const date = new Date(d + 'T00:00:00');
   return date.toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -273,13 +283,14 @@ function renderAustriaMap(doc: PDFKit.PDFDocument, blStats: BlStat[]) {
     doc.path(pathData.d).lineWidth(2 / scale).fillAndStroke(fillColor, WHITE);
     doc.restore();
 
-    // Label
+    // Label — contrast-aware color based on heatmap background
     const lx = offsetX + pathData.labelX * scale;
     const ly = mapStartY + pathData.labelY * scale;
+    const labelColor = getLabelColor(fillColor);
     doc.save();
-    doc.fontSize(6).fillColor(NAVY);
+    doc.fontSize(6).fillColor(labelColor);
     textAt(doc, BL_SHORT[code] || code, lx - 15, ly - 6, { width: 30, align: 'center' });
-    doc.fontSize(5).fillColor(NAVY);
+    doc.fontSize(5).fillColor(labelColor);
     textAt(doc, String(participants), lx - 15, ly + 1, { width: 30, align: 'center' });
     doc.restore();
   }
