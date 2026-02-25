@@ -68,6 +68,16 @@
   - **Client:** `downloadFullPage()` in `AggregatedReportsPage.tsx` und `ReportsPage.tsx` ruft jetzt den Server-PDF-Endpunkt auf statt `toPng()`. Dateiname: `.pdf` statt `.png`.
   - Einzelne Chart-Downloads (Karte, Balken, Torte) bleiben als PNG via `html-to-image` — **kein Funktionsverlust**.
   - PDF: A4 Querformat, automatische Seitenumbrüche.
+- **Nachträgliche Fixes (4 Iterationen):**
+  - **Fix 1 — Tabellen-Layout:** `doc.text()` verschob Y-Cursor automatisch bei jeder Spalte → `textAt()`-Helper mit `lineBreak: false` und manueller Y-Steuerung pro Zeile.
+  - **Fix 2 — Austria-Karte schwarz:** PDFKit versteht kein CSS `rgb()` → Hex-Format (`#rrggbb`). `.fill().stroke()` Chaining funktioniert nicht → `fillAndStroke()`.
+  - **Fix 3 — Kartentext-Kontrast:** Labels bei dunklem Heatmap-Hintergrund (z.B. Kärnten mit vielen Teilnehmern) unsichtbar → `getLabelColor()` berechnet wahrgenommene Helligkeit und wechselt zu weißem Text bei dunklem Hintergrund.
+  - **Fix 4 — A4-Layout-Optimierung:**
+    - **Alle Repeater angezeigt:** `slice(0, 6)` Limit entfernt, Multi-Row Grid (6 pro Zeile, automatisch umbrechen).
+    - **Charts auf BL-Ebene:** Balken-/Tortendiagramm nutzt immer Bundesland-Daten (max 9 Einträge) statt Bezirke (40+) für Lesbarkeit. Bezirk-Detail bleibt in der Tabelle.
+    - **Charts auf eigener Seite:** Kein Split durch `ensureSpace` mitten im Chart-Block.
+    - **Pie-Legend Safety:** Berechnet verfügbaren Platz, zeigt „… +N weitere" bei Überlauf.
+  - **Offen:** Spaltenheader bei Seitenumbrüchen in Bezirk-/Teilnehmer-Tabellen wiederholen.
 - **Geänderte Dateien:** `server/src/services/pdf.ts` (NEU), `server/src/routes/pdf.ts` (NEU), `server/src/index.ts`, `server/package.json`, `client/src/pages/AggregatedReportsPage.tsx`, `client/src/pages/ReportsPage.tsx`
 
 ### #6 — Rufzeichen doppelt eingeben führt zu Problemen
