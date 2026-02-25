@@ -1,0 +1,80 @@
+# Session Context
+
+## User Prompts
+
+### Prompt 1
+
+Implement the following plan:
+
+# Issue #8: Download Auswertung — Server-seitiges PDF
+
+## Context
+"Download Auswertung komplett" nutzt `html-to-image` (`toPng()`), das den gesamten DOM klont — inkl. SVG-Karte, Chart.js-Diagramme, große Tabellen. Bei umfangreichen Auswertungen crasht der Browser (500MB+ RAM, Main Thread blockiert). Lösung: PDF-Generierung auf dem Server mit PDFKit (pure JS, kein Chromium nötig, läuft auf Alpine).
+
+**Scope:** Nur die "Download Auswertung komplett"-Buttons a...
+
+### Prompt 2
+
+deploy mit ./deploy-production.sh
+
+### Prompt 3
+
+ja, commit, push und neu deployen
+
+### Prompt 4
+
+österreich karte ist schwarz.
+
+### Prompt 5
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me chronologically analyze the conversation:
+
+1. The user provided a detailed plan for Issue #8: Server-side PDF generation to replace client-side html-to-image for "Download Auswertung komplett" buttons.
+
+2. I read multiple files to understand the codebase:
+   - server/src/index.ts - route registration
+   - server/src/routes/repor...
+
+### Prompt 6
+
+kärnten daten sind auf der karte nicht sichtbar. wsl ist die schriftfarbe gleich der karte => achtung bei kontrasten => heatmap
+
+### Prompt 7
+
+überprüfe ob alles auf standard a4 passt
+
+### Prompt 8
+
+auch werden nicht alle relais auf der ersten seite angezeigt!
+
+### Prompt 9
+
+mir kommt vor als wäre die nebenstationen nach bezirksliste nicht a 4
+
+### Prompt 10
+
+[Request interrupted by user]
+
+### Prompt 11
+
+dokumentiere fix in markdown
+
+### Prompt 12
+
+ist nicht nötig
+
+### Prompt 13
+
+https://github.com/achildrenmile/bosarsalog/issues/9
+
+### Prompt 14
+
+https://github.com/achildrenmile/bosarsalog/issues/10 bei den auswertungen dies mitanführen + dokumentieren im markdown
+
+### Prompt 15
+
+[Request interrupted by user for tool use]
+
