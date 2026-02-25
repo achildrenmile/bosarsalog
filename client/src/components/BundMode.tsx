@@ -28,7 +28,6 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
   const [bundeslaender, setBundeslaender] = useState<any[]>([]);
   const [bezirke, setBezirke] = useState<any[]>([]);
   const [linkedRepeaters, setLinkedRepeaters] = useState<any[]>([]);
-  const [allRepeaters, setAllRepeaters] = useState<any[]>([]);
   const [blRepSelection, setBlRepSelection] = useState<Record<string, number>>({});
   const [blOpCallsigns, setBlOpCallsigns] = useState<Record<string, string>>({});
   const [blHomeRepeaters, setBlHomeRepeaters] = useState<Record<string, string>>({});
@@ -50,7 +49,6 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
     ]).then(([bl, bz, allReps, exReps]) => {
       setBundeslaender(bl);
       setBezirke(bz);
-      setAllRepeaters(allReps);
       const linked = allReps.filter((r: any) => r.is_linked);
       setLinkedRepeaters(linked);
       // Initialize per-BL defaults: first linked in that BL, else first overall
@@ -338,13 +336,13 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
                   className="border border-gray-300 rounded px-1 py-0.5 text-xs w-24 sm:w-32 focus:outline-none focus:ring-1 focus:ring-blue-500 hidden sm:block"
                 >
                   <option value="">—</option>
-                  {allRepeaters.filter(r => r.bundesland_code === bl.code).map(r => (
+                  {linkedRepeaters.filter(r => r.bundesland_code === bl.code).map(r => (
                     <option key={r.id} value={r.short_name}>{r.short_name}</option>
                   ))}
-                  {allRepeaters.filter(r => r.bundesland_code !== bl.code).length > 0 && (
+                  {linkedRepeaters.filter(r => r.bundesland_code !== bl.code).length > 0 && (
                     <option disabled>──────</option>
                   )}
-                  {allRepeaters.filter(r => r.bundesland_code !== bl.code).map(r => (
+                  {linkedRepeaters.filter(r => r.bundesland_code !== bl.code).map(r => (
                     <option key={r.id} value={r.short_name}>{r.short_name}</option>
                   ))}
                 </select>
