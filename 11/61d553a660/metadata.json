@@ -3,16 +3,18 @@
   "checkpoint_id": "1161d553a660",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 0,
+  "checkpoints_count": 1,
   "files_touched": [
     "CHANGELOG-2026-02-24.md",
     "client/src/components/BundMode.tsx",
     "client/src/components/LandMode.tsx",
     "client/src/pages/AggregatedReportsPage.tsx",
+    "client/src/pages/OperatorsPage.tsx",
     "client/src/pages/ReportsPage.tsx",
     "client/src/types/stats.ts",
     "server/src/db/schema.ts",
     "server/src/routes/exercises.ts",
+    "server/src/routes/operators.ts",
     "server/src/routes/pdf.ts",
     "server/src/routes/reports.ts",
     "server/src/services/pdf.ts"
@@ -24,13 +26,20 @@
       "context": "/11/61d553a660/0/context.md",
       "content_hash": "/11/61d553a660/0/content_hash.txt",
       "prompt": "/11/61d553a660/0/prompt.txt"
+    },
+    {
+      "metadata": "/11/61d553a660/1/metadata.json",
+      "transcript": "/11/61d553a660/1/full.jsonl",
+      "context": "/11/61d553a660/1/context.md",
+      "content_hash": "/11/61d553a660/1/content_hash.txt",
+      "prompt": "/11/61d553a660/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 17,
-    "cache_creation_tokens": 31687,
-    "cache_read_tokens": 1324796,
-    "output_tokens": 548,
-    "api_call_count": 11
+    "input_tokens": 58,
+    "cache_creation_tokens": 238168,
+    "cache_read_tokens": 4878162,
+    "output_tokens": 7655,
+    "api_call_count": 46
   }
 }
