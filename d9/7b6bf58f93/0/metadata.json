@@ -1,0 +1,32 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "d97b6bf58f93",
+  "session_id": "013e9a46-7047-41cf-9e91-46c53d5aca1f",
+  "strategy": "manual-commit",
+  "created_at": "2026-02-25T06:17:41.67672461Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "server/src/services/pdf.ts"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "d9dca23e-c007-498d-940f-22d4550b8d12",
+  "checkpoint_transcript_start": 559,
+  "transcript_lines_at_start": 559,
+  "token_usage": {
+    "input_tokens": 9,
+    "cache_creation_tokens": 50011,
+    "cache_read_tokens": 372835,
+    "output_tokens": 536,
+    "api_call_count": 7
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-02-25T06:17:40.832933822Z",
+    "agent_lines": 14,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 14,
+    "agent_percentage": 100
+  }
+}
