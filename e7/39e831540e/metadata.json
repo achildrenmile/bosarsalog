@@ -3,13 +3,14 @@
   "checkpoint_id": "e739e831540e",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 0,
+  "checkpoints_count": 2,
   "files_touched": [
     "CHANGELOG-2026-02-24.md",
     "CHANGELOG-2026-02-25.md",
     "CHANGELOG-v1.1.0.md",
     "client/src/App.tsx",
     "client/src/components/BundMode.tsx",
+    "client/src/components/LandMode.tsx",
     "client/src/components/Layout.tsx",
     "client/src/pages/AggregatedReportsPage.tsx",
     "client/src/pages/HilfePage.tsx",
@@ -33,13 +34,20 @@
       "context": "/e7/39e831540e/0/context.md",
       "content_hash": "/e7/39e831540e/0/content_hash.txt",
       "prompt": "/e7/39e831540e/0/prompt.txt"
+    },
+    {
+      "metadata": "/e7/39e831540e/1/metadata.json",
+      "transcript": "/e7/39e831540e/1/full.jsonl",
+      "context": "/e7/39e831540e/1/context.md",
+      "content_hash": "/e7/39e831540e/1/content_hash.txt",
+      "prompt": "/e7/39e831540e/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 13,
-    "cache_creation_tokens": 7245,
-    "cache_read_tokens": 748197,
-    "output_tokens": 344,
-    "api_call_count": 7
+    "input_tokens": 33,
+    "cache_creation_tokens": 126027,
+    "cache_read_tokens": 1807279,
+    "output_tokens": 1734,
+    "api_call_count": 23
   }
 }

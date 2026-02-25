@@ -1,0 +1,22 @@
+# Session Context
+
+## User Prompts
+
+### Prompt 1
+
+Implement the following plan:
+
+# Plan: Allow duplicate callsigns in reports
+
+## Context
+Currently `signal_reports` has a `UNIQUE (exercise_id, operator_id, repeater_id)` constraint — same callsign can only appear once per repeater per exercise. User wants to allow the same callsign multiple times (e.g. operator checks in again later with different signal conditions).
+
+## Changes
+
+### 1. Schema: `server/src/db/schema.ts`
+- Add migration: detect the UNIQUE constraint and recreate `signal_reports...
+
+### Prompt 2
+
+deploy and create a new sub release 1.10.1.
+
