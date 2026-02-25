@@ -184,24 +184,31 @@ function renderSummaryCards(doc: PDFKit.PDFDocument, stats: PdfStats, exerciseCo
 
 function renderPerRepeater(doc: PDFKit.PDFDocument, perRepeater: PerRepeater[]) {
   if (perRepeater.length === 0) return;
-  ensureSpace(doc, 35);
   const m = doc.page.margins;
   const usable = doc.page.width - m.left - m.right;
-  const cols = Math.min(perRepeater.length, 6);
-  const cardW = usable / cols - 6;
-  const startY = doc.y;
+  const gap = 6;
+  const maxCols = 6;
+  const cols = Math.min(perRepeater.length, maxCols);
+  const cardW = usable / cols - gap;
+  const rowH = 28;
+  const rows = Math.ceil(perRepeater.length / maxCols);
+  ensureSpace(doc, rows * (rowH + gap) + 4);
 
-  perRepeater.slice(0, 6).forEach((r, i) => {
-    const x = m.left + i * (cardW + 6);
+  const startY = doc.y;
+  perRepeater.forEach((r, i) => {
+    const col = i % maxCols;
+    const row = Math.floor(i / maxCols);
+    const x = m.left + col * (cardW + gap);
+    const y = startY + row * (rowH + gap);
     doc.save();
-    doc.roundedRect(x, startY, cardW, 28, 3).fill(GRAY_50);
+    doc.roundedRect(x, y, cardW, rowH, 3).fill(GRAY_50);
     doc.fontSize(12).fillColor(GRAY_500);
-    textAt(doc, String(r.count), x, startY + 2, { width: cardW, align: 'center' });
+    textAt(doc, String(r.count), x, y + 2, { width: cardW, align: 'center' });
     doc.fontSize(6).fillColor(GRAY_500);
-    textAt(doc, r.short_name, x, startY + 17, { width: cardW, align: 'center' });
+    textAt(doc, r.short_name, x, y + 17, { width: cardW, align: 'center' });
     doc.restore();
   });
-  doc.y = startY + 36;
+  doc.y = startY + rows * (rowH + gap) + 4;
 }
 
 function renderExerciseTable(doc: PDFKit.PDFDocument, exercises: ExerciseSummary[]) {
@@ -308,7 +315,7 @@ function renderBarChart(doc: PDFKit.PDFDocument, chartData: { label: string; par
   const startX = m.left;
 
   doc.fontSize(9).fillColor(NAVY);
-  textAt(doc, 'Stationen & Rapporte', m.left, doc.y);
+  textAt(doc, 'Stationen & Rapporte nach Bundesland', m.left, doc.y);
   doc.y += 15;
   const startY = doc.y;
 
@@ -385,16 +392,22 @@ function renderPieChart(doc: PDFKit.PDFDocument, chartData: { label: string; val
     startAngle = endAngle;
   });
 
-  // Legend
+  // Legend (limit to available space)
   const legendX = cx + r + 30;
-  filtered.forEach((d, i) => {
+  const maxLegendItems = Math.floor(((doc.page.height - m.bottom) - (cy - r)) / 12);
+  const legendItems = filtered.slice(0, maxLegendItems);
+  legendItems.forEach((d, i) => {
     const ly = cy - r + i * 12;
-    if (ly > doc.page.height - m.bottom) return;
     const color = PIE_COLORS[i % PIE_COLORS.length];
     doc.rect(legendX, ly, 8, 8).fill(color);
     doc.fontSize(6).fillColor(TEXT_DARK);
     textAt(doc, `${d.label} (${d.value})`, legendX + 12, ly + 1, { width: usable - legendX + m.left - 12 });
   });
+  if (filtered.length > maxLegendItems) {
+    const overflowY = cy - r + maxLegendItems * 12;
+    doc.fontSize(5).fillColor(GRAY_500);
+    textAt(doc, `… +${filtered.length - maxLegendItems} weitere`, legendX, overflowY);
+  }
 
   doc.y = cy + r + 15;
 }
@@ -606,20 +619,21 @@ export function generateAggregatedPdf(
   renderPerRepeater(doc, stats.perRepeater);
   renderExerciseTable(doc, exercises);
 
+  // Page 2: Austria map
   if (stats.blStats.length > 0) {
     doc.addPage();
     renderAustriaMap(doc, stats.blStats);
   }
 
-  const chartData = stats.bezirkStats.length > 0
-    ? stats.bezirkStats.map(bz => ({ label: `${bz.bundesland} ${bz.bezirk_code}`, participants: bz.participants, reports: bz.reports }))
-    : stats.blStats.map(bl => ({ label: bl.bundesland, participants: bl.participants, reports: bl.reports }));
-
+  // Page 3: Charts (always BL-level for readability, max 9 entries)
+  const chartData = stats.blStats.map(bl => ({ label: bl.bundesland, participants: bl.participants, reports: bl.reports }));
   if (chartData.length > 0) {
+    doc.addPage();
     renderBarChart(doc, chartData);
     renderPieChart(doc, chartData.map(d => ({ label: d.label, value: d.reports })));
   }
 
+  // Page 4+: Bezirk/BL detail table
   if (stats.bezirkStats.length > 0) {
     doc.addPage();
     renderBezirkTable(doc, stats.bezirkStats, stats);
@@ -628,6 +642,7 @@ export function generateAggregatedPdf(
     renderBlTable(doc, stats.blStats, stats);
   }
 
+  // Page 5+: Participants
   doc.addPage();
   renderParticipants(doc, stats.participants);
   renderFooter(doc);
@@ -655,20 +670,21 @@ export function generateExercisePdf(
   renderSummaryCards(doc, stats);
   renderPerRepeater(doc, stats.perRepeater);
 
+  // Page 2: Austria map
   if (stats.blStats.length > 0) {
     doc.addPage();
     renderAustriaMap(doc, stats.blStats);
   }
 
-  const chartData = stats.bezirkStats.length > 0
-    ? stats.bezirkStats.map(bz => ({ label: `${bz.bundesland} ${bz.bezirk_code}`, participants: bz.participants, reports: bz.reports }))
-    : stats.blStats.map(bl => ({ label: bl.bundesland, participants: bl.participants, reports: bl.reports }));
-
+  // Page 3: Charts (always BL-level for readability, max 9 entries)
+  const chartData = stats.blStats.map(bl => ({ label: bl.bundesland, participants: bl.participants, reports: bl.reports }));
   if (chartData.length > 0) {
+    doc.addPage();
     renderBarChart(doc, chartData);
     renderPieChart(doc, chartData.map(d => ({ label: d.label, value: d.reports })));
   }
 
+  // Page 4+: Bezirk/BL detail table
   if (stats.bezirkStats.length > 0) {
     doc.addPage();
     renderBezirkTable(doc, stats.bezirkStats, stats);
@@ -677,6 +693,7 @@ export function generateExercisePdf(
     renderBlTable(doc, stats.blStats, stats);
   }
 
+  // Page 5+: Participants
   doc.addPage();
   renderParticipants(doc, stats.participants);
   renderFooter(doc);
