@@ -1,10 +1,10 @@
-export async function getOrCreateOperator(callsign: string, existing: any): Promise<any> {
+export async function getOrCreateOperator(callsign: string, existing: any, extras?: { name?: string; qth?: string }): Promise<any> {
   if (existing) return existing;
   if (!callsign || callsign.length < 3) return null;
   try {
     return await apiFetch('/api/v1/operators', {
       method: 'POST',
-      body: JSON.stringify({ callsign: callsign.toUpperCase() }),
+      body: JSON.stringify({ callsign: callsign.toUpperCase(), name: extras?.name || null, qth: extras?.qth || null }),
     });
   } catch (err: any) {
     if (err.message?.includes('existiert')) {

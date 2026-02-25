@@ -182,8 +182,18 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
   const handleBezirkSubmit = async (bezirkCode: string, repeaterId: number, form: EntryForm) => {
     try {
       if (!repeaterId) return;
-      const operator = await getOrCreateOperator(form.callsign, form.operator);
+      const operator = await getOrCreateOperator(form.callsign, form.operator, { name: form.opName, qth: form.opQth });
       if (!operator) return;
+
+      // Patch name/QTH if user filled them in and they differ from what's stored
+      if (operator.id && (form.opName || form.opQth)) {
+        const patch: any = {};
+        if (form.opName && form.opName !== (operator.name || '')) patch.name = form.opName;
+        if (form.opQth && form.opQth !== (operator.qth || '')) patch.qth = form.opQth;
+        if (Object.keys(patch).length > 0) {
+          await apiFetch(`/api/v1/operators/${operator.id}`, { method: 'PATCH', body: JSON.stringify(patch) });
+        }
+      }
 
       const parsed = parseRapport(form.rapport);
 
