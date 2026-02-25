@@ -337,13 +337,13 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
                 >
                   <option value="">—</option>
                   {linkedRepeaters.filter(r => r.bundesland_code === bl.code).map(r => (
-                    <option key={r.id} value={r.short_name}>{r.short_name}</option>
+                    <option key={r.id} value={r.short_name}>{r.site_name || r.short_name}{r.band ? ` ${r.band}` : ''}</option>
                   ))}
                   {linkedRepeaters.filter(r => r.bundesland_code !== bl.code).length > 0 && (
                     <option disabled>──────</option>
                   )}
                   {linkedRepeaters.filter(r => r.bundesland_code !== bl.code).map(r => (
-                    <option key={r.id} value={r.short_name}>{r.short_name}</option>
+                    <option key={r.id} value={r.short_name}>{r.site_name || r.short_name}{r.band ? ` ${r.band}` : ''}</option>
                   ))}
                 </select>
               </div>
