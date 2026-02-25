@@ -107,6 +107,13 @@ export default function HilfePage() {
           Unterhalb der Umsetzer gibt es einen eigenen Bereich für Simplex-Frequenzen (z.B. 145.500 MHz).
           Eigene Simplex-Frequenzen können mit <b>+ Simplex-Frequenz hinzufügen</b> ergänzt werden.
         </p>
+        <h4 className="font-semibold text-[#1e3a5f] mt-3">Simplex-Bezirke (nur Admin)</h4>
+        <p>
+          Die Checkbox <b>Simplex Bezirke aktivieren</b> gruppiert Simplex-Frequenzen nach Bundesland und Bezirk
+          (wie im OE-Link-Modus). Standardmäßig deaktiviert — wenn aktiv, erscheint ein BL-Grid zur Auswahl
+          der anzuzeigenden Bundesländer. Rapporte ohne Bezirk landen im „Sonstige"-Bereich.
+          Der Toggle kann jederzeit ein-/ausgeschaltet werden, ohne dass Daten verloren gehen.
+        </p>
         <h4 className="font-semibold text-[#1e3a5f] mt-3">OE-Link</h4>
         <p>
           Die Checkbox <b>OE-Link</b> aktiviert den OE-Link-Modus.
@@ -170,13 +177,21 @@ export default function HilfePage() {
           Ein Rapport bleibt immer in dem Bundesland, in dem er eingegeben wurde — auch wenn der gewählte
           Umsetzer physisch in einem anderen Bundesland steht (z.B. Hermannskogel/OE1 bei einem Eintrag in Salzburg).
         </p>
+        <p>
+          Im Header jedes Bundeslandes gibt es zwei Felder:
+        </p>
+        <ul className="list-disc ml-5 space-y-1">
+          <li><b>OP</b> — Rufzeichen des zuständigen Operators für dieses Bundesland. Wird in Echtzeit an alle Clients übertragen.</li>
+          <li><b>REP</b> — Dropdown zur Auswahl des eigenen Repeaters (nur OE-Link-Umsetzer). Zeigt Standort und Band (z.B. „Magdalensberg 70cm"). Repeater des eigenen Bundeslandes stehen oben, gefolgt von den anderen BLs. Wird pro Übung gespeichert.</li>
+        </ul>
 
         <h4 className="font-semibold text-[#1e3a5f] mt-3">Rapport eingeben</h4>
         <p>
-          Jeder Bezirk hat ein Eingabeformular mit drei Feldern:
+          Jeder Bezirk hat ein Eingabeformular mit folgenden Feldern:
         </p>
         <ul className="list-disc ml-5 space-y-1">
           <li><b>Rufzeichen</b> — Eingabe mit Autovervollständigung. Wird das Rufzeichen nicht gefunden, wird der Operator automatisch neu angelegt.</li>
+          <li><b>Suffix-Buttons</b> — Vier Toggle-Buttons (<b>/m</b>, <b>/p</b>, <b>/am</b>, <b>/mm</b>) neben dem Rufzeichen. Klicken aktiviert den Suffix (blau), nochmals klicken deaktiviert ihn. Nur ein Suffix gleichzeitig aktiv. Der Suffix erscheint in der Auswertung neben dem Rufzeichen (z.B. „OE8YML/m").</li>
           <li><b>RST</b> — Signalrapport im Format R/S, z.B. „5/9", „4/7+20"</li>
           <li><b>Bemerkung</b> — Optionale Notiz</li>
         </ul>
@@ -186,12 +201,25 @@ export default function HilfePage() {
           speichert den Rapport. Alternativ kann der <b>+</b>-Button verwendet werden.
           Die Felder werden automatisch geleert und der Fokus springt zurück zum Rufzeichen-Feld.
         </p>
+        <p>
+          Wird ein Rufzeichen doppelt eingegeben (gleicher Operator + gleicher Umsetzer), wird der bestehende Rapport
+          automatisch aktualisiert statt eines Fehlers.
+        </p>
 
         <h4 className="font-semibold text-[#1e3a5f] mt-3">Rapport bearbeiten</h4>
         <p>
           Klicken Sie auf einen bestehenden Rapport (Rufzeichen, RST oder Bemerkung), um ihn inline zu bearbeiten.
           Bestätigen mit <b>OK</b>, abbrechen mit <b>X</b>.
         </p>
+
+        <h4 className="font-semibold text-[#1e3a5f] mt-3">Rapport verschieben</h4>
+        <p>
+          Ein Rapport kann auf zwei Wege in einen anderen Bezirk verschoben werden:
+        </p>
+        <ul className="list-disc ml-5 space-y-1">
+          <li><b>Bezirk-Dropdown:</b> Beim Bearbeiten eines Rapports erscheint ein Bezirk-Auswahlfeld. Im OE-Link-Modus zeigt dieser Dropdown alle Bundesländer mit allen Bezirken — so kann z.B. ein Rapport von Wien direkt nach Salzburg verschoben werden.</li>
+          <li><b>Drag & Drop (Desktop):</b> Rapport-Zeilen können per Drag & Drop zwischen Bezirk-Abschnitten gezogen werden. Das Ziel wird blau hervorgehoben.</li>
+        </ul>
 
         <h4 className="font-semibold text-[#1e3a5f] mt-3">Rapport löschen</h4>
         <p>
@@ -248,7 +276,7 @@ export default function HilfePage() {
           <li><b>Übersichtskarten</b> — Teilnehmer (eindeutig über alle Übungen), Rapporte, Anzahl Übungen, Ø Teilnehmer/Übung</li>
           <li><b>Übungsliste</b> — Aufklappbare Liste aller enthaltenen Übungen mit Einzelwerten</li>
           <li>Karte, Diagramme, Tabellen und Teilnehmerliste wie bei der Einzelauswertung</li>
-          <li><b>Download Auswertung (PNG)</b> — Die gesamte Auswertung als Bild herunterladen</li>
+          <li><b>Download Auswertung (PDF)</b> — Die gesamte Auswertung als PDF herunterladen (A4 Querformat, server-seitig generiert)</li>
           <li><b>Download ADIF</b> — QSO-Daten im ADIF-Format (.adi) für den Import in QRZ.com, LOTW oder andere Logbuch-Software</li>
         </ul>
 
@@ -287,7 +315,7 @@ export default function HilfePage() {
               </tr>
             </thead>
             <tbody>
-              <Shortcut keys="PNG Auswertung" desc="Screenshot der gesamten Auswertungsseite" />
+              <Shortcut keys="PDF Auswertung" desc="Gesamte Auswertung als PDF (server-seitig generiert)" />
               <Shortcut keys="ADIF (.adi)" desc="QSO-Daten für QRZ.com, LOTW und andere Logbuch-Software" />
               <Shortcut keys="TXT — OE-Link" desc="Textdatei, gruppiert nach Bundesland und Bezirk" />
               <Shortcut keys="TXT — Frequenzen" desc="Textdatei, gruppiert nach Umsetzer und Bezirk" />
