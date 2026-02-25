@@ -1,0 +1,86 @@
+Implement the following plan:
+
+# Issue #10: Suffix-Checkboxen (/m /p /am /mm) statt Freitext im Rufzeichen
+
+## Context
+Operatoren geben aktuell Suffixe wie `/m` (mobil), `/p` (portabel) direkt im Rufzeichen-Feld ein (z.B. "OE8YML/m"). Das ist fehleranfällig und uneinheitlich. Stattdessen sollen Checkboxen/Toggles für `/m`, `/p`, `/am`, `/mm` neben dem Rufzeichen-Feld erscheinen. Der Suffix wird separat gespeichert und in den Auswertungen mitangezeigt.
+
+## Bestandsanalyse
+- `exercise_attendance` hat bereits `callsign_suffix TEXT` — **unbenutzt**
+- `signal_reports` hat **keinen** Suffix-Spalte
+- Suffix ist pro Report sinnvoll (Operator kann Status wechseln)
+- Auswertungen aggregieren Teilnehmer per `operator_id`, zeigen `callsign` an
+
+## Änderungen
+
+### 1. Schema-Migration: `server/src/db/schema.ts`
+- Neue Spalte `suffix TEXT DEFAULT NULL` in `signal_reports` (ALTER TABLE ADD COLUMN, nicht-destruktiv)
+- Gültige Werte: `'/m'`, `'/p'`, `'/am'`, `'/mm'`, `NULL`
+
+### 2. API: `server/src/routes/exercises.ts`
+- **POST** `/exercises/:id/reports`: `suffix` Feld akzeptieren und speichern
+- **PATCH** `/exercises/:id/reports/:rid`: `suffix` Feld akzeptieren
+- **GET** `/exercises/:id/reports`: `suffix` im SELECT mit zurückgeben
+- **GET** `/exercises/:id/stats` (Participants-Query): Suffix mit aggregieren — `GROUP_CONCAT(DISTINCT sr.suffix)` als `suffixes` oder einfach den häufigsten/letzten Suffix pro Operator
+
+### 3. API: `server/src/routes/reports.ts`
+- Stats-Participants-Query: Ebenfalls Suffix mitliefern (gleicher Pattern wie exercises stats)
+
+### 4. Client Types: `client/src/types/stats.ts`
+- `Participant` Interface: `suffix?: string | null` hinzufügen
+
+### 5. UI Eingabe: `client/src/components/LandMode.tsx` + `BundMode.tsx`
+- `EntryForm` Interface: `suffix: string` ('' | '/m' | '/p' | '/am' | '/mm')
+- **Toggle-Buttons** neben dem Rufzeichen-Feld (4 kleine Buttons: m, p, am, mm)
+  - Nur einer aktiv (Radio-Verhalten), nochmal klicken = deselect
+  - Visuell: grauer Button, bei aktiv blauer Hintergrund
+  - Kompakt: inline neben CallsignInput
+- `suffix` wird im POST/PATCH mitgesendet
+- In der Report-Anzeige (jede Zeile): Callsign + Suffix anzeigen (z.B. "OE8YML/m")
+
+### 6. Auswertung Web: `client/src/pages/ReportsPage.tsx` + `AggregatedReportsPage.tsx`
+- Teilnehmer-Tabelle: Suffix neben Rufzeichen anzeigen
+- Falls ein Operator mehrere Suffixe hat (unwahrscheinlich): alle zeigen
+
+### 7. Auswertung PDF: `server/src/services/pdf.ts`
+- `Participant` Interface: `suffix` Feld hinzufügen
+- `renderParticipants()`: Callsign + Suffix anzeigen
+
+### 8. CHANGELOG: `CHANGELOG-2026-02-24.md`
+- Issue #10 Eintrag
+
+## Dateien
+
+| Datei | Änderung |
+|-------|----------|
+| `server/src/db/schema.ts` | ALTER TABLE ADD COLUMN `suffix` |
+| `server/src/routes/exercises.ts` | POST/PATCH/GET reports: suffix Feld |
+| `server/src/routes/reports.ts` | Stats participants: suffix mitliefern |
+| `server/src/routes/pdf.ts` | Suffix in PDF-Stats Query |
+| `client/src/types/stats.ts` | Participant.suffix |
+| `client/src/components/LandMode.tsx` | Suffix-Toggles + form submit |
+| `client/src/components/BundMode.tsx` | Suffix-Toggles + form submit |
+| `client/src/pages/ReportsPage.tsx` | Suffix in Teilnehmer-Tabelle |
+| `client/src/pages/AggregatedReportsPage.tsx` | Suffix in Teilnehmer-Tabelle |
+| `server/src/services/pdf.ts` | Suffix in PDF Teilnehmer |
+| `CHANGELOG-2026-02-24.md` | Dokumentation |
+
+## Verifikation
+1. `nix-shell -p nodejs --run "npm run build"` kompiliert sauber
+2. Neuer Report: Suffix-Toggles sichtbar, /m auswählen → Report zeigt "OE8YML/m"
+3. Auswertung (Einzel-Übung): Teilnehmer-Liste zeigt Suffix
+4. Auswertung (Aggregiert): Teilnehmer-Liste zeigt Suffix
+5. PDF-Download: Teilnehmer mit Suffix
+6. Bestehende Reports ohne Suffix: funktionieren weiterhin (NULL = kein Suffix)
+7. Deploy mit `./deploy-production.sh`
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+
+---
+
+deploy with ./deploy-production.sh
+
+---
+
+no change visible
