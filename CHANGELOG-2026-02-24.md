@@ -80,6 +80,14 @@
   - **Offen:** Spaltenheader bei Seitenumbrüchen in Bezirk-/Teilnehmer-Tabellen wiederholen.
 - **Geänderte Dateien:** `server/src/services/pdf.ts` (NEU), `server/src/routes/pdf.ts` (NEU), `server/src/index.ts`, `server/package.json`, `client/src/pages/AggregatedReportsPage.tsx`, `client/src/pages/ReportsPage.tsx`
 
+### #9 — Rapporte Verteilung schneidet Bundesland-Namen ab
+- **Issue:** https://github.com/achildrenmile/bosarsalog/issues/9
+- **Status:** Erledigt und deployed
+- **Problem:** Balken- und Tortendiagramm in der Webansicht (Auswertung) nutzten volle Bundesland-Namen (z.B. „Niederösterreich") als Labels — werden bei wenig Platz abgeschnitten.
+- **Fix:** Labels verwenden jetzt OE-Kurzform: `OE3` (Bundesland-Ebene) bzw. `OE3 AM` (Bezirk-Ebene mit Bezirkscode).
+- **Scope:** Nur Webansicht (Client). PDF-Labels waren bereits auf BL-Ebene.
+- **Geänderte Dateien:** `AggregatedReportsPage.tsx`, `ReportsPage.tsx`
+
 ### #6 — Rufzeichen doppelt eingeben führt zu Problemen
 - **Issue:** https://github.com/achildrenmile/bosarsalog/issues/6
 - **Status:** Erledigt

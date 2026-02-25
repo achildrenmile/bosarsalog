@@ -425,8 +425,8 @@ export default function AggregatedReportsPage() {
           {/* Charts */}
           {(() => {
             const chartData = stats.bezirkStats.length > 0
-              ? stats.bezirkStats.map(bz => ({ label: `${bz.bundesland} ${bz.bezirk_code}`, participants: bz.participants, reports: bz.reports }))
-              : stats.blStats.map(bl => ({ label: bl.bundesland, participants: bl.participants, reports: bl.reports }));
+              ? stats.bezirkStats.map(bz => ({ label: `OE${parseInt(bz.bundesland_code, 10)} ${bz.bezirk_code}`, participants: bz.participants, reports: bz.reports }))
+              : stats.blStats.map(bl => ({ label: `OE${parseInt(bl.bundesland_code, 10)}`, participants: bl.participants, reports: bl.reports }));
 
             return chartData.length > 0 ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
