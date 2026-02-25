@@ -137,9 +137,10 @@ Part of the [oeradio.at](https://oeradio.at) ecosystem.
 ### Operator Registry
 
 - Searchable operator database (callsign, name, QTH)
-- Quick-add during live entry when callsign not found
+- Quick-add during live entry when callsign not found — Name and QTH are saved on creation
 - Inline editing of operator details (Name, QTH) directly from report entry forms
 - Operator Name and QTH displayed alongside callsign in all report lists
+- Same callsign can appear multiple times per repeater per exercise (duplicate reports allowed)
 - Paginated browsing (50 per page)
 - Bulk import from official Fernmeldebehörde Rufzeichenliste PDF (see below)
 
