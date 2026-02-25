@@ -15,7 +15,7 @@ export default function Layout() {
       <nav className="bg-[#1e3a5f] text-white px-2 sm:px-4 py-2 flex items-center justify-between shadow-md gap-2">
         <div className="flex items-center gap-2 sm:gap-4 min-w-0">
           <a href="https://bosarsa.oeradio.at" target="_blank" rel="noopener noreferrer" className="flex-shrink-0">
-            <img src="/bosarsa.jpeg" alt="BOS-ARSA" className="h-8 sm:h-10 rounded" />
+            <img src="/bosarsa.webp" alt="BOS-ARSA" className="h-8 sm:h-10 rounded" />
           </a>
           <Link to="/" className="hover:text-blue-200 flex-shrink-0">
             <div className="text-base sm:text-lg font-bold tracking-wide leading-tight">BOS-ARSA Log</div>

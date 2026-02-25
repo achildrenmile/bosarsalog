@@ -33,7 +33,7 @@ export default function ReportsPage() {
     header.setAttribute('data-export-inject', 'true');
     header.style.cssText = 'display:flex;align-items:center;gap:12px;padding:16px 24px;background:#1e3a5f;border-radius:8px;margin-bottom:16px;';
     const img = document.createElement('img');
-    img.src = '/bosarsa.jpeg';
+    img.src = '/bosarsa.webp';
     img.style.cssText = 'height:36px;border-radius:4px;';
     header.appendChild(img);
     const text = document.createElement('div');
