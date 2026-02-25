@@ -89,7 +89,7 @@ reportsRouter.get('/stats', (req, res) => {
   ).all(...ids);
 
   const participants = db.prepare(
-    `SELECT o.callsign, o.name, o.bezirk_code, o.bundesland_code, o.home_repeater,
+    `SELECT o.callsign, o.name, o.bezirk_code, o.bundesland_code,
       bl.name as bundesland_name,
       COUNT(CASE WHEN sr.readability IS NOT NULL THEN 1 END) as report_count,
       GROUP_CONCAT(DISTINCT sr.suffix) as suffixes

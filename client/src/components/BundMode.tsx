@@ -30,6 +30,7 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
   const [linkedRepeaters, setLinkedRepeaters] = useState<any[]>([]);
   const [blRepSelection, setBlRepSelection] = useState<Record<string, number>>({});
   const [blOpCallsigns, setBlOpCallsigns] = useState<Record<string, string>>({});
+  const [blHomeRepeaters, setBlHomeRepeaters] = useState<Record<string, string>>({});
   const [collapsedBl, setCollapsedBl] = useState<Set<string>>(new Set());
   const [addRepBl, setAddRepBl] = useState<string | null>(null);
   const [newRepName, setNewRepName] = useState('');
@@ -53,22 +54,24 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
       // Initialize per-BL defaults: first linked in that BL, else first overall
       const defaults: Record<string, number> = {};
       const ops: Record<string, string> = {};
+      const homeReps: Record<string, string> = {};
       for (const b of bl) {
         const inBl = linked.find((r: any) => r.bundesland_code === b.code);
         const repId = inBl ? inBl.id : (linked[0]?.id ?? 0);
         defaults[b.code] = repId;
-        // Load existing OP callsign from exercise_repeaters
+        // Load existing OP callsign and home repeater from exercise_repeaters
         const exRep = exReps.find((er: any) => er.repeater_id === repId);
         ops[b.code] = exRep?.operator_callsign || '';
+        homeReps[b.code] = exRep?.home_repeater || '';
       }
       setBlRepSelection(defaults);
       setBlOpCallsigns(ops);
+      setBlHomeRepeaters(homeReps);
     }).catch(() => {});
 
     const socket = getSocket();
     const handleOpCallsignUpdated = (data: { exercise_id: string; repeater_id: number; operator_callsign: string }) => {
       if (data.exercise_id !== exerciseId) return;
-      // Map repeater_id back to blCode via current blRepSelection
       setBlRepSelection(sel => {
         for (const [blCode, repId] of Object.entries(sel)) {
           if (repId === data.repeater_id) {
@@ -78,8 +81,23 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
         return sel;
       });
     };
+    const handleHomeRepeaterUpdated = (data: { exercise_id: string; repeater_id: number; home_repeater: string }) => {
+      if (data.exercise_id !== exerciseId) return;
+      setBlRepSelection(sel => {
+        for (const [blCode, repId] of Object.entries(sel)) {
+          if (repId === data.repeater_id) {
+            setBlHomeRepeaters(prev => ({ ...prev, [blCode]: data.home_repeater || '' }));
+          }
+        }
+        return sel;
+      });
+    };
     socket.on('op_callsign_updated', handleOpCallsignUpdated);
-    return () => { socket.off('op_callsign_updated', handleOpCallsignUpdated); };
+    socket.on('home_repeater_updated', handleHomeRepeaterUpdated);
+    return () => {
+      socket.off('op_callsign_updated', handleOpCallsignUpdated);
+      socket.off('home_repeater_updated', handleHomeRepeaterUpdated);
+    };
   }, [exerciseId]);
 
   const saveOpCallsign = async (blCode: string, val: string) => {
@@ -99,6 +117,23 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
       });
     }
     getSocket().emit('op_callsign_updated', { exercise_id: exerciseId, repeater_id: repId, operator_callsign: val });
+  };
+
+  const saveHomeRepeater = async (blCode: string, val: string) => {
+    const repId = blRepSelection[blCode];
+    if (!repId) return;
+    try {
+      await apiFetch(`/api/v1/exercises/${exerciseId}/repeaters`, {
+        method: 'POST',
+        body: JSON.stringify({ repeater_id: repId, home_repeater: val || null }),
+      });
+    } catch {
+      await apiFetch(`/api/v1/exercises/${exerciseId}/repeaters/${repId}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ home_repeater: val || null }),
+      });
+    }
+    getSocket().emit('home_repeater_updated', { exercise_id: exerciseId, repeater_id: repId, home_repeater: val });
   };
 
   const addRepeater = async (blCode: string) => {
@@ -289,6 +324,15 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
                   onBlur={e => saveOpCallsign(bl.code, e.target.value.toUpperCase())}
                   placeholder="Rufz."
                   className={`border rounded px-1.5 py-0.5 text-xs font-mono uppercase w-20 sm:w-24 focus:outline-none focus:ring-1 focus:ring-blue-500 ${blOpCallsigns[bl.code] ? 'border-gray-300' : 'border-[#c8102e] placeholder-[#c8102e]/60'}`}
+                />
+                <label className="text-xs text-gray-500 hidden sm:inline">REP:</label>
+                <input
+                  type="text"
+                  value={blHomeRepeaters[bl.code] || ''}
+                  onChange={e => setBlHomeRepeaters(prev => ({ ...prev, [bl.code]: e.target.value }))}
+                  onBlur={e => saveHomeRepeater(bl.code, e.target.value)}
+                  placeholder="Repeater"
+                  className="border border-gray-300 rounded px-1.5 py-0.5 text-xs w-20 sm:w-28 focus:outline-none focus:ring-1 focus:ring-blue-500 hidden sm:block"
                 />
               </div>
             </div>

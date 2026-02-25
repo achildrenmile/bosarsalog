@@ -261,10 +261,16 @@ export function runMigrations(db: Database.Database): void {
     )
   `).run();
 
-  // Migration: add home_repeater to operators
+  // Migration: add home_repeater to operators (legacy, kept for deployed DB compat)
   const opCols = db.prepare("PRAGMA table_info(operators)").all() as any[];
   if (!opCols.some((c: any) => c.name === 'home_repeater')) {
     db.exec("ALTER TABLE operators ADD COLUMN home_repeater TEXT DEFAULT NULL");
+  }
+
+  // Migration: add home_repeater to exercise_repeaters (per-exercise repeater assignment)
+  const erCols = db.prepare("PRAGMA table_info(exercise_repeaters)").all() as any[];
+  if (!erCols.some((c: any) => c.name === 'home_repeater')) {
+    db.exec("ALTER TABLE exercise_repeaters ADD COLUMN home_repeater TEXT DEFAULT NULL");
   }
 
   // Migration: backfill operators with null bundesland_code using callsign prefix

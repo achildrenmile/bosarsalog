@@ -29,7 +29,7 @@ interface BezirkStat {
 interface Participant {
   callsign: string; name: string | null; bezirk_code: string | null;
   bundesland_code: string | null; bundesland_name: string | null; report_count: number;
-  suffixes: string | null; home_repeater: string | null;
+  suffixes: string | null;
 }
 interface ExerciseSummary {
   id: string; date: string; name: string; exercise_type?: string | null;
@@ -549,7 +549,6 @@ function renderParticipants(doc: PDFKit.PDFDocument, participants: Participant[]
   const colNum = m.left + 3;
   const colCall = m.left + 25;
   const colName = m.left + 90;
-  const colRep = m.left + usable - 185;
   const colBz = m.left + usable - 135;
   const colBl = m.left + usable - 90;
   const colRap = m.left + usable - 35;
@@ -561,7 +560,6 @@ function renderParticipants(doc: PDFKit.PDFDocument, participants: Participant[]
   textAt(doc, '#', colNum, hy);
   textAt(doc, 'RUFZEICHEN', colCall, hy);
   textAt(doc, 'NAME', colName, hy);
-  textAt(doc, 'REP.', colRep, hy);
   textAt(doc, 'BEZ.', colBz, hy);
   textAt(doc, 'BUNDESLAND', colBl, hy);
   textAt(doc, 'RAPP.', colRap, hy, { width: 35, align: 'right' });
@@ -582,8 +580,7 @@ function renderParticipants(doc: PDFKit.PDFDocument, participants: Participant[]
     doc.fontSize(6).fillColor(TEXT_DARK);
     textAt(doc, p.callsign + suffixStr, colCall, ty);
     doc.fontSize(6).fillColor(TEXT_MED);
-    textAt(doc, p.name || '', colName, ty, { width: colRep - colName - 5 });
-    textAt(doc, p.home_repeater || '', colRep, ty, { width: colBz - colRep - 5 });
+    textAt(doc, p.name || '', colName, ty, { width: colBz - colName - 5 });
     textAt(doc, p.bezirk_code || '', colBz, ty);
     textAt(doc, p.bundesland_name || '', colBl, ty, { width: colRap - colBl - 5 });
     doc.fontSize(6).fillColor(TEXT_DARK);

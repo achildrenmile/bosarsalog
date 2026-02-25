@@ -48,18 +48,23 @@
 
 ## Offene Issues
 
-### #3 — Eigener Repeater pro Operator (Stammdaten)
+### #3 — Eigener Repeater pro Operator → verschoben nach BundMode
 - **Issue:** https://github.com/achildrenmile/bosarsalog/issues/3
-- **Status:** Erledigt
-- **Umsetzung:**
-  - **Schema-Migration:** Neue Spalte `home_repeater TEXT DEFAULT NULL` in `operators`-Tabelle (Freitext, optional).
-  - **API:** POST/PATCH Operators akzeptieren `home_repeater`-Feld. GET liefert es automatisch mit `SELECT *`.
-  - **Stats-Queries:** Alle 4 Participants-Queries (exercises.ts, reports.ts, pdf.ts x2) selektieren `o.home_repeater`.
-  - **Stammdaten UI (OperatorsPage):** Neue Spalte "Repeater" in der Tabelle. Inline-Edit und Add-Form mit Freitext-Input.
-  - **Auswertung Web:** Neue Spalte "Repeater" in der Teilnehmer-Liste (ReportsPage + AggregatedReportsPage).
-  - **Auswertung PDF:** Neue Spalte "REP." in der Teilnehmer-Liste zwischen Name und Bezirk.
-  - Operatoren ohne Repeater: Spalte bleibt leer.
-- **Geänderte Dateien:** `schema.ts`, `operators.ts`, `exercises.ts`, `reports.ts`, `pdf.ts` (Routes), `pdf.ts` (Service), `stats.ts`, `OperatorsPage.tsx`, `ReportsPage.tsx`, `AggregatedReportsPage.tsx`
+- **Status:** Erledigt und deployed
+- **Änderung:** home_repeater ist jetzt ein **per-Übung/per-BL-Feld** im BundMode, nicht mehr ein Operator-Stammdaten-Attribut.
+- **Revert (Stammdaten/Auswertung):**
+  - `home_repeater` aus POST/PATCH Operators entfernt (Spalte in DB bleibt für Kompatibilität).
+  - Participants-Queries in exercises.ts, reports.ts, pdf.ts: `o.home_repeater` entfernt.
+  - Participant-Interface (client + server): `home_repeater` entfernt.
+  - OperatorsPage: Repeater-Spalte entfernt (Tabelle, Add-Form, Edit-Modus).
+  - ReportsPage + AggregatedReportsPage: Repeater-Spalte aus Teilnehmer-Tabelle entfernt.
+  - PDF: REP.-Spalte aus Teilnehmer-Liste entfernt, Name-Spalte wieder breiter.
+- **Neue Umsetzung (BundMode):**
+  - **Schema-Migration:** Neue Spalte `home_repeater TEXT DEFAULT NULL` in `exercise_repeaters`-Tabelle.
+  - **API:** POST/PATCH `/:id/repeaters/:rid` akzeptieren `home_repeater`. PATCH unterstützt partielle Updates (operator_callsign und/oder home_repeater).
+  - **Socket:** Neues Event `home_repeater_updated` — Server broadcastet an Exercise-Room.
+  - **BundMode UI:** REP-Input neben OP-Input im BL-Header. Speichert on blur (POST-dann-PATCH Pattern wie OP). Socket-Sync zwischen Clients.
+- **Geänderte Dateien:** `schema.ts`, `operators.ts`, `exercises.ts`, `reports.ts`, `pdf.ts` (Routes), `pdf.ts` (Service), `socket.ts`, `stats.ts`, `OperatorsPage.tsx`, `ReportsPage.tsx`, `AggregatedReportsPage.tsx`, `BundMode.tsx`
 
 ### #5 — Eventuell mehrere OPs bei Simplex
 - **Issue:** https://github.com/achildrenmile/bosarsalog/issues/5

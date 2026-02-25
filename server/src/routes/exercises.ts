@@ -161,7 +161,7 @@ exercisesRouter.get('/:id/stats', (req, res) => {
 
   // Participant list: all operators with their report counts
   const participants = db.prepare(`
-    SELECT o.callsign, o.name, o.bezirk_code, o.bundesland_code, o.home_repeater,
+    SELECT o.callsign, o.name, o.bezirk_code, o.bundesland_code,
       bl.name as bundesland_name,
       COUNT(CASE WHEN sr.readability IS NOT NULL THEN 1 END) as report_count,
       GROUP_CONCAT(DISTINCT sr.suffix) as suffixes
@@ -194,9 +194,9 @@ exercisesRouter.get('/:id/repeaters', (req, res) => {
 
 exercisesRouter.post('/:id/repeaters', (req, res) => {
   const db = getDb();
-  const { repeater_id, operator_callsign } = req.body;
+  const { repeater_id, operator_callsign, home_repeater } = req.body;
   try {
-    db.prepare('INSERT INTO exercise_repeaters (exercise_id, repeater_id, operator_callsign) VALUES (?, ?, ?)').run(req.params.id, repeater_id, operator_callsign || null);
+    db.prepare('INSERT INTO exercise_repeaters (exercise_id, repeater_id, operator_callsign, home_repeater) VALUES (?, ?, ?, ?)').run(req.params.id, repeater_id, operator_callsign || null, home_repeater || null);
     res.status(201).json({ success: true });
   } catch (e: any) {
     if (e.message?.includes('UNIQUE') || e.message?.includes('PRIMARY')) {
@@ -209,9 +209,17 @@ exercisesRouter.post('/:id/repeaters', (req, res) => {
 
 exercisesRouter.patch('/:id/repeaters/:rid', (req, res) => {
   const db = getDb();
-  const { operator_callsign } = req.body;
-  db.prepare('UPDATE exercise_repeaters SET operator_callsign = ? WHERE exercise_id = ? AND repeater_id = ?')
-    .run(operator_callsign || null, req.params.id, req.params.rid);
+  const updates: string[] = [];
+  const params: any[] = [];
+  if (req.body.operator_callsign !== undefined) { updates.push('operator_callsign = ?'); params.push(req.body.operator_callsign || null); }
+  if (req.body.home_repeater !== undefined) { updates.push('home_repeater = ?'); params.push(req.body.home_repeater || null); }
+  if (updates.length === 0) {
+    res.status(400).json({ error: 'Keine Änderungen' });
+    return;
+  }
+  params.push(req.params.id, req.params.rid);
+  db.prepare(`UPDATE exercise_repeaters SET ${updates.join(', ')} WHERE exercise_id = ? AND repeater_id = ?`)
+    .run(...params);
   res.json({ success: true });
 });
 
