@@ -261,6 +261,12 @@ export function runMigrations(db: Database.Database): void {
     )
   `).run();
 
+  // Migration: add home_repeater to operators
+  const opCols = db.prepare("PRAGMA table_info(operators)").all() as any[];
+  if (!opCols.some((c: any) => c.name === 'home_repeater')) {
+    db.exec("ALTER TABLE operators ADD COLUMN home_repeater TEXT DEFAULT NULL");
+  }
+
   // Migration: backfill operators with null bundesland_code using callsign prefix
   const nullBlOps = db.prepare("SELECT id, callsign FROM operators WHERE bundesland_code IS NULL").all() as { id: number; callsign: string }[];
   if (nullBlOps.length > 0) {

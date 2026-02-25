@@ -16,6 +16,7 @@ export interface Participant {
   bundesland_name: string | null;
   report_count: number;
   suffixes: string | null;
+  home_repeater: string | null;
 }
 
 export interface RepeaterStat {

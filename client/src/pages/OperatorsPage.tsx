@@ -8,7 +8,7 @@ export default function OperatorsPage() {
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState<any>(null);
   const [showAdd, setShowAdd] = useState(false);
-  const [newOp, setNewOp] = useState({ callsign: '', name: '', qth: '', bezirk_code: '', bundesland_code: '' });
+  const [newOp, setNewOp] = useState({ callsign: '', name: '', qth: '', bezirk_code: '', bundesland_code: '', home_repeater: '' });
   const [page, setPage] = useState(0);
   const debounceRef = useRef<ReturnType<typeof setTimeout>>();
 
@@ -54,7 +54,7 @@ export default function OperatorsPage() {
       });
       setOperators(prev => [created, ...prev]);
       setShowAdd(false);
-      setNewOp({ callsign: '', name: '', qth: '', bezirk_code: '', bundesland_code: '' });
+      setNewOp({ callsign: '', name: '', qth: '', bezirk_code: '', bundesland_code: '', home_repeater: '' });
     } catch (e: any) {
       alert(e.message);
     }
@@ -107,6 +107,7 @@ export default function OperatorsPage() {
             <input value={newOp.qth} onChange={e => setNewOp(p => ({ ...p, qth: e.target.value }))} placeholder="QTH" className="border rounded px-2 py-1 text-sm w-32" />
             <input value={newOp.bezirk_code} onChange={e => setNewOp(p => ({ ...p, bezirk_code: e.target.value.toUpperCase() }))} placeholder="Bezirk" className="border rounded px-2 py-1 text-sm w-16 uppercase" />
             <input value={newOp.bundesland_code} onChange={e => setNewOp(p => ({ ...p, bundesland_code: e.target.value }))} placeholder="BL" className="border rounded px-2 py-1 text-sm w-12" />
+            <input value={newOp.home_repeater} onChange={e => setNewOp(p => ({ ...p, home_repeater: e.target.value }))} placeholder="Repeater" className="border rounded px-2 py-1 text-sm w-28" />
             <button onClick={handleAdd} className="bg-green-600 text-white px-3 py-1 rounded text-sm">Anlegen</button>
             <button onClick={() => setShowAdd(false)} className="text-gray-500 text-sm">Abbrechen</button>
           </div>
@@ -120,6 +121,7 @@ export default function OperatorsPage() {
               <th className="px-2 sm:px-3 py-2 text-left">Rufzeichen</th>
               <th className="px-2 sm:px-3 py-2 text-left">Name</th>
               <th className="px-2 sm:px-3 py-2 text-left hidden sm:table-cell">QTH</th>
+              <th className="px-2 sm:px-3 py-2 text-left hidden md:table-cell">Repeater</th>
               <th className="px-2 sm:px-3 py-2 text-left">Bezirk</th>
               <th className="px-2 sm:px-3 py-2 text-left hidden sm:table-cell">BL</th>
               <th className="px-2 sm:px-3 py-2 text-left hidden md:table-cell">Ausstattung</th>
@@ -134,6 +136,7 @@ export default function OperatorsPage() {
                     <td className="px-3 py-1"><input value={editing.callsign} onChange={e => setEditing({ ...editing, callsign: e.target.value.toUpperCase() })} className="border rounded px-1 py-0.5 font-mono text-xs w-24 uppercase" /></td>
                     <td className="px-3 py-1"><input value={editing.name || ''} onChange={e => setEditing({ ...editing, name: e.target.value })} className="border rounded px-1 py-0.5 text-xs w-24" /></td>
                     <td className="px-3 py-1"><input value={editing.qth || ''} onChange={e => setEditing({ ...editing, qth: e.target.value })} className="border rounded px-1 py-0.5 text-xs w-24" /></td>
+                    <td className="px-3 py-1"><input value={editing.home_repeater || ''} onChange={e => setEditing({ ...editing, home_repeater: e.target.value })} className="border rounded px-1 py-0.5 text-xs w-24" /></td>
                     <td className="px-3 py-1"><input value={editing.bezirk_code || ''} onChange={e => setEditing({ ...editing, bezirk_code: e.target.value.toUpperCase() })} className="border rounded px-1 py-0.5 text-xs w-12 uppercase" /></td>
                     <td className="px-3 py-1"><input value={editing.bundesland_code || ''} onChange={e => setEditing({ ...editing, bundesland_code: e.target.value })} className="border rounded px-1 py-0.5 text-xs w-10" /></td>
                     <td className="px-3 py-1"><input value={editing.equipment || ''} onChange={e => setEditing({ ...editing, equipment: e.target.value })} className="border rounded px-1 py-0.5 text-xs w-24" /></td>
@@ -147,6 +150,7 @@ export default function OperatorsPage() {
                     <td className="px-2 sm:px-3 py-1.5 font-mono font-medium">{op.callsign}</td>
                     <td className="px-2 sm:px-3 py-1.5">{op.name}</td>
                     <td className="px-2 sm:px-3 py-1.5 text-gray-500 hidden sm:table-cell">{op.qth}</td>
+                    <td className="px-2 sm:px-3 py-1.5 text-gray-500 text-xs hidden md:table-cell">{op.home_repeater}</td>
                     <td className="px-2 sm:px-3 py-1.5">
                       {op.bezirk_code && (
                         <span className="text-xs bg-gray-200 rounded px-1">{op.bezirk_code}</span>

@@ -48,9 +48,18 @@
 
 ## Offene Issues
 
-### #3 — Bei den Repeatern bitte „eigener Repeater" dazufügen — Klärung
+### #3 — Eigener Repeater pro Operator (Stammdaten)
 - **Issue:** https://github.com/achildrenmile/bosarsalog/issues/3
-- Klärungsbedarf: benutzerdefinierte Repeater können bereits über Einrichtung hinzugefügt werden. Zu klären, ob weitere Funktionalität gewünscht.
+- **Status:** Erledigt
+- **Umsetzung:**
+  - **Schema-Migration:** Neue Spalte `home_repeater TEXT DEFAULT NULL` in `operators`-Tabelle (Freitext, optional).
+  - **API:** POST/PATCH Operators akzeptieren `home_repeater`-Feld. GET liefert es automatisch mit `SELECT *`.
+  - **Stats-Queries:** Alle 4 Participants-Queries (exercises.ts, reports.ts, pdf.ts x2) selektieren `o.home_repeater`.
+  - **Stammdaten UI (OperatorsPage):** Neue Spalte "Repeater" in der Tabelle. Inline-Edit und Add-Form mit Freitext-Input.
+  - **Auswertung Web:** Neue Spalte "Repeater" in der Teilnehmer-Liste (ReportsPage + AggregatedReportsPage).
+  - **Auswertung PDF:** Neue Spalte "REP." in der Teilnehmer-Liste zwischen Name und Bezirk.
+  - Operatoren ohne Repeater: Spalte bleibt leer.
+- **Geänderte Dateien:** `schema.ts`, `operators.ts`, `exercises.ts`, `reports.ts`, `pdf.ts` (Routes), `pdf.ts` (Service), `stats.ts`, `OperatorsPage.tsx`, `ReportsPage.tsx`, `AggregatedReportsPage.tsx`
 
 ### #5 — Eventuell mehrere OPs bei Simplex
 - **Issue:** https://github.com/achildrenmile/bosarsalog/issues/5

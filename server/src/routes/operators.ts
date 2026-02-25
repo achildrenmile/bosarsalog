@@ -56,7 +56,7 @@ operatorsRouter.get('/:id', (req, res) => {
 // Quick-add operator
 operatorsRouter.post('/', (req, res) => {
   const db = getDb();
-  const { callsign, name, qth, bezirk_code, bundesland_code } = req.body;
+  const { callsign, name, qth, bezirk_code, bundesland_code, home_repeater } = req.body;
   if (!callsign) {
     res.status(400).json({ error: 'Rufzeichen erforderlich' });
     return;
@@ -65,9 +65,9 @@ operatorsRouter.post('/', (req, res) => {
     const derivedBl = bundesland_code || callsignToCountryCode(callsign) || null;
     const derivedBz = bezirk_code || (qth ? qthToBezirkCode(db, qth, derivedBl) : null);
     const result = db.prepare(`
-      INSERT INTO operators (callsign, name, qth, bezirk_code, bundesland_code)
-      VALUES (?, ?, ?, ?, ?)
-    `).run(callsign.toUpperCase(), name || null, qth || null, derivedBz, derivedBl);
+      INSERT INTO operators (callsign, name, qth, bezirk_code, bundesland_code, home_repeater)
+      VALUES (?, ?, ?, ?, ?, ?)
+    `).run(callsign.toUpperCase(), name || null, qth || null, derivedBz, derivedBl, home_repeater || null);
     const operator = db.prepare('SELECT * FROM operators WHERE id = ?').get(result.lastInsertRowid);
     res.status(201).json(operator);
   } catch (e: any) {
@@ -100,7 +100,7 @@ operatorsRouter.delete('/:id', (req, res) => {
 // Update operator
 operatorsRouter.patch('/:id', (req, res) => {
   const db = getDb();
-  const fields = ['callsign', 'name', 'qth', 'bezirk_code', 'bundesland_code', 'is_bos_arsa', 'is_arena', 'is_portable', 'is_exercise_support', 'gender', 'email', 'equipment', 'antenna', 'has_emergency_power', 'has_lighthouse_readiness', 'latitude', 'longitude'];
+  const fields = ['callsign', 'name', 'qth', 'bezirk_code', 'bundesland_code', 'home_repeater', 'is_bos_arsa', 'is_arena', 'is_portable', 'is_exercise_support', 'gender', 'email', 'equipment', 'antenna', 'has_emergency_power', 'has_lighthouse_readiness', 'latitude', 'longitude'];
   const updates: string[] = [];
   const params: any[] = [];
   for (const f of fields) {

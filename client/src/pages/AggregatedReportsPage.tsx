@@ -612,6 +612,7 @@ export default function AggregatedReportsPage() {
                       <th className="px-2 sm:px-4 py-2 w-8">#</th>
                       <th className="px-2 sm:px-4 py-2">Rufzeichen</th>
                       <th className="px-2 sm:px-4 py-2 hidden sm:table-cell">Name</th>
+                      <th className="px-2 sm:px-4 py-2 hidden md:table-cell">Repeater</th>
                       <th className="px-2 sm:px-4 py-2">Bezirk</th>
                       <th className="px-2 sm:px-4 py-2 hidden md:table-cell">Bundesland / Land</th>
                       <th className="px-2 sm:px-4 py-2 text-right w-16 sm:w-24">Rapp.</th>
@@ -623,6 +624,7 @@ export default function AggregatedReportsPage() {
                         <td className="px-2 sm:px-4 py-1 text-xs text-gray-400">{idx + 1}</td>
                         <td className="px-2 sm:px-4 py-1 font-mono font-medium">{p.callsign}{p.suffixes ? p.suffixes.split(',').filter(Boolean).map(s => s.startsWith('/') ? s : `/${s}`).join('') : ''}</td>
                         <td className="px-2 sm:px-4 py-1 text-gray-600 hidden sm:table-cell">{p.name || ''}</td>
+                        <td className="px-2 sm:px-4 py-1 text-gray-500 text-xs hidden md:table-cell">{p.home_repeater || ''}</td>
                         <td className="px-2 sm:px-4 py-1">
                           {p.bezirk_code && (
                             <span className="text-xs bg-gray-200 rounded px-1.5 py-0.5 font-mono">{p.bezirk_code}</span>

@@ -161,7 +161,7 @@ exercisesRouter.get('/:id/stats', (req, res) => {
 
   // Participant list: all operators with their report counts
   const participants = db.prepare(`
-    SELECT o.callsign, o.name, o.bezirk_code, o.bundesland_code,
+    SELECT o.callsign, o.name, o.bezirk_code, o.bundesland_code, o.home_repeater,
       bl.name as bundesland_name,
       COUNT(CASE WHEN sr.readability IS NOT NULL THEN 1 END) as report_count,
       GROUP_CONCAT(DISTINCT sr.suffix) as suffixes
