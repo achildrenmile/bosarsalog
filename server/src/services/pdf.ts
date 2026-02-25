@@ -29,6 +29,7 @@ interface BezirkStat {
 interface Participant {
   callsign: string; name: string | null; bezirk_code: string | null;
   bundesland_code: string | null; bundesland_name: string | null; report_count: number;
+  suffixes: string | null;
 }
 interface ExerciseSummary {
   id: string; date: string; name: string; exercise_type?: string | null;
@@ -575,8 +576,9 @@ function renderParticipants(doc: PDFKit.PDFDocument, participants: Participant[]
     const ty = rowY + 2;
     doc.fontSize(6).fillColor(GRAY_500);
     textAt(doc, String(i + 1), colNum, ty);
+    const suffixStr = p.suffixes ? p.suffixes.split(',').filter(Boolean).map(s => s.startsWith('/') ? s : `/${s}`).join('') : '';
     doc.fontSize(6).fillColor(TEXT_DARK);
-    textAt(doc, p.callsign, colCall, ty);
+    textAt(doc, p.callsign + suffixStr, colCall, ty);
     doc.fontSize(6).fillColor(TEXT_MED);
     textAt(doc, p.name || '', colName, ty, { width: colBz - colName - 5 });
     textAt(doc, p.bezirk_code || '', colBz, ty);

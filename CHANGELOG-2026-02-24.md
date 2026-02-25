@@ -88,6 +88,19 @@
 - **Scope:** Nur Webansicht (Client). PDF-Labels waren bereits auf BL-Ebene.
 - **Geänderte Dateien:** `AggregatedReportsPage.tsx`, `ReportsPage.tsx`
 
+### #10 — Suffix-Checkboxen (/m /p /am /mm) statt Freitext im Rufzeichen
+- **Issue:** https://github.com/achildrenmile/bosarsalog/issues/10
+- **Status:** Erledigt
+- **Problem:** Operatoren gaben Suffixe wie `/m` (mobil), `/p` (portabel) direkt im Rufzeichen-Feld ein — fehleranfällig und uneinheitlich.
+- **Umsetzung:**
+  - **Schema-Migration:** Neue Spalte `suffix TEXT DEFAULT NULL` in `signal_reports` (ALTER TABLE ADD COLUMN, nicht-destruktiv).
+  - **API:** POST/PATCH/GET Reports akzeptieren und liefern `suffix`-Feld. Stats-Participants-Query nutzt `GROUP_CONCAT(DISTINCT sr.suffix)` als `suffixes`.
+  - **UI-Eingabe:** Toggle-Buttons (m, p, am, mm) neben dem Rufzeichen-Feld in LandMode und BundMode. Radio-Verhalten: nur einer aktiv, nochmal klicken = deselect. Blau bei aktiv, grau bei inaktiv.
+  - **Auswertung Web:** Teilnehmer-Tabelle zeigt Suffix neben Rufzeichen (z.B. "OE8YML/m").
+  - **Auswertung PDF:** Teilnehmer-Liste zeigt Callsign + Suffix.
+  - Bestehende Reports ohne Suffix funktionieren weiterhin (NULL = kein Suffix).
+- **Geänderte Dateien:** `schema.ts`, `exercises.ts`, `reports.ts`, `pdf.ts` (Routes), `pdf.ts` (Service), `stats.ts`, `LandMode.tsx`, `BundMode.tsx`, `ReportsPage.tsx`, `AggregatedReportsPage.tsx`
+
 ### #6 — Rufzeichen doppelt eingeben führt zu Problemen
 - **Issue:** https://github.com/achildrenmile/bosarsalog/issues/6
 - **Status:** Erledigt

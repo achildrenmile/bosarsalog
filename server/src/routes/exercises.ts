@@ -163,7 +163,8 @@ exercisesRouter.get('/:id/stats', (req, res) => {
   const participants = db.prepare(`
     SELECT o.callsign, o.name, o.bezirk_code, o.bundesland_code,
       bl.name as bundesland_name,
-      COUNT(CASE WHEN sr.readability IS NOT NULL THEN 1 END) as report_count
+      COUNT(CASE WHEN sr.readability IS NOT NULL THEN 1 END) as report_count,
+      GROUP_CONCAT(DISTINCT sr.suffix) as suffixes
     FROM signal_reports sr
     JOIN operators o ON o.id = sr.operator_id
     LEFT JOIN bundeslaender bl ON bl.code = o.bundesland_code
@@ -241,8 +242,8 @@ exercisesRouter.get('/:id/reports', (req, res) => {
 exercisesRouter.post('/:id/reports', (req, res) => {
   const db = getDb();
   const admin = (req as AuthRequest).admin!;
-  const { operator_id, repeater_id, readability, strength, db_over_s9, einstiegspunkt_id, is_op_marker, notes, bezirk_code } = req.body;
-  console.log(`[report] POST exercise=${req.params.id} op=${operator_id} rep=${repeater_id} r=${readability} s=${strength} bz=${bezirk_code || '?'} by=${admin.username}`);
+  const { operator_id, repeater_id, readability, strength, db_over_s9, einstiegspunkt_id, is_op_marker, notes, bezirk_code, suffix } = req.body;
+  console.log(`[report] POST exercise=${req.params.id} op=${operator_id} rep=${repeater_id} r=${readability} s=${strength} bz=${bezirk_code || '?'} suffix=${suffix || ''} by=${admin.username}`);
 
   if (!operator_id || !repeater_id) {
     console.log('[report] REJECTED: missing operator_id or repeater_id');
@@ -253,9 +254,9 @@ exercisesRouter.post('/:id/reports', (req, res) => {
   try {
     const insertReportAndAttendance = db.transaction(() => {
       const result = db.prepare(`
-        INSERT INTO signal_reports (exercise_id, operator_id, repeater_id, readability, strength, db_over_s9, einstiegspunkt_id, is_op_marker, notes, entered_by, bezirk_code)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(req.params.id, operator_id, repeater_id, readability || null, strength || null, db_over_s9 || null, einstiegspunkt_id || null, is_op_marker ? 1 : 0, notes || null, admin.username, bezirk_code || null);
+        INSERT INTO signal_reports (exercise_id, operator_id, repeater_id, readability, strength, db_over_s9, einstiegspunkt_id, is_op_marker, notes, entered_by, bezirk_code, suffix)
+        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `).run(req.params.id, operator_id, repeater_id, readability || null, strength || null, db_over_s9 || null, einstiegspunkt_id || null, is_op_marker ? 1 : 0, notes || null, admin.username, bezirk_code || null, suffix || null);
 
       db.prepare('INSERT OR IGNORE INTO exercise_attendance (exercise_id, operator_id, entered_by) VALUES (?, ?, ?)')
         .run(req.params.id, operator_id, admin.username);
@@ -298,7 +299,7 @@ exercisesRouter.post('/:id/reports', (req, res) => {
 
 exercisesRouter.patch('/:id/reports/:rid', (req, res) => {
   const db = getDb();
-  const { readability, strength, db_over_s9, einstiegspunkt_id, notes, is_op_marker, bezirk_code } = req.body;
+  const { readability, strength, db_over_s9, einstiegspunkt_id, notes, is_op_marker, bezirk_code, suffix } = req.body;
   const updates: string[] = [];
   const params: any[] = [];
   if (readability !== undefined) { updates.push('readability = ?'); params.push(readability); }
@@ -308,6 +309,7 @@ exercisesRouter.patch('/:id/reports/:rid', (req, res) => {
   if (notes !== undefined) { updates.push('notes = ?'); params.push(notes); }
   if (is_op_marker !== undefined) { updates.push('is_op_marker = ?'); params.push(is_op_marker ? 1 : 0); }
   if (bezirk_code !== undefined) { updates.push('bezirk_code = ?'); params.push(bezirk_code); }
+  if (suffix !== undefined) { updates.push('suffix = ?'); params.push(suffix || null); }
   updates.push("updated_at = datetime('now')");
   params.push(req.params.rid);
   db.prepare(`UPDATE signal_reports SET ${updates.join(', ')} WHERE id = ?`).run(...params);

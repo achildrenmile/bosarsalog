@@ -91,7 +91,8 @@ reportsRouter.get('/stats', (req, res) => {
   const participants = db.prepare(
     `SELECT o.callsign, o.name, o.bezirk_code, o.bundesland_code,
       bl.name as bundesland_name,
-      COUNT(CASE WHEN sr.readability IS NOT NULL THEN 1 END) as report_count
+      COUNT(CASE WHEN sr.readability IS NOT NULL THEN 1 END) as report_count,
+      GROUP_CONCAT(DISTINCT sr.suffix) as suffixes
     FROM signal_reports sr
     JOIN operators o ON o.id = sr.operator_id
     LEFT JOIN bundeslaender bl ON bl.code = o.bundesland_code

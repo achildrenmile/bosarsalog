@@ -227,6 +227,12 @@ export function runMigrations(db: Database.Database): void {
   // Create index after migration ensures column exists
   db.exec("CREATE INDEX IF NOT EXISTS idx_repeaters_bundesland ON repeaters(bundesland_code)");
 
+  // Migration: add suffix column to signal_reports
+  const srColsSuffix = db.prepare("PRAGMA table_info(signal_reports)").all() as any[];
+  if (!srColsSuffix.some((c: any) => c.name === 'suffix')) {
+    db.exec("ALTER TABLE signal_reports ADD COLUMN suffix TEXT DEFAULT NULL");
+  }
+
   // Migration: add bezirk_code to signal_reports (report bezirk != operator home bezirk)
   const srCols = db.prepare("PRAGMA table_info(signal_reports)").all() as any[];
   if (!srCols.some((c: any) => c.name === 'bezirk_code')) {

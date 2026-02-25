@@ -414,7 +414,7 @@ export default function ReportsPage() {
                   {stats.participants.map((p, idx) => (
                     <tr key={p.callsign} className="hover:bg-blue-50">
                       <td className="px-2 sm:px-4 py-1 text-xs text-gray-400">{idx + 1}</td>
-                      <td className="px-2 sm:px-4 py-1 font-mono font-medium">{p.callsign}</td>
+                      <td className="px-2 sm:px-4 py-1 font-mono font-medium">{p.callsign}{p.suffixes ? p.suffixes.split(',').filter(Boolean).map(s => s.startsWith('/') ? s : `/${s}`).join('') : ''}</td>
                       <td className="px-2 sm:px-4 py-1 text-gray-600 hidden sm:table-cell">{p.name || ''}</td>
                       <td className="px-2 sm:px-4 py-1">
                         {p.bezirk_code && (

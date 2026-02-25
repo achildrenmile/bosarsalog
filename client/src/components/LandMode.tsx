@@ -35,14 +35,17 @@ interface EntryForm {
   opName: string;
   opQth: string;
   bezirkCode: string;
+  suffix?: string;
 }
+
+const SUFFIXES = ['/m', '/p', '/am', '/mm'] as const;
 
 export default function LandMode({ exerciseId, repeaters, reports, simplexBezirke, simplexBlCodes, onReportCreated, onReportUpdated, onReportDeleted }: Props) {
   const [collapsedReps, setCollapsedReps] = useState<Set<number>>(new Set());
   const [opCallsigns, setOpCallsigns] = useState<Record<number, string>>({});
   const [bezirke, setBezirke] = useState<any[]>([]);
   const [editingId, setEditingId] = useState<number | null>(null);
-  const [editForm, setEditForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '', notes: '', opName: '', opQth: '', bezirkCode: '' });
+  const [editForm, setEditForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '', notes: '', opName: '', opQth: '', bezirkCode: '', suffix: '' });
   const [dragReportId, setDragReportId] = useState<number | null>(null);
 
   // Load bezirke + OP callsigns
@@ -141,6 +144,7 @@ export default function LandMode({ exerciseId, repeaters, reports, simplexBezirk
             ...parsed,
             notes: form.notes || null,
             bezirk_code: (bezirkCode && bezirkCode !== '??') ? bezirkCode : null,
+            suffix: form.suffix || null,
           }),
         });
         onReportCreated(report);
@@ -149,7 +153,7 @@ export default function LandMode({ exerciseId, repeaters, reports, simplexBezirk
           const existing = err.data.existing_report;
           const updated = await apiFetch(`/api/v1/exercises/${exerciseId}/reports/${existing.id}`, {
             method: 'PATCH',
-            body: JSON.stringify({ ...parsed, notes: form.notes || null }),
+            body: JSON.stringify({ ...parsed, notes: form.notes || null, suffix: form.suffix || null }),
           });
           onReportUpdated(updated);
         }
@@ -167,6 +171,7 @@ export default function LandMode({ exerciseId, repeaters, reports, simplexBezirk
       opName: report.operator_name || '',
       opQth: report.operator_qth || '',
       bezirkCode: report.bezirk_code || '',
+      suffix: report.suffix || '',
     });
   };
 
@@ -190,7 +195,7 @@ export default function LandMode({ exerciseId, repeaters, reports, simplexBezirk
       }
       const updated = await apiFetch(`/api/v1/exercises/${exerciseId}/reports/${editingId}`, {
         method: 'PATCH',
-        body: JSON.stringify({ ...parsed, notes: editForm.notes || null, bezirk_code: editForm.bezirkCode || null }),
+        body: JSON.stringify({ ...parsed, notes: editForm.notes || null, bezirk_code: editForm.bezirkCode || null, suffix: editForm.suffix || null }),
       });
       // Update the returned report with new name/qth so display refreshes
       if (editForm.opName !== undefined) updated.operator_name = editForm.opName || null;
@@ -465,7 +470,7 @@ interface BezirkRowProps {
 }
 
 function BezirkRow({ bezirk, reports, repeaterId, availableBezirke, onSubmit, onEdit, onDelete, onMoveToBezirk, editingId, editForm, onEditChange, onEditSave, onEditCancel, dragReportId, onDragStart, onDragEnd }: BezirkRowProps) {
-  const [form, setForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '5/9', notes: '', opName: '', opQth: '', bezirkCode: '' });
+  const [form, setForm] = useState<EntryForm>({ callsign: '', operator: null, rapport: '5/9', notes: '', opName: '', opQth: '', bezirkCode: '', suffix: '' });
   const [dragOver, setDragOver] = useState(false);
   const callsignRef = useRef<CallsignInputRef>(null);
   const rapportRef = useRef<HTMLInputElement>(null);
@@ -474,7 +479,7 @@ function BezirkRow({ bezirk, reports, repeaterId, availableBezirke, onSubmit, on
     e.preventDefault();
     if (!form.callsign && !form.operator) return;
     onSubmit(form);
-    setForm({ callsign: '', operator: null, rapport: '5/9', notes: '', opName: '', opQth: '', bezirkCode: '' });
+    setForm({ callsign: '', operator: null, rapport: '5/9', notes: '', opName: '', opQth: '', bezirkCode: '', suffix: '' });
     setTimeout(() => callsignRef.current?.focus(), 50);
   };
 
@@ -550,7 +555,7 @@ function BezirkRow({ bezirk, reports, repeaterId, availableBezirke, onSubmit, on
                   <>
                     <td className="py-0.5 text-gray-400 w-4 cursor-grab">{idx + 1}</td>
                     <td className="py-0.5 cursor-pointer" onClick={() => onEdit(r)}>
-                      <span className="font-mono font-medium">{r.callsign}</span>
+                      <span className="font-mono font-medium">{r.callsign}{r.suffix || ''}</span>
                       {r.operator_name && <span className="ml-1 text-gray-500 text-xs">{r.operator_name}</span>}
                       {r.operator_qth && <span className="ml-1 text-gray-400 text-xs hidden sm:inline">{r.operator_qth}</span>}
                     </td>
@@ -581,6 +586,19 @@ function BezirkRow({ bezirk, reports, repeaterId, availableBezirke, onSubmit, on
           onEnter={() => setTimeout(() => { const el = rapportRef.current; if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }, 50)}
           className="w-24 sm:w-28"
         />
+        <div className="flex gap-0.5">
+          {SUFFIXES.map(s => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setForm(f => ({ ...f, suffix: f.suffix === s ? '' : s }))}
+              className={`px-1 py-0.5 rounded text-xs font-mono border ${form.suffix === s ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'}`}
+              title={s}
+            >
+              {s.slice(1)}
+            </button>
+          ))}
+        </div>
         <input
           type="text"
           value={form.opName}
@@ -687,7 +705,7 @@ function FlatReportRow({ reports, repeaterId, onSubmit, onEdit, onDelete, editin
                   <>
                     <td className="py-0.5 text-gray-400 w-4">{idx + 1}</td>
                     <td className="py-0.5 cursor-pointer" onClick={() => onEdit(r)}>
-                      <span className="font-mono font-medium">{r.callsign}</span>
+                      <span className="font-mono font-medium">{r.callsign}{r.suffix || ''}</span>
                       {r.operator_name && <span className="ml-1 text-gray-500 text-xs">{r.operator_name}</span>}
                       {r.operator_qth && <span className="ml-1 text-gray-400 text-xs hidden sm:inline">{r.operator_qth}</span>}
                     </td>
@@ -718,6 +736,19 @@ function FlatReportRow({ reports, repeaterId, onSubmit, onEdit, onDelete, editin
           onEnter={() => setTimeout(() => { const el = rapportRef.current; if (el) { el.focus(); el.setSelectionRange(el.value.length, el.value.length); } }, 50)}
           className="w-24 sm:w-28"
         />
+        <div className="flex gap-0.5">
+          {SUFFIXES.map(s => (
+            <button
+              key={s}
+              type="button"
+              onClick={() => setForm(f => ({ ...f, suffix: f.suffix === s ? '' : s }))}
+              className={`px-1 py-0.5 rounded text-xs font-mono border ${form.suffix === s ? 'bg-blue-600 text-white border-blue-600' : 'bg-gray-100 text-gray-600 border-gray-300 hover:bg-gray-200'}`}
+              title={s}
+            >
+              {s.slice(1)}
+            </button>
+          ))}
+        </div>
         <input
           type="text"
           value={form.opName}
