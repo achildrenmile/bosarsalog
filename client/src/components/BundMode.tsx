@@ -28,6 +28,7 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
   const [bundeslaender, setBundeslaender] = useState<any[]>([]);
   const [bezirke, setBezirke] = useState<any[]>([]);
   const [linkedRepeaters, setLinkedRepeaters] = useState<any[]>([]);
+  const [allRepeaters, setAllRepeaters] = useState<any[]>([]);
   const [blRepSelection, setBlRepSelection] = useState<Record<string, number>>({});
   const [blOpCallsigns, setBlOpCallsigns] = useState<Record<string, string>>({});
   const [blHomeRepeaters, setBlHomeRepeaters] = useState<Record<string, string>>({});
@@ -49,6 +50,7 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
     ]).then(([bl, bz, allReps, exReps]) => {
       setBundeslaender(bl);
       setBezirke(bz);
+      setAllRepeaters(allReps);
       const linked = allReps.filter((r: any) => r.is_linked);
       setLinkedRepeaters(linked);
       // Initialize per-BL defaults: first linked in that BL, else first overall
@@ -326,14 +328,26 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
                   className={`border rounded px-1.5 py-0.5 text-xs font-mono uppercase w-20 sm:w-24 focus:outline-none focus:ring-1 focus:ring-blue-500 ${blOpCallsigns[bl.code] ? 'border-gray-300' : 'border-[#c8102e] placeholder-[#c8102e]/60'}`}
                 />
                 <label className="text-xs text-gray-500 hidden sm:inline">REP:</label>
-                <input
-                  type="text"
+                <select
                   value={blHomeRepeaters[bl.code] || ''}
-                  onChange={e => setBlHomeRepeaters(prev => ({ ...prev, [bl.code]: e.target.value }))}
-                  onBlur={e => saveHomeRepeater(bl.code, e.target.value)}
-                  placeholder="Repeater"
-                  className="border border-gray-300 rounded px-1.5 py-0.5 text-xs w-20 sm:w-28 focus:outline-none focus:ring-1 focus:ring-blue-500 hidden sm:block"
-                />
+                  onChange={e => {
+                    const val = e.target.value;
+                    setBlHomeRepeaters(prev => ({ ...prev, [bl.code]: val }));
+                    saveHomeRepeater(bl.code, val);
+                  }}
+                  className="border border-gray-300 rounded px-1 py-0.5 text-xs w-24 sm:w-32 focus:outline-none focus:ring-1 focus:ring-blue-500 hidden sm:block"
+                >
+                  <option value="">—</option>
+                  {allRepeaters.filter(r => r.bundesland_code === bl.code).map(r => (
+                    <option key={r.id} value={r.short_name}>{r.short_name}</option>
+                  ))}
+                  {allRepeaters.filter(r => r.bundesland_code !== bl.code).length > 0 && (
+                    <option disabled>──────</option>
+                  )}
+                  {allRepeaters.filter(r => r.bundesland_code !== bl.code).map(r => (
+                    <option key={r.id} value={r.short_name}>{r.short_name}</option>
+                  ))}
+                </select>
               </div>
             </div>
 
