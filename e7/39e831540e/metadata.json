@@ -1,0 +1,45 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "e739e831540e",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 0,
+  "files_touched": [
+    "CHANGELOG-2026-02-24.md",
+    "CHANGELOG-2026-02-25.md",
+    "CHANGELOG-v1.1.0.md",
+    "client/src/App.tsx",
+    "client/src/components/BundMode.tsx",
+    "client/src/components/Layout.tsx",
+    "client/src/pages/AggregatedReportsPage.tsx",
+    "client/src/pages/HilfePage.tsx",
+    "client/src/pages/LoginPage.tsx",
+    "client/src/pages/OperatorsPage.tsx",
+    "client/src/pages/ReportsPage.tsx",
+    "client/src/types/stats.ts",
+    "package.json",
+    "server/src/db/schema.ts",
+    "server/src/routes/exercises.ts",
+    "server/src/routes/operators.ts",
+    "server/src/routes/pdf.ts",
+    "server/src/routes/reports.ts",
+    "server/src/services/pdf.ts",
+    "server/src/services/socket.ts"
+  ],
+  "sessions": [
+    {
+      "metadata": "/e7/39e831540e/0/metadata.json",
+      "transcript": "/e7/39e831540e/0/full.jsonl",
+      "context": "/e7/39e831540e/0/context.md",
+      "content_hash": "/e7/39e831540e/0/content_hash.txt",
+      "prompt": "/e7/39e831540e/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 13,
+    "cache_creation_tokens": 7245,
+    "cache_read_tokens": 748197,
+    "output_tokens": 344,
+    "api_call_count": 7
+  }
+}
