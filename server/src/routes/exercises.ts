@@ -259,50 +259,32 @@ exercisesRouter.post('/:id/reports', (req, res) => {
     return;
   }
 
-  try {
-    const insertReportAndAttendance = db.transaction(() => {
-      const result = db.prepare(`
-        INSERT INTO signal_reports (exercise_id, operator_id, repeater_id, readability, strength, db_over_s9, einstiegspunkt_id, is_op_marker, notes, entered_by, bezirk_code, suffix)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-      `).run(req.params.id, operator_id, repeater_id, readability || null, strength || null, db_over_s9 || null, einstiegspunkt_id || null, is_op_marker ? 1 : 0, notes || null, admin.username, bezirk_code || null, suffix || null);
+  const insertReportAndAttendance = db.transaction(() => {
+    const result = db.prepare(`
+      INSERT INTO signal_reports (exercise_id, operator_id, repeater_id, readability, strength, db_over_s9, einstiegspunkt_id, is_op_marker, notes, entered_by, bezirk_code, suffix)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(req.params.id, operator_id, repeater_id, readability || null, strength || null, db_over_s9 || null, einstiegspunkt_id || null, is_op_marker ? 1 : 0, notes || null, admin.username, bezirk_code || null, suffix || null);
 
-      db.prepare('INSERT OR IGNORE INTO exercise_attendance (exercise_id, operator_id, entered_by) VALUES (?, ?, ?)')
-        .run(req.params.id, operator_id, admin.username);
+    db.prepare('INSERT OR IGNORE INTO exercise_attendance (exercise_id, operator_id, entered_by) VALUES (?, ?, ?)')
+      .run(req.params.id, operator_id, admin.username);
 
-      return result;
-    });
+    return result;
+  });
 
-    const result = insertReportAndAttendance();
+  const result = insertReportAndAttendance();
 
-    const report = db.prepare(`
-      SELECT sr.*, o.callsign, o.name as operator_name, sr.bezirk_code, o.bundesland_code,
-        r.short_name as repeater_name, r.bundesland_code as repeater_bundesland_code, r.is_linked as repeater_is_linked,
-        ep.abbreviation as einstiegspunkt_abbr, ep.site_name as einstiegspunkt_name
-      FROM signal_reports sr
-      JOIN operators o ON o.id = sr.operator_id
-      JOIN repeaters r ON r.id = sr.repeater_id
-      LEFT JOIN einstiegspunkte ep ON ep.id = sr.einstiegspunkt_id
-      WHERE sr.id = ?
-    `).get(result.lastInsertRowid);
+  const report = db.prepare(`
+    SELECT sr.*, o.callsign, o.name as operator_name, sr.bezirk_code, o.bundesland_code,
+      r.short_name as repeater_name, r.bundesland_code as repeater_bundesland_code, r.is_linked as repeater_is_linked,
+      ep.abbreviation as einstiegspunkt_abbr, ep.site_name as einstiegspunkt_name
+    FROM signal_reports sr
+    JOIN operators o ON o.id = sr.operator_id
+    JOIN repeaters r ON r.id = sr.repeater_id
+    LEFT JOIN einstiegspunkte ep ON ep.id = sr.einstiegspunkt_id
+    WHERE sr.id = ?
+  `).get(result.lastInsertRowid);
 
-    res.status(201).json(report);
-  } catch (e: any) {
-    if (e.message?.includes('UNIQUE')) {
-      const existing = db.prepare(`
-        SELECT sr.*, o.callsign, o.name as operator_name, sr.bezirk_code, o.bundesland_code,
-          r.short_name as repeater_name, r.bundesland_code as repeater_bundesland_code, r.is_linked as repeater_is_linked,
-          ep.abbreviation as einstiegspunkt_abbr, ep.site_name as einstiegspunkt_name
-        FROM signal_reports sr
-        JOIN operators o ON o.id = sr.operator_id
-        JOIN repeaters r ON r.id = sr.repeater_id
-        LEFT JOIN einstiegspunkte ep ON ep.id = sr.einstiegspunkt_id
-        WHERE sr.exercise_id = ? AND sr.operator_id = ? AND sr.repeater_id = ?
-      `).get(req.params.id, operator_id, repeater_id);
-      res.status(409).json({ error: 'Rapport für diesen Operator auf diesem Umsetzer existiert bereits', existing_report: existing });
-    } else {
-      throw e;
-    }
-  }
+  res.status(201).json(report);
 });
 
 exercisesRouter.patch('/:id/reports/:rid', (req, res) => {

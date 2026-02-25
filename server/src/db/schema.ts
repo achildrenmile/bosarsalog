@@ -273,6 +273,44 @@ export function runMigrations(db: Database.Database): void {
     db.exec("ALTER TABLE exercise_repeaters ADD COLUMN home_repeater TEXT DEFAULT NULL");
   }
 
+  // Migration: drop UNIQUE constraint on signal_reports (allow duplicate callsigns per repeater)
+  const srIndexes = db.prepare("PRAGMA index_list(signal_reports)").all() as any[];
+  const hasUniqueConstraint = srIndexes.some((idx: any) => {
+    if (!idx.unique) return false;
+    const cols = db.prepare(`PRAGMA index_info("${idx.name}")`).all() as any[];
+    const colNames = cols.map((c: any) => c.name).sort();
+    return colNames.join(',') === 'exercise_id,operator_id,repeater_id';
+  });
+  if (hasUniqueConstraint) {
+    console.log('  Migration: dropping UNIQUE constraint on signal_reports (exercise_id, operator_id, repeater_id)');
+    db.exec(`
+      CREATE TABLE signal_reports_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        exercise_id TEXT REFERENCES exercises(id) ON DELETE CASCADE,
+        operator_id INTEGER REFERENCES operators(id),
+        repeater_id INTEGER REFERENCES repeaters(id),
+        readability INTEGER,
+        strength INTEGER,
+        db_over_s9 TEXT,
+        einstiegspunkt_id INTEGER REFERENCES einstiegspunkte(id),
+        is_op_marker INTEGER DEFAULT 0,
+        notes TEXT,
+        entered_by TEXT,
+        created_at TEXT DEFAULT (datetime('now')),
+        updated_at TEXT DEFAULT (datetime('now')),
+        suffix TEXT DEFAULT NULL,
+        bezirk_code TEXT REFERENCES bezirke(code)
+      );
+      INSERT INTO signal_reports_new SELECT id, exercise_id, operator_id, repeater_id, readability, strength, db_over_s9, einstiegspunkt_id, is_op_marker, notes, entered_by, created_at, updated_at, suffix, bezirk_code FROM signal_reports;
+      DROP TABLE signal_reports;
+      ALTER TABLE signal_reports_new RENAME TO signal_reports;
+      CREATE INDEX idx_signal_reports_exercise ON signal_reports(exercise_id);
+      CREATE INDEX idx_signal_reports_operator ON signal_reports(operator_id);
+      CREATE INDEX idx_signal_reports_repeater ON signal_reports(repeater_id);
+      CREATE INDEX idx_signal_reports_bezirk ON signal_reports(bezirk_code);
+    `);
+  }
+
   // Migration: backfill operators with null bundesland_code using callsign prefix
   const nullBlOps = db.prepare("SELECT id, callsign FROM operators WHERE bundesland_code IS NULL").all() as { id: number; callsign: string }[];
   if (nullBlOps.length > 0) {

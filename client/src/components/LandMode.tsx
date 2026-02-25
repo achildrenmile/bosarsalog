@@ -135,29 +135,18 @@ export default function LandMode({ exerciseId, repeaters, reports, simplexBezirk
 
       const parsed = parseRapport(form.rapport);
 
-      try {
-        const report = await apiFetch(`/api/v1/exercises/${exerciseId}/reports`, {
-          method: 'POST',
-          body: JSON.stringify({
-            operator_id: operator.id,
-            repeater_id: repeaterId,
-            ...parsed,
-            notes: form.notes || null,
-            bezirk_code: (bezirkCode && bezirkCode !== '??') ? bezirkCode : null,
-            suffix: form.suffix || null,
-          }),
-        });
-        onReportCreated(report);
-      } catch (err: any) {
-        if (err.message?.includes('existiert') && err.data?.existing_report) {
-          const existing = err.data.existing_report;
-          const updated = await apiFetch(`/api/v1/exercises/${exerciseId}/reports/${existing.id}`, {
-            method: 'PATCH',
-            body: JSON.stringify({ ...parsed, notes: form.notes || null, suffix: form.suffix || null }),
-          });
-          onReportUpdated(updated);
-        }
-      }
+      const report = await apiFetch(`/api/v1/exercises/${exerciseId}/reports`, {
+        method: 'POST',
+        body: JSON.stringify({
+          operator_id: operator.id,
+          repeater_id: repeaterId,
+          ...parsed,
+          notes: form.notes || null,
+          bezirk_code: (bezirkCode && bezirkCode !== '??') ? bezirkCode : null,
+          suffix: form.suffix || null,
+        }),
+      });
+      onReportCreated(report);
     } catch {}
   };
 
