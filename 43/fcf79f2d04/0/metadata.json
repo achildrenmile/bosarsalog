@@ -1,0 +1,33 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "43fcf79f2d04",
+  "session_id": "ccf13571-f85b-4be8-b142-9e5e060af664",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-02T22:26:58.699316691Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "client/src/components/AustriaBezirkMap.tsx",
+    "scripts/generate-bezirk-paths.mjs"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "e5e20525-3af9-4e7c-9f09-ea6430779e2a",
+  "checkpoint_transcript_start": 541,
+  "transcript_lines_at_start": 541,
+  "token_usage": {
+    "input_tokens": 14,
+    "cache_creation_tokens": 24571,
+    "cache_read_tokens": 1669283,
+    "output_tokens": 626,
+    "api_call_count": 12
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-02T22:26:58.301402239Z",
+    "agent_lines": 57,
+    "human_added": 12,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 69,
+    "agent_percentage": 82.6086956521739
+  }
+}
