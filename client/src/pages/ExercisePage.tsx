@@ -2,9 +2,11 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { apiFetch } from '../services/api';
 import { getSocket } from '../services/socket';
+import { useAuth } from '../hooks/useAuth';
 import LandMode from '../components/LandMode';
 import BundMode from '../components/BundMode';
 import RunningTotals from '../components/RunningTotals';
+import EmHamImport from '../components/EmHamImport';
 
 interface Stats {
   totalParticipants: number;
@@ -14,8 +16,11 @@ interface Stats {
 
 export default function ExercisePage() {
   const { id } = useParams<{ id: string }>();
+  const { admin } = useAuth();
+  const isAdmin = admin?.role === 'admin';
   const [exercise, setExercise] = useState<any>(null);
   const [mode, setMode] = useState<'land' | 'bund'>('land');
+  const [showImport, setShowImport] = useState(false);
   const oeLinkEnabled = exercise?.oe_link_enabled !== 0;
   const [stats, setStats] = useState<Stats>({ totalParticipants: 0, totalReports: 0, perRepeater: [] });
   const [reports, setReports] = useState<any[]>([]);
@@ -132,6 +137,14 @@ export default function ExercisePage() {
             {saveStatus === 'saving' && <span className="text-xs text-amber-600 animate-pulse">Speichern...</span>}
             {saveStatus === 'saved' && <span className="text-xs text-green-600">Gespeichert</span>}
           </div>
+          {isAdmin && (
+            <button
+              onClick={() => setShowImport(true)}
+              className="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 px-2 sm:px-3 py-1 rounded text-xs sm:text-sm"
+            >
+              EmHam Import
+            </button>
+          )}
           <Link to={`/exercises/${id}/setup`} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 sm:px-3 py-1 rounded text-xs sm:text-sm">
             Einrichten
           </Link>
@@ -178,6 +191,20 @@ export default function ExercisePage() {
           onReportCreated={handleReportCreated}
           onReportUpdated={handleReportUpdated}
           onReportDeleted={handleReportDeleted}
+        />
+      )}
+
+      {showImport && (
+        <EmHamImport
+          exerciseId={id!}
+          onClose={() => setShowImport(false)}
+          onImported={(importedReports) => {
+            for (const report of importedReports) {
+              setReports(prev => [report, ...prev]);
+              socketRef.current.emit('report_created', { ...report, exercise_id: id! });
+            }
+            refreshStats();
+          }}
         />
       )}
     </div>

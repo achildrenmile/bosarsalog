@@ -311,6 +311,21 @@ export function runMigrations(db: Database.Database): void {
     `);
   }
 
+  // Migration: create emham_imports log table
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS emham_imports (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      exercise_id TEXT REFERENCES exercises(id) ON DELETE CASCADE,
+      filename TEXT,
+      uploaded_by TEXT,
+      row_count INTEGER DEFAULT 0,
+      created_count INTEGER DEFAULT 0,
+      skipped_count INTEGER DEFAULT 0,
+      duplicate_count INTEGER DEFAULT 0,
+      created_at TEXT DEFAULT (datetime('now'))
+    )
+  `);
+
   // Migration: backfill operators with null bundesland_code using callsign prefix
   const nullBlOps = db.prepare("SELECT id, callsign FROM operators WHERE bundesland_code IS NULL").all() as { id: number; callsign: string }[];
   if (nullBlOps.length > 0) {
