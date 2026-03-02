@@ -1,0 +1,78 @@
+Implement the following plan:
+
+# Plan: Designanpassungen (Issue #12)
+
+## Context
+Issue #12 requests: larger headings, more spacing between blocks, larger text, and better menu accessibility. Bootstrap was suggested but is not recommended — the project already uses Tailwind CSS v4 and switching would require a massive rewrite for no clear benefit. Instead: systematic Tailwind class upgrades across all components.
+
+## Current Problems
+- **Headings too small**: h1 ranges 16-24px (inconsistent), h2/card headers only 12-14px
+- **Text too small**: Heavy use of `text-xs` (12px) for labels, form inputs, nav, tables
+- **Tight spacing**: Data entry uses `space-y-2`, cards use `p-3 sm:p-4`
+- **Nav accessibility**: `text-xs sm:text-sm` nav links, no ARIA labels
+
+## Size Upgrades (old → new)
+
+| Element | Old | New |
+|---------|-----|-----|
+| **h1 (page titles)** | `text-base sm:text-xl` | `text-xl sm:text-2xl` |
+| **h2 (card/section headers)** | `text-xs sm:text-sm` | `text-sm sm:text-base` |
+| **Navbar links** | `text-xs sm:text-sm` | `text-sm sm:text-base` |
+| **Mobile menu links** | `text-xs` | `text-sm` |
+| **Form labels** | `text-xs` | `text-sm` |
+| **Table headers** | `text-xs` | `text-sm` |
+| **Table cells** | `text-xs sm:text-sm` | `text-sm` |
+| **Buttons** | `text-xs sm:text-sm` | `text-sm` |
+| **Form inputs (data entry)** | `text-xs` | `text-sm` |
+
+## Spacing Upgrades (old → new)
+
+| Element | Old | New |
+|---------|-----|-----|
+| **Main page blocks** | `space-y-4` | `space-y-6` |
+| **Card padding** | `p-3 sm:p-4` | `p-4 sm:p-5` |
+| **Main content padding** | `p-2 sm:p-4` | `p-3 sm:p-5` |
+| **BundMode/LandMode sections** | `space-y-2` | `space-y-3` |
+
+## Files to Modify (12 files)
+
+| # | File | Changes |
+|---|------|---------|
+| 1 | `client/src/components/Layout.tsx` | Navbar text sizes, main content padding, mobile menu, footer |
+| 2 | `client/src/pages/DashboardPage.tsx` | h1, card headers, spacing |
+| 3 | `client/src/pages/ReportsPage.tsx` | h1, h2 headers, table text, spacing |
+| 4 | `client/src/pages/AggregatedReportsPage.tsx` | h2 headers, table text, spacing |
+| 5 | `client/src/pages/ExercisePage.tsx` | h1, spacing |
+| 6 | `client/src/pages/ExerciseSetupPage.tsx` | h1, h2, form labels, spacing |
+| 7 | `client/src/pages/OperatorsPage.tsx` | h1, table text, form inputs |
+| 8 | `client/src/pages/HilfePage.tsx` | h1 |
+| 9 | `client/src/pages/LoginPage.tsx` | Form labels |
+| 10 | `client/src/components/BundMode.tsx` | Form inputs, labels, section spacing |
+| 11 | `client/src/components/LandMode.tsx` | Form inputs, labels, section spacing |
+| 12 | `client/src/components/EmHamImport.tsx` | Text sizes if applicable |
+
+## Verification
+1. `nix-shell -p nodejs --run "npm run build"` compiles clean
+2. Visual check: headings visibly larger, more whitespace between sections
+3. Nav links readable on mobile
+4. Form labels/inputs at least 14px (text-sm)
+5. Deploy via `./deploy-production.sh`
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+
+---
+
+deploy to production
+
+---
+
+is it visible. do not see bigger text
+
+---
+
+yes, commit and push and redeploy
+
+---
+
+close issue. new release, footer and whatsapp message
