@@ -5,7 +5,7 @@ dist-node/
 *.db-shm
 *.db-wal
 *.db-journal
-data/
+/data/
 .env
 .env.local
 .env.production

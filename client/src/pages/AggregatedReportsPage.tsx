@@ -10,6 +10,7 @@ import {
 import { Bar, Pie } from 'react-chartjs-2';
 import { toPng } from 'html-to-image';
 import AustriaMap from '../components/AustriaMap';
+import AustriaBezirkMap from '../components/AustriaBezirkMap';
 import type { BezirkStat, Stats } from '../types/stats';
 
 ChartJS.register(CategoryScale, LinearScale, BarElement, ArcElement, PointElement, LineElement, Title, Tooltip, Legend);
@@ -62,6 +63,7 @@ export default function AggregatedReportsPage() {
   const barCardRef = useRef<HTMLDivElement>(null);
   const pieCardRef = useRef<HTMLDivElement>(null);
   const mapCardRef = useRef<HTMLDivElement>(null);
+  const bezirkMapCardRef = useRef<HTMLDivElement>(null);
   const pageRef = useRef<HTMLDivElement>(null);
 
   const fetchStats = (f: string, t: string, types?: Set<string>) => {
@@ -417,6 +419,32 @@ export default function AggregatedReportsPage() {
                   code: bl.bundesland_code,
                   participants: bl.participants,
                   reports: bl.reports,
+                }))}
+              />
+            </div>
+          )}
+
+          {/* Bezirk Heatmap */}
+          {stats.bezirkStats.length > 0 && (
+            <div ref={bezirkMapCardRef} className="bg-white rounded-xl shadow p-3 sm:p-4">
+              <div className="flex items-center justify-between mb-2 sm:mb-3">
+                <h2 className="text-xs sm:text-sm font-semibold text-[#1e3a5f]">
+                  Teilnehmer nach Bezirk (Heatmap)
+                </h2>
+                <button
+                  onClick={() => downloadChart(bezirkMapCardRef, `BOS-ARSA_Bezirk-Heatmap_${from}_${to}.png`)}
+                  className="text-xs text-gray-400 hover:text-blue-600 flex-shrink-0 ml-2"
+                  title="Bezirk-Heatmap als PNG herunterladen"
+                  data-no-export="true"
+                >
+                  Download
+                </button>
+              </div>
+              <AustriaBezirkMap
+                data={stats.bezirkStats.map((bz) => ({
+                  bezirk_code: bz.bezirk_code,
+                  participants: bz.participants,
+                  reports: bz.reports,
                 }))}
               />
             </div>
