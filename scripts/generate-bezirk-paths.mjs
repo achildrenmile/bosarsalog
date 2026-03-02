@@ -226,38 +226,30 @@ const BEZIRK_META = {
   'FK': { name: 'Feldkirch', bundesland_code: '09' },
 };
 
-// ─── Mercator Projection ───
-// The existing AustriaMap BL_PATHS use Mercator projection (from MapSVG).
-// We must use Mercator Y to match the aspect ratio.
+// ─── Linear Projection (matching existing AustriaMap BL_PATHS) ───
+// The existing BL_PATHS from MapSVG use a simple linear (equirectangular)
+// projection, NOT Mercator. Analysis of the existing map shows:
+//   - X scale: 78.55 px/degree
+//   - Y scale: ~118 px/degree (linear)
+//   - Y/X ratio: ~1.50 (consistent with equirectangular at ~48°N)
 //
-// Mercator Y formula: y_merc = ln(tan(π/4 + lat_rad/2))
+// Calibration anchor: Wien center 16.37°E, 48.21°N → SVG (550, 97)
 //
-// Calibration from existing BL_PATHS reference points:
-//   Wien:     16.37°E, 48.21°N → SVG (550, 97)
-//   Bregenz:   9.75°E, 47.50°N → SVG (30, 215)
+// X: x = lon * SX + OX
+//   SX = 78.55
+//   OX = 550 - 16.37 * 78.55 = -735.86
 //
-// X is linear: x = lon * SX + OX
-//   SX = (550 - 30) / (16.37 - 9.75) = 78.55
-//   OX = 550 - 16.37 * 78.55 = -735.45
-//
-// Y uses Mercator: y = mercY(lat) * SY_M + OY_M
-//   mercY(48.21°) = ln(tan(π/4 + latRad/2)) = 0.9630
-//   mercY(47.50°) = ln(tan(π/4 + latRad/2)) = 0.9445
-//   SY_M = (97 - 215) / (0.9630 - 0.9445) = -118 / 0.01847 = -6389.5
-//   OY_M = 97 - 0.9630 * (-6389.5) = 97 + 6152.8 = 6249.8
+// Y: y = lat * SY + OY  (linear, negative because SVG Y increases downward)
+//   SY = -SX * 1.50 = -117.83  (Y/X ratio from existing map analysis)
+//   OY = 97 - 48.21 * (-117.83) = 97 + 5680.0 = 5777.0
 
 const SX = 78.55;
 const OX = -735.86;
-const SY_M = -6389.5;
-const OY_M = 6249.8;
-
-function mercatorY(latDeg) {
-  const latRad = latDeg * Math.PI / 180;
-  return Math.log(Math.tan(Math.PI / 4 + latRad / 2));
-}
+const SY = -117.83;
+const OY = 5777.0;
 
 function projectLon(lon) { return lon * SX + OX; }
-function projectLat(lat) { return mercatorY(lat) * SY_M + OY_M; }
+function projectLat(lat) { return lat * SY + OY; }
 
 function coordsToSvgPath(rings) {
   return rings.map((ring, ri) => {
