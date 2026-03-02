@@ -354,6 +354,11 @@ importRouter.post('/:id/import-emham/confirm', requireRole('admin'), (req, res) 
     existingByCallsign.get(cs)!.push(r);
   }
 
+  // Load valid bezirk codes to avoid FK violations
+  const validBezirke = new Set(
+    (db.prepare('SELECT code FROM bezirke').all() as any[]).map(b => b.code)
+  );
+
   const results: { created: number; skipped: number; duplicates: number; reports: any[] } = { created: 0, skipped: 0, duplicates: 0, reports: [] };
 
   const importAll = db.transaction(() => {
@@ -371,12 +376,15 @@ importRouter.post('/:id/import-emham/confirm', requireRole('admin'), (req, res) 
         continue;
       }
 
+      // Validate bezirk_code against DB
+      const safeBezirk = row.bezirk_code && validBezirke.has(row.bezirk_code) ? row.bezirk_code : null;
+
       // Get or create operator
       let operator = db.prepare('SELECT * FROM operators WHERE callsign = ?').get(callsign) as any;
 
       if (!operator) {
         const blCode = callsignToCountryCode(callsign);
-        const bzCode = row.bezirk_code || (row.qth ? qthToBezirkCode(db, row.qth, blCode) : null);
+        const bzCode = safeBezirk || (row.qth ? qthToBezirkCode(db, row.qth, blCode) : null);
         const result = db.prepare(
           'INSERT INTO operators (callsign, name, qth, bezirk_code, bundesland_code) VALUES (?, ?, ?, ?, ?)'
         ).run(callsign, row.name || null, row.qth || null, bzCode, blCode);
@@ -387,7 +395,7 @@ importRouter.post('/:id/import-emham/confirm', requireRole('admin'), (req, res) 
         const params: any[] = [];
         if (row.name && !operator.name) { updates.push('name = ?'); params.push(row.name); }
         if (row.qth && !operator.qth) { updates.push('qth = ?'); params.push(row.qth); }
-        if (row.bezirk_code && !operator.bezirk_code) { updates.push('bezirk_code = ?'); params.push(row.bezirk_code); }
+        if (safeBezirk && !operator.bezirk_code) { updates.push('bezirk_code = ?'); params.push(safeBezirk); }
         if (updates.length > 0) {
           params.push(operator.id);
           db.prepare(`UPDATE operators SET ${updates.join(', ')} WHERE id = ?`).run(...params);
@@ -414,7 +422,7 @@ importRouter.post('/:id/import-emham/confirm', requireRole('admin'), (req, res) 
         row.db_over_s9 || null,
         notes,
         admin.username,
-        row.bezirk_code || operator.bezirk_code || null,
+        safeBezirk || operator.bezirk_code || null,
         row.suffix || null
       );
 
