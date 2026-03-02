@@ -29,30 +29,28 @@ interface ParsedRow {
   issues: string[];
 }
 
-function parseRapport(raw: string): { readability: number | null; strength: number | null; db_over_s9: string | null } {
-  if (!raw || !raw.trim()) return { readability: null, strength: null, db_over_s9: null };
-  const s = raw.trim();
-  // Formats: "5/9", "5/8", "5/9 10" (= +10dB), "5/9 60" (= +60dB), "5/9+20"
-  const m = s.match(/^(\d)\/(\d)\s*\+?\s*(\d+)?$/);
-  if (!m) return { readability: null, strength: null, db_over_s9: null };
-  return {
-    readability: parseInt(m[1]),
-    strength: parseInt(m[2]),
-    db_over_s9: m[3] ? `+${m[3]}` : null,
-  };
-}
+/**
+ * Parse EmHam PDF text output.
+ *
+ * pdf-parse extracts columns in visual order, which for EmHam is:
+ *   Name [Locator] [+dB] REPEATER\tPLZ, QTH R / S\tBezKen [Info]\tCallsign [/ suffix]
+ *
+ * Examples:
+ *   Jozef JN88ee HERMANNSKOGEL\t1110, Wien 5 / 8\tWC\tOE1CJG
+ *   Robert JN88ff 10 HERMANNSKOGEL\t1220, Wien 5 / 9\tWC\tOE1KOV
+ *   Martin JN88fg HERMANNSKOGEL\t1210, Wien 5 / 9\tWC\tOE1MVA / portabel
+ *   Günter 10 HERMANNSKOGEL\t1160, Wien 5 / 9\tWC Lichtinsel 16 Stacharnd\tOE1GOF
+ *   Niko HERMANNSKOGEL\t, Sulz im Wienerwald 5 / 9\t*\tOE3NMC
+ *
+ * Tabs separate the major field groups. Callsign is always the LAST tab-segment.
+ */
 
 function parseCallsign(raw: string): { callsign: string; suffix: string | null } {
   const s = raw.trim().toUpperCase();
-  // Handle "OE1MVA / portabel" or "OE1MVA/P" etc.
   const portabelMatch = s.match(/^(\S+)\s*\/\s*(?:PORTABEL|PORT|PORTABLE)$/i);
-  if (portabelMatch) {
-    return { callsign: portabelMatch[1], suffix: '/p' };
-  }
+  if (portabelMatch) return { callsign: portabelMatch[1], suffix: '/p' };
   const slashMatch = s.match(/^(\S+)\s*\/\s*(\S+)$/);
-  if (slashMatch) {
-    return { callsign: slashMatch[1], suffix: `/${slashMatch[2].toLowerCase()}` };
-  }
+  if (slashMatch) return { callsign: slashMatch[1], suffix: `/${slashMatch[2].toLowerCase()}` };
   return { callsign: s, suffix: null };
 }
 
@@ -65,134 +63,148 @@ function parseEmHamText(text: string): ParsedRow[] {
     const line = lines[i].trim();
     if (!line) continue;
 
-    // Skip headers, totals, page numbers
-    if (/^(Gesamt|Rufzeichen|Callsign|Vor-|Seite|\d+\s*$|Stand:|Krisenkommunikations|EmHam|Teilnehmer)/i.test(line)) continue;
-    if (/^[-=]+$/.test(line)) continue;
-
-    // Detect Bundesland section headers: "OE1 - Wien" or "OE1-Wien" or just "OE1"
+    // Detect Bundesland section headers: "OE1 - Wien" or "OE3 - Niederösterreich"
     const blMatch = line.match(/^(OE\d)\s*[-–—]\s*(.+)$/);
     if (blMatch) {
       currentBl = blMatch[1];
       continue;
     }
-    // Also match standalone "OE1" etc. at start
-    const blSimple = line.match(/^(OE\d)$/);
-    if (blSimple) {
-      currentBl = blSimple[1];
-      continue;
+
+    // Skip non-data lines
+    if (/^(Gesamt|Rufzeichen|Callsign|Vor-|Seite|Stand:|Krisenkommunikations|EmHam|Teilnehmer|Bei der|OE\d\s+Gesamt|ausgeführt|Not-|vy |Rapporte|Zusammenfassung|Länderkennung|Übertragungsart|Summe|Statistik|\d+[,%])/i.test(line)) continue;
+    if (/^(OE\d)$/.test(line)) { currentBl = line; continue; }
+    if (/^[-=]+$/.test(line)) continue;
+    if (/^--\s*\d+\s*of\s*\d+\s*--$/.test(line)) continue;
+
+    // A data line must contain tabs (tab-separated columns)
+    if (!line.includes('\t')) continue;
+
+    const tabParts = line.split('\t').map(s => s.trim());
+    if (tabParts.length < 2) continue;
+
+    // Last tab-segment should contain the callsign (possibly with "/ portabel" etc.)
+    const lastPart = tabParts[tabParts.length - 1];
+    let callsignRaw: string;
+
+    const callsignMatch = lastPart.match(/^([A-Z0-9]{3,}(?:\s*\/\s*\S+)?)$/i);
+    if (callsignMatch) {
+      callsignRaw = callsignMatch[1];
+    } else {
+      // Callsign might be on a subsequent line (multi-line info wrapping)
+      // Collect continuation lines and look for a callsign
+      let found = false;
+      let lookAhead = i + 1;
+      let extraInfo = '';
+      while (lookAhead < lines.length) {
+        const nextLine = lines[lookAhead].trim();
+        if (!nextLine || nextLine.includes('\t') || /^(OE\d\s*[-–—]|Gesamt|Seite|--|Callsign|Rufzeichen)/i.test(nextLine)) break;
+        // Check if this line IS a callsign
+        const csMatch = nextLine.match(/^([A-Z0-9]{3,}(?:\s*\/\s*\S+)?)$/i);
+        if (csMatch) {
+          callsignRaw = csMatch[1];
+          // Append any previously collected lines as extra info
+          if (extraInfo) {
+            // Append to the last tab segment that wasn't a callsign
+            tabParts[tabParts.length - 1] = tabParts[tabParts.length - 1] + ' ' + extraInfo;
+          }
+          i = lookAhead; // Skip past the consumed lines
+          found = true;
+          break;
+        }
+        extraInfo += (extraInfo ? ' ' : '') + nextLine;
+        lookAhead++;
+      }
+      if (!found) continue;
     }
 
-    // Try to parse a data row
-    // Callsign starts with letter pattern typical for ham calls
-    if (!/^[A-Z0-9]{2,}/.test(line)) continue;
-
-    // Split on multiple spaces (2+) to get columns
-    // But also handle tab-separated
-    const parts = line.split(/\t|\s{2,}/).map(p => p.trim()).filter(Boolean);
-    if (parts.length < 2) continue;
-
-    // First part is always callsign (possibly with suffix)
-    const { callsign, suffix } = parseCallsign(parts[0]);
-
-    // Skip if doesn't look like a valid callsign
+    const { callsign, suffix } = parseCallsign(callsignRaw!);
     if (!/^[A-Z0-9]{3,}$/.test(callsign)) continue;
 
-    // Try to identify the remaining fields
-    // Typical order: Name, QTH, BezKen, Locator, Rapport, Repeater, Notstrom, Info
-    // But fields can be empty, so we need heuristics
-    let name: string | null = null;
-    let qth: string | null = null;
-    let bezirk_code: string | null = null;
-    let locator: string | null = null;
-    let rapportStr = '';
+    // First tab-segment: "Name [Locator] [+dB] REPEATER"
+    const firstPart = tabParts[0];
+
+    // Extract repeater name (all-caps word at end, e.g. HERMANNSKOGEL)
     let repeater_name: string | null = null;
-    let notstrom = false;
+    let db_over_s9: string | null = null;
+    let locator: string | null = null;
+    let name: string | null = null;
+
+    // Pattern: "Name [Locator] [dBvalue] REPEATERNAME"
+    // Repeater is the last all-caps word (4+ chars)
+    const firstWords = firstPart.split(/\s+/);
+
+    // Find repeater name from end (all-caps, 4+ chars)
+    let repeaterIdx = -1;
+    for (let j = firstWords.length - 1; j >= 0; j--) {
+      if (/^[A-ZÄÖÜ]{4,}$/.test(firstWords[j])) {
+        repeaterIdx = j;
+        break;
+      }
+    }
+    if (repeaterIdx >= 0) {
+      repeater_name = firstWords[repeaterIdx];
+    }
+
+    // Before the repeater, look for dB value (just a number like "10", "60", "40")
+    // and locator (JN/JO pattern)
+    const beforeRepeater = repeaterIdx >= 0 ? firstWords.slice(0, repeaterIdx) : firstWords;
+    const nameParts: string[] = [];
+
+    for (const w of beforeRepeater) {
+      if (/^J[NO]\d{2}[a-zA-Z]{2}$/i.test(w)) {
+        locator = w.toUpperCase();
+      } else if (/^\d{1,3}$/.test(w) && parseInt(w) >= 5 && parseInt(w) <= 60) {
+        // Likely a dB value (appears before repeater name)
+        db_over_s9 = `+${w}`;
+      } else {
+        nameParts.push(w);
+      }
+    }
+    name = nameParts.length > 0 ? nameParts.join(' ') : null;
+
+    // Second tab-segment: "PLZ, QTH R / S" (e.g. "1110, Wien 5 / 8")
+    let qth: string | null = null;
+    let readability: number | null = null;
+    let strength: number | null = null;
+
+    if (tabParts.length >= 2) {
+      const secondPart = tabParts[1];
+      // Extract rapport "R / S" from the end
+      const rapportMatch = secondPart.match(/(\d)\s*\/\s*(\d)\s*$/);
+      if (rapportMatch) {
+        readability = parseInt(rapportMatch[1]);
+        strength = parseInt(rapportMatch[2]);
+        // Everything before the rapport is the QTH
+        const qthRaw = secondPart.slice(0, rapportMatch.index).trim();
+        // QTH format: "PLZ, Ort" — strip leading comma if PLZ is missing
+        qth = qthRaw.replace(/^,\s*/, '').trim() || null;
+      } else {
+        qth = secondPart.trim() || null;
+      }
+    }
+
+    // Third tab-segment (if exists): "BezKen [Info]" (e.g. "WC" or "GF Abfrage am...")
+    let bezirk_code: string | null = null;
     let info: string | null = null;
 
-    // Work through remaining parts with pattern matching
-    const remaining = parts.slice(1);
-    const consumed = new Array(remaining.length).fill(false);
-
-    // Find rapport (digit/digit pattern)
-    for (let j = 0; j < remaining.length; j++) {
-      if (/^\d\/\d(\s*\+?\s*\d+)?$/.test(remaining[j])) {
-        rapportStr = remaining[j];
-        consumed[j] = true;
-        break;
-      }
-    }
-
-    // Find locator (JN/JO + alphanumeric)
-    for (let j = 0; j < remaining.length; j++) {
-      if (!consumed[j] && /^J[NO]\d{2}[A-Z]{2}/i.test(remaining[j])) {
-        locator = remaining[j].toUpperCase();
-        consumed[j] = true;
-        break;
-      }
-    }
-
-    // Find bezirk code (2-3 uppercase letters, common Austrian bezirk codes)
-    for (let j = 0; j < remaining.length; j++) {
-      if (!consumed[j] && /^[A-Z]{2,3}$/.test(remaining[j]) && remaining[j].length <= 3) {
-        // Check if it looks like a bezirk code (not a repeater name which is longer/mixed)
-        const candidate = remaining[j];
-        if (/^[A-Z]{2,3}$/.test(candidate) && !/^(JA|JO|JN)$/.test(candidate)) {
-          bezirk_code = candidate;
-          consumed[j] = true;
-          break;
+    if (tabParts.length >= 3) {
+      // Third segment = everything between second tab and callsign tab
+      // If there are 4 tabs: [first, second, bezirk+info, callsign]
+      // If there are 3 tabs: [first, second+bezirk, callsign]
+      const thirdPart = tabParts.length >= 4 ? tabParts[2] : null;
+      if (thirdPart) {
+        // First word might be bezirk code (2-3 uppercase letters or "*")
+        const thirdWords = thirdPart.split(/\s+/);
+        if (thirdWords[0] && /^[A-Z*]{1,3}$/.test(thirdWords[0])) {
+          bezirk_code = thirdWords[0] === '*' ? null : thirdWords[0];
+          if (thirdWords.length > 1) {
+            info = thirdWords.slice(1).join(' ');
+          }
+        } else {
+          info = thirdPart;
         }
       }
     }
-
-    // Find Notstrom
-    for (let j = 0; j < remaining.length; j++) {
-      if (!consumed[j] && /^(ja|yes|x|notstrom)$/i.test(remaining[j])) {
-        notstrom = true;
-        consumed[j] = true;
-        break;
-      }
-    }
-
-    // Find repeater name (all caps, usually a site name like HERMANNSKOGEL, KAHLENBERG etc.)
-    for (let j = 0; j < remaining.length; j++) {
-      if (!consumed[j] && /^[A-ZÄÖÜ][A-ZÄÖÜa-zäöü\s-]{3,}$/i.test(remaining[j]) && remaining[j].length >= 4) {
-        // Check if it looks like a repeater name (not a person name which comes earlier)
-        // Repeater names tend to be after the rapport
-        const rapportIdx = remaining.findIndex(r => /^\d\/\d/.test(r));
-        if (rapportIdx >= 0 && j > rapportIdx) {
-          repeater_name = remaining[j].toUpperCase();
-          consumed[j] = true;
-          break;
-        }
-      }
-    }
-
-    // Remaining unconsumed parts before rapport are name/QTH
-    // After rapport and repeater are info
-    const rapportIdx = remaining.findIndex(r => /^\d\/\d/.test(r));
-    const unconsumedBefore: string[] = [];
-    const unconsumedAfter: string[] = [];
-    for (let j = 0; j < remaining.length; j++) {
-      if (consumed[j]) continue;
-      if (rapportIdx >= 0 && j < rapportIdx) {
-        unconsumedBefore.push(remaining[j]);
-      } else if (rapportIdx >= 0 && j > rapportIdx) {
-        unconsumedAfter.push(remaining[j]);
-      } else if (rapportIdx < 0) {
-        unconsumedBefore.push(remaining[j]);
-      }
-    }
-
-    // First unconsumed before rapport = name, second = QTH
-    if (unconsumedBefore.length >= 1) name = unconsumedBefore[0];
-    if (unconsumedBefore.length >= 2) qth = unconsumedBefore[1];
-
-    // Unconsumed after rapport = info
-    if (unconsumedAfter.length > 0) {
-      info = unconsumedAfter.join(' ');
-    }
-
-    const { readability, strength, db_over_s9 } = parseRapport(rapportStr);
 
     rows.push({
       callsign,
@@ -205,7 +217,7 @@ function parseEmHamText(text: string): ParsedRow[] {
       strength,
       db_over_s9,
       repeater_name,
-      notstrom,
+      notstrom: false,
       info,
       bundesland_section: currentBl,
       matched_repeater_id: null,
