@@ -3,14 +3,18 @@
   "checkpoint_id": "589cf06043e1",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 0,
+  "checkpoints_count": 2,
   "files_touched": [
+    ".gitignore",
     "client/src/App.tsx",
+    "client/src/components/AustriaBezirkMap.tsx",
     "client/src/components/EmHamImport.tsx",
     "client/src/components/Layout.tsx",
+    "client/src/pages/AggregatedReportsPage.tsx",
     "client/src/pages/ExercisePage.tsx",
     "client/src/pages/LoginPage.tsx",
     "package.json",
+    "scripts/generate-bezirk-paths.mjs",
     "server/src/db/schema.ts",
     "server/src/index.ts",
     "server/src/routes/import.ts",
@@ -24,13 +28,20 @@
       "context": "/58/9cf06043e1/0/context.md",
       "content_hash": "/58/9cf06043e1/0/content_hash.txt",
       "prompt": "/58/9cf06043e1/0/prompt.txt"
+    },
+    {
+      "metadata": "/58/9cf06043e1/1/metadata.json",
+      "transcript": "/58/9cf06043e1/1/full.jsonl",
+      "context": "/58/9cf06043e1/1/context.md",
+      "content_hash": "/58/9cf06043e1/1/content_hash.txt",
+      "prompt": "/58/9cf06043e1/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 34,
-    "cache_creation_tokens": 71647,
-    "cache_read_tokens": 1343520,
-    "output_tokens": 852,
-    "api_call_count": 20
+    "input_tokens": 19881,
+    "cache_creation_tokens": 257305,
+    "cache_read_tokens": 4077683,
+    "output_tokens": 1431,
+    "api_call_count": 55
   }
 }

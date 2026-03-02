@@ -1,0 +1,32 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "589cf06043e1",
+  "session_id": "ccf13571-f85b-4be8-b142-9e5e060af664",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-02T22:05:00.493846435Z",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "files_touched": [
+    ".gitignore",
+    "client/src/components/AustriaBezirkMap.tsx",
+    "client/src/pages/AggregatedReportsPage.tsx",
+    "scripts/generate-bezirk-paths.mjs"
+  ],
+  "agent": "Claude Code",
+  "token_usage": {
+    "input_tokens": 19847,
+    "cache_creation_tokens": 185658,
+    "cache_read_tokens": 2734163,
+    "output_tokens": 579,
+    "api_call_count": 35
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-02T22:05:00.232289246Z",
+    "agent_lines": 601,
+    "human_added": 479,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 1080,
+    "agent_percentage": 55.648148148148145
+  }
+}
