@@ -1,0 +1,361 @@
+Implement the following plan:
+
+# Plan: EmHam PDF Import Feature
+
+## Context
+The BOS-ARSA exercises are also logged in EmHam (by OE1VRS), which exports a structured PDF with callsign listings per Bundesland. We want to import these PDFs into BOS-ARSA Log to avoid double data entry. The PDF contains tabular data: Callsign, Name, QTH, BezKen, Locator, Rapport, Repeater, Notstrom, Info — grouped by Bundesland. All entries typically use one linked repeater (e.g. HERMANNSKOGEL) → BundMode.
+
+**Important: No deploy during this session — exercise is currently running.**
+
+## PDF Data Structure
+Each row: `Callsign | Name | QTH | BezKen | Locator | Rapport +Sig | Repeater | Notstrom | Info`
+- Rapport format: `5/8`, `5/9`, `5/9 10` (=+10dB), `5/9 60` (=+60dB)
+- Callsigns may have suffix: `OE1MVA / portabel`
+- Some fields can be empty (no Locator, no BezKen)
+
+## Changes
+
+### 1. New server dependency: `pdf-parse`
+- `cd server && npm install pdf-parse`
+- Pure JS PDF text extraction, no native deps
+
+### 2. New server dependency: `multer`
+- `cd server && npm install multer @types/multer`
+- Multipart file upload middleware
+
+### 3. New server route: `server/src/routes/import.ts`
+- **POST `/api/v1/exercises/:id/import-emham`** — admin-only, multer single file upload
+- Steps:
+  1. Accept PDF file via multipart upload
+  2. Extract text with `pdf-parse`
+  3. Parse text into structured rows per Bundesland section
+  4. For each row:
+     - Get or create operator (callsign, name, QTH, bezirk_code)
+     - Match repeater by `short_name` against exercise's repeaters
+     - Parse rapport into readability/strength/db_over_s9
+     - Handle `/ portabel` → suffix `/p`
+  5. Return parsed data as JSON preview (don't insert yet)
+- **POST `/api/v1/exercises/:id/import-emham/confirm`** — admin-only
+  - Accept the parsed data array
+  - Create operators + signal_reports in a transaction
+  - Emit socket events for each created report
+  - Return summary (created count, skipped count)
+
+### 4. Register route: `server/src/index.ts`
+- Import and mount the new import router
+
+### 5. New client component: `client/src/components/EmHamImport.tsx`
+- Modal dialog triggered by "EmHam Import" button
+- UI flow:
+  1. File picker (accept `.pdf`)
+  2. Upload → show parsed preview table (callsign, name, QTH, bezirk, rapport, repeater match status)
+  3. Highlight any issues (unmatched repeater, missing data)
+  4. "Importieren" button → confirm endpoint → close modal, reports appear via socket
+- Admin-only (button only rendered for admin role)
+
+### 6. ExercisePage integration: `client/src/pages/ExercisePage.tsx`
+- Add admin-only "EmHam Import" button in the header row (next to Einrichten/Auswertung)
+- Button opens EmHamImport modal, passes `exerciseId` and exercise's repeaters list
+
+## Text Parsing Strategy
+```
+Detect sections: /^(OE\d)\s*-\s*(.+)$/  →  bundesland header
+Detect rows: /^(OE\d\w+(?:\s*\/\s*\w+)?)\s+(.+?)\s+(\d{4},\s*.+?)\s+(\w{2})?\s+(JN\w+)?\s+(\d\/\d(?:\s+\d+)?)\s+([\w]+)\s*/
+Skip: "Gesamt:", headers, stats pages, empty lines
+```
+
+## Field Mapping
+| PDF Column | Target | Handling |
+|---|---|---|
+| Callsign | `operators.callsign` | Strip `/ portabel` → suffix `/p` |
+| Vor-/Rufname | `operators.name` | Direct |
+| QTH | `operators.qth` | Direct |
+| BezKen | `signal_reports.bezirk_code` | Direct (WC, TU, GF, etc.) |
+| Locator | `signal_reports.notes` | Append to notes |
+| Rapport +Sig | readability/strength/db_over_s9 | Parse `5/9 10` → R=5, S=9, db="+10" |
+| Repeater | `repeater_id` | Match `repeaters.short_name` in exercise |
+| Notstrom | `signal_reports.notes` | Append "Notstrom" to notes if checked |
+| Info | `signal_reports.notes` | Direct |
+
+## Files to modify/create
+- `server/package.json` — add `pdf-parse`, `multer`, `@types/multer`
+- `server/src/routes/import.ts` — **NEW** import route with parsing logic
+- `server/src/index.ts` — mount import router
+- `client/src/components/EmHamImport.tsx` — **NEW** modal component
+- `client/src/pages/ExercisePage.tsx` — add EmHam Import button
+
+## Verification
+1. `nix-shell -p nodejs --run "npm run build"` compiles clean
+2. Upload the sample PDF → preview shows 17 parsed entries across OE1/OE3/OE4
+3. Confirm import → reports appear in BundMode
+4. Repeater "HERMANNSKOGEL" correctly matched to exercise repeater
+5. Rapport values parsed correctly (5/8, 5/9, 5/9+10, 5/9+60)
+6. Operators created with correct name, QTH, bezirk_code
+7. **No deploy** — exercise currently running
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+
+---
+
+do we have an upload log. do we have a mechanism that ensures that we do not have duplicates
+
+---
+
+yes, implement both
+
+---
+
+commit this
+
+---
+
+Servus Michael, warum stehen bei der gestrigen Übung in Tirol 8 OE8-Stationen unter ?? Sonstiges?
+
+---
+
+der emham import funktioniert mit dem pdf nicht... es wird nichts erkannt
+
+---
+
+ist in downloads
+
+---
+
+bekomme interner serverfehler beim importieren
+
+---
+
+create release add to footer
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me chronologically analyze the conversation:
+
+1. **Initial Request**: User asked to implement an EmHam PDF Import feature based on a detailed plan. The plan included:
+   - New server dependencies (pdf-parse, multer)
+   - New server route for PDF parsing and import
+   - New client component for the import modal
+   - Integration into ExercisePage
+   - No deploy during that session
+
+2. **Implementation Phase**:
+   - Installed pdf-parse, multer, @types/multer in server
+   - Created server/src/routes/import.ts with PDF parsing logic
+   - Registered import router in server/src/index.ts
+   - Created client/src/components/EmHamImport.tsx modal
+   - Added EmHam Import button to ExercisePage.tsx
+   - Hit TypeScript error with pdf-parse v2 (no default export) - fixed by using `{ PDFParse }` named import and class-based API
+   - Build succeeded
+
+3. **User asked about upload log and duplicate prevention** - neither existed. User confirmed to implement both.
+
+4. **Added duplicate detection and import log**:
+   - Added `emham_imports` table migration in schema.ts
+   - Added `is_duplicate` field to ParsedRow
+   - Added duplicate detection in preview (checks existing reports by callsign+repeater)
+   - Added duplicate skipping in confirm endpoint
+   - Added import log entry creation in confirm transaction
+   - Updated client to show duplicate counts and status
+   - Build succeeded
+
+5. **User asked to commit** - committed all changes.
+
+6. **User asked to deploy** - pushed and deployed via deploy-production.sh.
+
+7. **User asked about OE8 stations showing under "?? Sonstige" in Tirol** - investigated and found a bug in bezirkStats query where GROUP BY only groups by bezirk_code, not bundesland, causing all NULL-bezirk operators from different Bundesländer to be lumped together. Explained the issue but did NOT fix it yet.
+
+8. **User reported EmHam import not working - nothing recognized**:
+   - Created test script to extract raw PDF text
+   - Found the actual EmHam PDF at `/home/achildrenmile/Downloads/Verbindungsuebung_01.03.2026 (3).pdf`
+   - Discovered the PDF text extraction format was completely different from assumptions - columns come in visual order: Name/Locator/dB/Repeater then QTH/Rapport then BezKen then Callsign (at END, not beginning)
+   - Completely rewrote the parser to handle tab-separated segments correctly
+   - Also handled multi-line entries (OE3EGH case where callsign is on a subsequent line)
+   - Tested: 17/17 entries correctly parsed
+   - Committed, pushed, deployed
+
+9. **User reported "interner Serverfehler" when importing**:
+   - Checked docker logs: `SQLITE_CONSTRAINT_FOREIGNKEY` error
+   - Root cause: bezirk codes from PDF may not exist in bezirke table, and foreign_keys=ON enforces the constraint
+   - Fix: Load valid bezirk codes from DB, validate before using in both operator and signal_report inserts
+   - Committed, pushed, deployed
+
+10. **User asked to create release and update footer** - this is the most recent request before the summary request.
+
+The version needs to bump from 1.1.4 to 1.1.5 (or 1.2.0 since this is a feature). Need to update:
+- package.json version
+- Footer links in LoginPage.tsx, Layout.tsx, App.tsx (3 locations)
+- Create git tag
+- Create GitHub release
+
+The user's last message before summary was "create release add to footer" - I had just shown the grep results finding the 3 footer locations with v1.1.4 but hadn't made any changes yet.
+
+Summary:
+1. Primary Request and Intent:
+   - Implement EmHam PDF Import feature: upload EmHam exercise PDFs, parse them, preview parsed data, and confirm import into BOS-ARSA Log to avoid double data entry
+   - Add upload log (`emham_imports` table) to track every import with filename, user, and result counts
+   - Add duplicate detection mechanism to prevent importing the same data twice (callsign+repeater already exists in exercise)
+   - User also asked about a separate bug: OE8 stations appearing under "?? Sonstige" in Tirol (bezirkStats GROUP BY bug) - explained but NOT fixed yet
+   - Create a new release and update footer version links (most recent request, not yet done)
+
+2. Key Technical Concepts:
+   - **pdf-parse v2**: Class-based API (`new PDFParse({ data })` then `parser.getText()`) — NOT the old `pdf(buffer)` default export
+   - **PDF text extraction order**: pdf-parse extracts in visual column order, NOT table column order. For EmHam: `Name [Locator] [dB] REPEATER\tPLZ, QTH R / S\tBezKen [Info]\tCallsign`
+   - **Tab-separated segments**: Major field groups separated by tabs; callsign is always the LAST tab-segment
+   - **Multi-line entries**: Some entries span multiple lines (info text wraps, callsign on subsequent line)
+   - **Foreign key enforcement**: SQLite with `PRAGMA foreign_keys = ON` — bezirk codes must exist in bezirke table
+   - **Multer**: Multipart file upload middleware with memory storage
+   - **Two-step import flow**: Preview (parse only) → Confirm (insert with transaction)
+   - **Duplicate detection**: At both preview and confirm time, checking callsign+repeater_id against existing signal_reports
+   - **Release process**: Version in package.json + footer links in LoginPage.tsx, Layout.tsx, App.tsx (3 locations), git tag, gh release create, deploy
+
+3. Files and Code Sections:
+   - **`server/src/routes/import.ts`** (NEW — core of the feature)
+     - Contains the full EmHam PDF parser and two endpoints
+     - POST `/:id/import-emham` — preview endpoint (admin-only, multer upload, pdf-parse, returns parsed rows)
+     - POST `/:id/import-emham/confirm` — confirm endpoint (admin-only, creates operators + signal_reports in transaction, writes import log, returns reports for socket broadcast)
+     - Parser handles: tab-separated segments, callsign at end, multi-line entries, locator/dB extraction, rapport parsing (`R / S` format with spaces), bezirk code validation against DB
+     - Key parsing logic:
+       ```typescript
+       // Last tab-segment should contain the callsign
+       const callsignMatch = lastPart.match(/^([A-Z0-9]{3,}(?:\s*\/\s*\S+)?)$/i);
+       // If not found, look ahead for callsign on subsequent lines
+       ```
+     - Duplicate detection loads existing reports and checks callsign+repeater_id
+     - FK safety: loads valid bezirk codes from DB before inserting
+
+   - **`server/src/index.ts`** (modified)
+     - Added `import { importRouter } from './routes/import.js';`
+     - Added `app.use('/api/v1/exercises', authMiddleware, importRouter);`
+
+   - **`server/src/db/schema.ts`** (modified)
+     - Added migration for `emham_imports` table:
+       ```sql
+       CREATE TABLE IF NOT EXISTS emham_imports (
+         id INTEGER PRIMARY KEY AUTOINCREMENT,
+         exercise_id TEXT REFERENCES exercises(id) ON DELETE CASCADE,
+         filename TEXT,
+         uploaded_by TEXT,
+         row_count INTEGER DEFAULT 0,
+         created_count INTEGER DEFAULT 0,
+         skipped_count INTEGER DEFAULT 0,
+         duplicate_count INTEGER DEFAULT 0,
+         created_at TEXT DEFAULT (datetime('now'))
+       )
+       ```
+
+   - **`server/package.json`** (modified)
+     - Added dependencies: `pdf-parse`, `multer`, `@types/multer`
+
+   - **`client/src/components/EmHamImport.tsx`** (NEW)
+     - Modal component with 3-step UI: upload → preview → done
+     - Uses FormData for file upload (NOT apiFetch since it needs multipart)
+     - Preview table shows: callsign, name, QTH, bezirk, rapport, repeater match status, duplicate status
+     - Shows counts: importable, duplicates, issues
+     - Passes filename to confirm endpoint for import log
+
+   - **`client/src/pages/ExercisePage.tsx`** (modified)
+     - Added imports: `useAuth`, `EmHamImport`
+     - Added `isAdmin` check and `showImport` state
+     - Added admin-only "EmHam Import" button (emerald green) before Einrichten/Auswertung links
+     - Added EmHamImport modal with `onImported` handler that adds reports to state and emits socket events
+
+   - **`client/src/services/api.ts`** (read only) — uses `apiFetch` wrapper with token auth
+   - **`server/src/middleware/auth.ts`** (read only) — `requireRole('admin')` used for import endpoints
+   - **`server/src/utils/callsignCountry.ts`** (read only) — `callsignToCountryCode()` used for operator creation
+   - **`server/src/utils/qthBezirk.ts`** (read only) — `qthToBezirkCode()` used for operator creation
+   - **`server/src/db/database.ts`** (read only) — confirmed `foreign_keys = ON` pragma
+
+4. Errors and fixes:
+   - **pdf-parse v2 TypeScript error** (`Module has no default export`):
+     - pdf-parse v2 uses class-based named export: `import { PDFParse } from 'pdf-parse'`
+     - Changed from `pdf(buffer)` to `new PDFParse({ data: new Uint8Array(buffer) })` then `parser.getText()` then `parser.destroy()`
+   - **Parser not recognizing any entries** (user reported "es wird nichts erkannt"):
+     - Root cause: PDF text extraction produces columns in visual order, completely different from assumed table order
+     - Callsign is at the END of each line (last tab segment), not the beginning
+     - Rapport format is `R / S` with spaces, not `R/S`
+     - Completely rewrote parser to handle tab-separated segments
+     - Also added lookahead for multi-line entries (callsign on subsequent line)
+     - Tested with real PDF: 17/17 entries parsed correctly
+   - **SQLITE_CONSTRAINT_FOREIGNKEY on confirm** (user reported "interner Serverfehler"):
+     - Root cause: bezirk codes from PDF may not exist in `bezirke` table, and `foreign_keys = ON` enforces the constraint
+     - Fix: Load valid bezirk codes from DB (`SELECT code FROM bezirke`), validate before using in operator creation and signal_report insertion, fall back to NULL for invalid codes
+   - **test-pdf.mjs couldn't find pdf-parse**: pdf-parse is installed in server/node_modules, not root. Ran inline node -e from server/ directory instead.
+
+5. Problem Solving:
+   - **Solved**: EmHam PDF import feature fully working with parse, preview, confirm flow
+   - **Solved**: Duplicate detection and import logging
+   - **Solved**: PDF parser rewritten to match actual pdf-parse v2 text extraction format
+   - **Solved**: FK constraint error on bezirk codes
+   - **NOT solved (explained only)**: OE8 stations showing under "?? Sonstige" in Tirol — bezirkStats query groups only by bezirk_code, not by bundesland+bezirk, causing all NULL-bezirk operators from different Bundesländer to be lumped together. Affects 3 files (exercises.ts, reports.ts, pdf.ts). User was told about the fix needed but said to proceed with import first.
+   - **NOT done yet**: Create release and update footer (most recent request)
+
+6. All user messages:
+   - "Implement the following plan: [detailed EmHam PDF Import plan]"
+   - "do we have an upload log. do we have a mechanism that ensures that we do not have duplicates"
+   - "yes, implement both"
+   - "commit this"
+   - "and then deploy via deploy script"
+   - "Servus Michael, warum stehen bei der gestrigen Übung in Tirol 8 OE8-Stationen unter ?? Sonstiges?"
+   - "der emham import funktioniert mit dem pdf nicht... es wird nichts erkannt"
+   - "ist in downloads" (referring to the EmHam PDF location)
+   - "bekomme interner serverfehler beim importieren"
+   - "create release add to footer"
+
+7. Pending Tasks:
+   - **Create release v1.1.5 and update footer** (most recent explicit request, not yet done)
+   - **Fix bezirkStats OE8/"?? Sonstige" bug** (explained to user but not implemented — user hasn't explicitly asked to fix it yet in this session, only asked why it happens)
+
+8. Current Work:
+   The user's most recent request was "create release add to footer". I had just grepped for the 3 footer locations containing `v1.1.4`:
+   - `client/src/components/Layout.tsx:69`
+   - `client/src/pages/LoginPage.tsx:80`
+   - `client/src/App.tsx:45`
+   
+   All contain links like:
+   ```html
+   <a href="https://github.com/achildrenmile/bosarsalog/releases/tag/v1.1.4" ...>v1.1.4</a>
+   ```
+   
+   No changes have been made yet. The current version is `1.1.4` in `package.json`.
+
+9. Optional Next Step:
+   Bump version to v1.1.5 in `package.json`, update the 3 footer links from v1.1.4 to v1.1.5, commit, create git tag `v1.1.5`, push with tags, create GitHub release with `gh release create`, then deploy.
+   
+   User's exact request: "create release add to footer"
+   
+   Release process from MEMORY.md:
+   - Version in `package.json` + footer links in `LoginPage.tsx`, `Layout.tsx`, `App.tsx` (3 footer locations)
+   - `git tag vX.Y.Z && git push origin main --tags`
+   - `gh release create vX.Y.Z --title "vX.Y.Z" --notes "..."`
+   - `./deploy-production.sh`
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+Please continue the conversation from where we left it off without asking the user any further questions. Continue with the last task that you were asked to work on.
+
+---
+
+create release add to footer
+
+---
+
+deploy
+
+---
+
+kurze zusammenfassung über das release 1.1.15 für whatsapp
+
+---
+
+analyze what it means to implement an import of handwritten notes.
+
+---
+
+https://github.com/achildrenmile/bosarsalog/issues/13 but do not entfernung piechart. only add
+
+---
+
+[Request interrupted by user for tool use]
