@@ -226,28 +226,38 @@ const BEZIRK_META = {
   'FK': { name: 'Feldkirch', bundesland_code: '09' },
 };
 
-// ─── Projection ───
-// Calibration: Wien center in existing SVG ≈ (550, 97)
-// Wien real coords ≈ (16.37°E, 48.21°N)
-// Vorarlberg center in existing SVG ≈ (30, 215)
-// Bregenz real coords ≈ (9.75°E, 47.50°N)
+// ─── Mercator Projection ───
+// The existing AustriaMap BL_PATHS use Mercator projection (from MapSVG).
+// We must use Mercator Y to match the aspect ratio.
 //
-// From these two reference points:
-// x: 550 = 16.37 * sx + ox  AND  30 = 9.75 * sx + ox
-//   → sx = (550 - 30) / (16.37 - 9.75) = 520 / 6.62 ≈ 78.55
-//   → ox = 550 - 16.37 * 78.55 ≈ 550 - 1285.45 ≈ -735.45
+// Mercator Y formula: y_merc = ln(tan(π/4 + lat_rad/2))
 //
-// y: 97 = 48.21 * sy + oy  AND  215 = 47.50 * sy + oy  (note: lat increases = y decreases)
-//   → sy = (97 - 215) / (48.21 - 47.50) = -118 / 0.71 ≈ -166.20
-//   → oy = 97 - 48.21 * (-166.20) ≈ 97 + 8014.3 ≈ 8111.3
+// Calibration from existing BL_PATHS reference points:
+//   Wien:     16.37°E, 48.21°N → SVG (550, 97)
+//   Bregenz:   9.75°E, 47.50°N → SVG (30, 215)
+//
+// X is linear: x = lon * SX + OX
+//   SX = (550 - 30) / (16.37 - 9.75) = 78.55
+//   OX = 550 - 16.37 * 78.55 = -735.45
+//
+// Y uses Mercator: y = mercY(lat) * SY_M + OY_M
+//   mercY(48.21°) = ln(tan(π/4 + latRad/2)) = 0.9630
+//   mercY(47.50°) = ln(tan(π/4 + latRad/2)) = 0.9445
+//   SY_M = (97 - 215) / (0.9630 - 0.9445) = -118 / 0.01847 = -6389.5
+//   OY_M = 97 - 0.9630 * (-6389.5) = 97 + 6152.8 = 6249.8
 
 const SX = 78.55;
-const OX = -735.45;
-const SY = -166.20;
-const OY = 8111.3;
+const OX = -735.86;
+const SY_M = -6389.5;
+const OY_M = 6249.8;
+
+function mercatorY(latDeg) {
+  const latRad = latDeg * Math.PI / 180;
+  return Math.log(Math.tan(Math.PI / 4 + latRad / 2));
+}
 
 function projectLon(lon) { return lon * SX + OX; }
-function projectLat(lat) { return lat * SY + OY; }
+function projectLat(lat) { return mercatorY(lat) * SY_M + OY_M; }
 
 function coordsToSvgPath(rings) {
   return rings.map((ring, ri) => {
