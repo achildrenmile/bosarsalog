@@ -1,0 +1,38 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "4ce3ddf1a973",
+  "session_id": "abcc5a4f-9583-427f-85cf-1c4283b3d576",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-02T19:28:35.1930969Z",
+  "branch": "main",
+  "checkpoints_count": 2,
+  "files_touched": [
+    "client/src/components/EmHamImport.tsx",
+    "client/src/pages/ExercisePage.tsx",
+    "server/src/db/schema.ts",
+    "server/src/index.ts",
+    "server/src/routes/import.ts",
+    "test-parse.mjs",
+    "test-pdf.mjs"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "251897b7-edf6-488b-bef7-20685bf05ece",
+  "checkpoint_transcript_start": 557,
+  "transcript_lines_at_start": 557,
+  "token_usage": {
+    "input_tokens": 38,
+    "cache_creation_tokens": 130457,
+    "cache_read_tokens": 4196336,
+    "output_tokens": 5855,
+    "api_call_count": 32
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-02T19:28:34.697025074Z",
+    "agent_lines": 131,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 20,
+    "total_committed": 131,
+    "agent_percentage": 100
+  }
+}
