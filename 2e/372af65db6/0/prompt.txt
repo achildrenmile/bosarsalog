@@ -1,0 +1,316 @@
+Implement the following plan:
+
+# Plan: Bezirks-Heatmap zur Auswertung hinzufügen (Issue #13)
+
+## Context
+GitHub issue #13 requests a Bezirk heatmap on the Auswertung page: "Österreich Karte mit allen Bezirken und dann auf einer Skala von grün bis rot Heatmap". The pie chart stays (user override). The existing Bundesland map also stays — the Bezirk heatmap is an **addition**.
+
+## Approach: Static SVG paths (matching existing AustriaMap pattern)
+
+The existing `AustriaMap.tsx` uses inline SVG paths from MapSVG for 9 Bundesländer. We follow the same pattern for ~94 Bezirke:
+
+1. **Source**: Download Bezirke GeoJSON from `github.com/ginseng666/GeoJSON-TopoJSON-Austria` (99.5% simplified, CC BY-SA 3.0)
+2. **Convert**: One-time Node script projects GeoJSON coordinates to SVG paths matching the existing map's coordinate system
+3. **Embed**: Store as `client/src/data/bezirkPaths.ts` — a static TypeScript file (~200-300KB source, ~50-80KB gzipped)
+4. **Render**: New `AustriaBezirkMap.tsx` component using same SVG pattern as `AustriaMap.tsx`
+
+No new runtime dependencies. Zero D3. Consistent with existing codebase.
+
+## Steps
+
+### 1. Generate Bezirk SVG path data
+- Create `scripts/generate-bezirk-paths.mjs` — one-time script
+- Download GeoJSON, project WGS84 → SVG coordinates (calibrated to existing map viewBox)
+- Map 3-digit ISO Gemeindekennzahl codes → 2-letter KFZ Bezirk codes (hardcoded mapping table, ~94 entries from `seed.ts`)
+- Output: `client/src/data/bezirkPaths.ts`
+  ```ts
+  export const BEZIRK_PATHS: Record<string, {
+    d: string; labelX: number; labelY: number;
+    name: string; bundesland_code: string;
+  }> = { ... };
+  ```
+- Calibrate projection using reference points from existing BL_PATHS (Wien center ~550,97 = 16.37°E,48.21°N)
+- Wien = single polygon (merge 23 sub-districts if needed)
+
+### 2. Create `client/src/components/AustriaBezirkMap.tsx`
+- Props: `{ data: { bezirk_code: string; participants: number; reports: number }[] }`
+- Color: green→yellow→red HSL gradient (H: 120→0) — distinct from the blue Bundesland map
+- Gray (#f3f4f6) for Bezirke with 0 participants
+- Bezirk borders: white, 0.5px stroke
+- Bundesland borders overlaid: #1e3a5f, 1.5px stroke (reuse BL_PATHS from AustriaMap)
+- Tooltip on hover: Bezirk name, code, Bundesland, participants, reports
+- Legend at bottom (green→red gradient bar)
+- Labels: show Bezirk code only for Bezirke with data (avoid clutter)
+- ViewBox: tight to Austria only (no neighbor countries)
+
+### 3. Integrate into `AggregatedReportsPage.tsx`
+- Import `AustriaBezirkMap`
+- Add `bezirkMapCardRef` for PNG export
+- Place **after** the existing Austria Map section (~line 423), before the charts
+- Only show when `stats.bezirkStats.length > 0`
+- Wire up download button with existing `downloadChart()` function
+- Feed data: `stats.bezirkStats.map(bz => ({ bezirk_code: bz.bezirk_code, participants: bz.participants, reports: bz.reports }))`
+
+## Files
+
+| File | Action | Notes |
+|------|--------|-------|
+| `scripts/generate-bezirk-paths.mjs` | CREATE | One-time GeoJSON→SVG conversion script |
+| `client/src/data/bezirkPaths.ts` | CREATE | Generated static SVG path data for ~94 Bezirke |
+| `client/src/components/AustriaBezirkMap.tsx` | CREATE | New heatmap component |
+| `client/src/pages/AggregatedReportsPage.tsx` | MODIFY | Add bezirk heatmap section |
+
+## Key References
+- `client/src/components/AustriaMap.tsx` — existing pattern to follow (SVG paths, tooltip, legend, color gradient)
+- `client/src/types/stats.ts` — `BezirkStat` interface (data shape)
+- `server/src/db/seed.ts` — complete list of 94 Bezirke with KFZ codes
+- Existing map viewBox: `"-300 -120 1100 560"`
+
+## Verification
+1. `nix-shell -p nodejs --run "npm run build"` compiles clean
+2. Auswertung page shows Bezirk heatmap below Bundesland map
+3. Bezirke with participants colored green→red, empty ones gray
+4. Hover tooltip shows correct Bezirk name + stats
+5. PNG download works via existing mechanism
+6. Pie chart still visible (not removed)
+7. Deploy via `./deploy-production.sh`
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+
+---
+
+deploy it
+
+---
+
+not visible
+
+---
+
+not visible https://bosarsalog.oeradio.at/exercises/d3a46728-abf4-42a1-aece-9e7c3ef497a3/reports
+
+---
+
+bezirksheadmap is off. the card does not fit to the bezirke. fix this
+
+---
+
+there are 2 cards. one with the umrisse and another. the umriss card is not overlapping correctly. it is still off
+
+---
+
+all within the border, but the card looks a bit squished
+
+---
+
+not it is smaller does not fit but squished from width
+
+---
+
+in comparsion to the other austria card, this looks off
+
+---
+
+and also title the bezirke with 0 rapports
+
+---
+
+This session is being continued from a previous conversation that ran out of context. The summary below covers the earlier portion of the conversation.
+
+Analysis:
+Let me chronologically analyze the conversation:
+
+1. User asked to implement a plan for adding a Bezirks-Heatmap to the Auswertung page (Issue #13). The plan was detailed with specific steps.
+
+2. I read reference files: AustriaMap.tsx, AggregatedReportsPage.tsx, stats.ts, seed.ts to understand existing patterns.
+
+3. Created `scripts/generate-bezirk-paths.mjs` - a one-time script to download GeoJSON and convert to SVG paths. Used a linear projection calibrated from 2 reference points (Wien and Bregenz).
+
+4. Ran the script successfully - generated 94 Bezirke paths.
+
+5. Created `client/src/data/bezirkPaths.ts` - generated static SVG path data.
+
+6. Created `client/src/components/AustriaBezirkMap.tsx` - new heatmap component with green-to-red gradient.
+
+7. Modified `client/src/pages/AggregatedReportsPage.tsx` - added bezirk heatmap section.
+
+8. Build succeeded. First deploy attempt - code wasn't committed/pushed, so Docker used cached layers.
+
+9. Found `.gitignore` had `data/` which caught `client/src/data/`. Fixed to `/data/`.
+
+10. Committed, pushed, redeployed successfully.
+
+11. User said "not visible" and pointed to `/exercises/:id/reports` URL - this is ReportsPage.tsx, not AggregatedReportsPage.tsx.
+
+12. Added the heatmap to ReportsPage.tsx as well. Deployed.
+
+13. User said "bezirksheadmap is off. the card does not fit to the bezirke" - the Bundesland border overlay paths (hardcoded from AustriaMap) used a different projection than the generated bezirk paths.
+
+14. Updated generate script to also fetch Bundesländer GeoJSON and generate BL_BORDER_PATHS with the same projection. Updated component to import from generated data instead of hardcoded. Deployed.
+
+15. User said "card looks a bit squished" - viewBox was `"0 -50 630 470"` making map too tall.
+
+16. Tried `maxHeight: 420px` - user said "not it is smaller does not fit but squished from width".
+
+17. Removed maxHeight, went back to `w-full h-auto` - still not right.
+
+18. Changed viewBox to `"-20 -50 670 340"` (2:1 ratio) - user said "card is now too big" and "still off".
+
+19. Changed viewBox to `"-2 -51 629 470"` with `max-h-[400px]` - user said "check if scale is ok. it seems to be stretched somehow in comparison to the other austria card".
+
+20. Analyzed the projection issue: existing AustriaMap uses Mercator projection (from MapSVG), but my bezirk paths use simple linear lat→y. This causes Austria to be vertically stretched.
+
+21. Started fixing the generation script to use Mercator Y projection instead of linear. Edited the projection constants in `generate-bezirk-paths.mjs` to use `mercatorY()` function. This was the LAST action before the summary request.
+
+The key unfinished work: I updated the projection in the script but haven't yet:
+- Run the script to regenerate bezirkPaths.ts with Mercator projection
+- Rebuilt the project
+- Committed/pushed/deployed
+
+Summary:
+1. Primary Request and Intent:
+   The user requested implementation of a Bezirks-Heatmap for the Auswertung page (GitHub Issue #13). The plan specified: generate SVG paths from GeoJSON for ~94 Austrian Bezirke, create a green-to-red heatmap component, and integrate it into the reports pages. The heatmap should show participant density by Bezirk with Bundesland border overlay, tooltip on hover, and PNG export capability. The existing Bundesland map and pie chart should remain. After initial implementation, the user iteratively provided feedback about visual issues (alignment, sizing, stretching).
+
+2. Key Technical Concepts:
+   - SVG path generation from GeoJSON data
+   - Map projection (linear vs Mercator) for WGS84 → SVG coordinate conversion
+   - Calibration of projection using reference points from existing AustriaMap.tsx BL_PATHS
+   - HSL color gradient (green→yellow→red) for heatmap visualization
+   - SVG viewBox tuning for proper aspect ratio
+   - Docker build caching (COPY layer invalidation)
+   - `.gitignore` pattern matching (`data/` vs `/data/`)
+   - Monorepo deployment via `./deploy-production.sh` (git push → remote pull → Docker build)
+
+3. Files and Code Sections:
+
+   - **`scripts/generate-bezirk-paths.mjs`** (CREATED, then modified multiple times)
+     - One-time script to download Bezirke + Bundesländer GeoJSON from `ginseng666/GeoJSON-TopoJSON-Austria`
+     - Maps 3-digit GKZ codes to KFZ Bezirk codes (94 entries)
+     - Projects WGS84 coordinates to SVG using calibrated projection
+     - Most recently updated to use **Mercator Y projection** instead of linear (NOT YET RUN):
+     ```javascript
+     const SX = 78.55;
+     const OX = -735.45;
+     const SY_M = -5721.8;
+     const OY_M = 6493.0;
+
+     function mercatorY(latDeg) {
+       const latRad = latDeg * Math.PI / 180;
+       return Math.log(Math.tan(Math.PI / 4 + latRad / 2));
+     }
+
+     function projectLon(lon) { return lon * SX + OX; }
+     function projectLat(lat) { return mercatorY(lat) * SY_M + OY_M; }
+     ```
+     - Also fetches Bundesländer GeoJSON (`laender_995_geo.json`) and generates `BL_BORDER_PATHS` export
+     - Uses `BL_ISO_TO_DB` mapping for Bundesland iso→DB code conversion
+
+   - **`client/src/data/bezirkPaths.ts`** (GENERATED)
+     - Auto-generated static data with `BEZIRK_PATHS` (94 entries) and `BL_BORDER_PATHS` (9 entries)
+     - Each bezirk entry: `{ d: string, labelX: number, labelY: number, name: string, bundesland_code: string }`
+     - Currently ~171KB, needs regeneration with Mercator projection
+
+   - **`client/src/components/AustriaBezirkMap.tsx`** (CREATED)
+     - Current state of the component:
+     ```tsx
+     import { useState } from 'react';
+     import { BEZIRK_PATHS, BL_BORDER_PATHS } from '../data/bezirkPaths';
+     ```
+     - Props: `{ data: { bezirk_code: string; participants: number; reports: number }[] }`
+     - `getHeatColor()` — HSL gradient green(120)→yellow(60)→red(0), gray for 0
+     - Tooltip with Bezirk name, code, Bundesland, participants, reports
+     - Shows labels for ALL Bezirke (bold+dark for data, smaller+gray for empty)
+     - Bundesland borders overlay from generated `BL_BORDER_PATHS`
+     - Current viewBox: `"-2 -51 629 470"` with `max-h-[400px]` and `preserveAspectRatio="xMidYMid meet"`
+     - Legend: green→red gradient bar
+
+   - **`client/src/pages/AggregatedReportsPage.tsx`** (MODIFIED)
+     - Added `import AustriaBezirkMap`
+     - Added `bezirkMapCardRef` ref
+     - Inserted bezirk heatmap section after existing Austria Map, before Charts
+     - Conditional on `stats.bezirkStats.length > 0`
+
+   - **`client/src/pages/ReportsPage.tsx`** (MODIFIED)
+     - Same changes as AggregatedReportsPage — added import, ref, and bezirk heatmap section
+     - This is the single exercise reports page at `/exercises/:id/reports`
+
+   - **`.gitignore`** (MODIFIED)
+     - Changed `data/` to `/data/` to stop ignoring `client/src/data/`
+
+   - **Reference files read:**
+     - `client/src/components/AustriaMap.tsx` — existing Bundesland map pattern (SVG paths from MapSVG, blue color gradient, viewBox `"-300 -120 1100 560"`, neighbor country paths)
+     - `client/src/types/stats.ts` — `BezirkStat`, `Stats` interfaces
+     - `server/src/db/seed.ts` — 94 Bezirke with KFZ codes, Bundesland assignments
+
+4. Errors and Fixes:
+   - **Docker cached build**: First deploy didn't include new code because changes weren't committed/pushed. The deploy script does `git pull` on the remote. Fix: commit and push before deploying.
+   - **`.gitignore` blocking `client/src/data/`**: The `data/` pattern matched any directory named `data/`. Fix: changed to `/data/` to only match root-level data directory.
+   - **BL border overlay misalignment**: Hardcoded BL_BORDER_PATHS from AustriaMap.tsx used a different projection than generated bezirk paths. User said "the card does not fit to the bezirke". Fix: updated generate script to also fetch Bundesländer GeoJSON and project with same parameters, imported from generated data.
+   - **ViewBox too tall (squished)**: viewBox `"0 -50 630 470"` made card too tall. User said "card looks a bit squished". Multiple iterations:
+     - Added `maxHeight: 420px` → user said "squished from width"
+     - Removed maxHeight → still off
+     - Changed to 2:1 ratio `"-20 -50 670 340"` → "card is now too big" and southern Bezirke cropped
+     - Changed to `"-2 -51 629 470"` with `max-h-[400px]` → user said "still off, stretched compared to other card"
+   - **Projection stretching (CURRENT ISSUE)**: The linear lat→y projection produces vertically stretched Austria compared to the Mercator projection used by the existing AustriaMap BL_PATHS. Analysis showed:
+     - X scale is correct (linear lon→x matches)
+     - Y scale is wrong: linear gives Villach at Y=365 but should be ~270
+     - Existing paths use Mercator-like projection
+     - Fix: updated script to use `mercatorY()` function — **NOT YET RUN**
+
+5. Problem Solving:
+   - Solved: GeoJSON→SVG path conversion with projection calibration
+   - Solved: KFZ code mapping for all 94 Bezirke including Wien (23 sub-districts merged)
+   - Solved: Consistent projection for bezirk and BL border paths
+   - Ongoing: Vertical stretching due to linear vs Mercator projection mismatch
+
+6. All User Messages:
+   - "Implement the following plan: # Plan: Bezirks-Heatmap zur Auswertung hinzufügen (Issue #13)" (with detailed plan)
+   - "deploy it"
+   - "not visible"
+   - "not visible https://bosarsalog.oeradio.at/exercises/d3a46728-abf4-42a1-aece-9e7c3ef497a3/reports"
+   - "bezirksheadmap is off. the card does not fit to the bezirke. fix this"
+   - "all in the heatmap card"
+   - "not it is smaller does not fit but squished from width"
+   - "in comparsion to the other austria card, this looks off"
+   - "card is now to big not have place in area. and still off"
+   - "and check if scale is ok. it seems to be stretched somehow in comparison to the other austria card"
+   - "there are 2 cards. one with the umrisse and another. the umriss card is not overlapping correctly. it is still off"
+   - "go on"
+   - "all within the border, but the card looks a bit squished"
+   - "and also title the bezirke with 0 rapports"
+
+7. Pending Tasks:
+   - Run the updated generate script (with Mercator projection) to regenerate `bezirkPaths.ts`
+   - Verify the new coordinates produce correct aspect ratio matching existing AustriaMap
+   - Update viewBox in AustriaBezirkMap.tsx to fit the new Mercator-projected coordinates
+   - Build, commit, push, deploy
+   - Verify visually that the bezirk heatmap now matches the existing Bundesland map's proportions
+
+8. Current Work:
+   I was fixing the vertical stretching issue. The user said "it seems to be stretched somehow in comparison to the other austria card". Analysis revealed the root cause: the existing AustriaMap uses Mercator projection while my bezirk paths used linear lat→y, causing Austria to appear vertically stretched.
+
+   I updated `scripts/generate-bezirk-paths.mjs` to use Mercator Y projection:
+   ```javascript
+   function mercatorY(latDeg) {
+     const latRad = latDeg * Math.PI / 180;
+     return Math.log(Math.tan(Math.PI / 4 + latRad / 2));
+   }
+   function projectLat(lat) { return mercatorY(lat) * SY_M + OY_M; }
+   ```
+   
+   This edit was completed but the script has NOT yet been run to regenerate the data.
+
+9. Optional Next Step:
+   Run the updated generation script with Mercator projection, check the new coordinate ranges, update the viewBox accordingly in AustriaBezirkMap.tsx, rebuild, commit, push, and deploy. This directly continues the work of fixing the stretching issue per the user's feedback: "check if scale is ok. it seems to be stretched somehow in comparison to the other austria card".
+
+If you need specific details from before compaction (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+Please continue the conversation from where we left it off without asking the user any further questions. Continue with the last task that you were asked to work on.
+
+---
+
+create a new release, add to footer and at the end sum up for a whatsapp message
+
+---
+
+headmap is to stretch in height

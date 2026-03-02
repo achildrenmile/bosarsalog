@@ -1,0 +1,26 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "2e372af65db6",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "client/src/components/AustriaBezirkMap.tsx"
+  ],
+  "sessions": [
+    {
+      "metadata": "/2e/372af65db6/0/metadata.json",
+      "transcript": "/2e/372af65db6/0/full.jsonl",
+      "context": "/2e/372af65db6/0/context.md",
+      "content_hash": "/2e/372af65db6/0/content_hash.txt",
+      "prompt": "/2e/372af65db6/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 9,
+    "cache_creation_tokens": 5384,
+    "cache_read_tokens": 420616,
+    "output_tokens": 114,
+    "api_call_count": 7
+  }
+}
