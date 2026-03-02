@@ -76,7 +76,7 @@ export default function AustriaBezirkMap({ data }: Props) {
   return (
     <div className="relative">
       <svg
-        viewBox="-5 -45 635 460"
+        viewBox="-20 -50 670 340"
         className="w-full h-auto"
         role="img"
         aria-label="Bezirks-Heatmap von Österreich"
