@@ -115,10 +115,10 @@ export default function AustriaBezirkMap({ data }: Props) {
           />
         ))}
 
-        {/* Labels for Bezirke with data */}
+        {/* Labels for all Bezirke */}
         {Object.entries(BEZIRK_PATHS).map(([code, { labelX, labelY }]) => {
           const bz = dataMap.get(code);
-          if (!bz || bz.participants === 0) return null;
+          const hasData = bz && bz.participants > 0;
           return (
             <text
               key={`label-${code}`}
@@ -126,12 +126,12 @@ export default function AustriaBezirkMap({ data }: Props) {
               y={labelY}
               textAnchor="middle"
               dominantBaseline="central"
-              fontSize="6"
-              fontWeight="bold"
-              fill="#1e3a5f"
+              fontSize={hasData ? '6' : '5'}
+              fontWeight={hasData ? 'bold' : 'normal'}
+              fill={hasData ? '#1e3a5f' : '#9ca3af'}
               pointerEvents="none"
               stroke="#ffffff"
-              strokeWidth="2"
+              strokeWidth={hasData ? '2' : '1.5'}
               paintOrder="stroke"
             >
               {code}
