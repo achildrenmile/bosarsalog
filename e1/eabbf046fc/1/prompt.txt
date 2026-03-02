@@ -1,0 +1,109 @@
+Implement the following plan:
+
+# Plan: EmHam PDF Import Feature
+
+## Context
+The BOS-ARSA exercises are also logged in EmHam (by OE1VRS), which exports a structured PDF with callsign listings per Bundesland. We want to import these PDFs into BOS-ARSA Log to avoid double data entry. The PDF contains tabular data: Callsign, Name, QTH, BezKen, Locator, Rapport, Repeater, Notstrom, Info — grouped by Bundesland. All entries typically use one linked repeater (e.g. HERMANNSKOGEL) → BundMode.
+
+**Important: No deploy during this session — exercise is currently running.**
+
+## PDF Data Structure
+Each row: `Callsign | Name | QTH | BezKen | Locator | Rapport +Sig | Repeater | Notstrom | Info`
+- Rapport format: `5/8`, `5/9`, `5/9 10` (=+10dB), `5/9 60` (=+60dB)
+- Callsigns may have suffix: `OE1MVA / portabel`
+- Some fields can be empty (no Locator, no BezKen)
+
+## Changes
+
+### 1. New server dependency: `pdf-parse`
+- `cd server && npm install pdf-parse`
+- Pure JS PDF text extraction, no native deps
+
+### 2. New server dependency: `multer`
+- `cd server && npm install multer @types/multer`
+- Multipart file upload middleware
+
+### 3. New server route: `server/src/routes/import.ts`
+- **POST `/api/v1/exercises/:id/import-emham`** — admin-only, multer single file upload
+- Steps:
+  1. Accept PDF file via multipart upload
+  2. Extract text with `pdf-parse`
+  3. Parse text into structured rows per Bundesland section
+  4. For each row:
+     - Get or create operator (callsign, name, QTH, bezirk_code)
+     - Match repeater by `short_name` against exercise's repeaters
+     - Parse rapport into readability/strength/db_over_s9
+     - Handle `/ portabel` → suffix `/p`
+  5. Return parsed data as JSON preview (don't insert yet)
+- **POST `/api/v1/exercises/:id/import-emham/confirm`** — admin-only
+  - Accept the parsed data array
+  - Create operators + signal_reports in a transaction
+  - Emit socket events for each created report
+  - Return summary (created count, skipped count)
+
+### 4. Register route: `server/src/index.ts`
+- Import and mount the new import router
+
+### 5. New client component: `client/src/components/EmHamImport.tsx`
+- Modal dialog triggered by "EmHam Import" button
+- UI flow:
+  1. File picker (accept `.pdf`)
+  2. Upload → show parsed preview table (callsign, name, QTH, bezirk, rapport, repeater match status)
+  3. Highlight any issues (unmatched repeater, missing data)
+  4. "Importieren" button → confirm endpoint → close modal, reports appear via socket
+- Admin-only (button only rendered for admin role)
+
+### 6. ExercisePage integration: `client/src/pages/ExercisePage.tsx`
+- Add admin-only "EmHam Import" button in the header row (next to Einrichten/Auswertung)
+- Button opens EmHamImport modal, passes `exerciseId` and exercise's repeaters list
+
+## Text Parsing Strategy
+```
+Detect sections: /^(OE\d)\s*-\s*(.+)$/  →  bundesland header
+Detect rows: /^(OE\d\w+(?:\s*\/\s*\w+)?)\s+(.+?)\s+(\d{4},\s*.+?)\s+(\w{2})?\s+(JN\w+)?\s+(\d\/\d(?:\s+\d+)?)\s+([\w]+)\s*/
+Skip: "Gesamt:", headers, stats pages, empty lines
+```
+
+## Field Mapping
+| PDF Column | Target | Handling |
+|---|---|---|
+| Callsign | `operators.callsign` | Strip `/ portabel` → suffix `/p` |
+| Vor-/Rufname | `operators.name` | Direct |
+| QTH | `operators.qth` | Direct |
+| BezKen | `signal_reports.bezirk_code` | Direct (WC, TU, GF, etc.) |
+| Locator | `signal_reports.notes` | Append to notes |
+| Rapport +Sig | readability/strength/db_over_s9 | Parse `5/9 10` → R=5, S=9, db="+10" |
+| Repeater | `repeater_id` | Match `repeaters.short_name` in exercise |
+| Notstrom | `signal_reports.notes` | Append "Notstrom" to notes if checked |
+| Info | `signal_reports.notes` | Direct |
+
+## Files to modify/create
+- `server/package.json` — add `pdf-parse`, `multer`, `@types/multer`
+- `server/src/routes/import.ts` — **NEW** import route with parsing logic
+- `server/src/index.ts` — mount import router
+- `client/src/components/EmHamImport.tsx` — **NEW** modal component
+- `client/src/pages/ExercisePage.tsx` — add EmHam Import button
+
+## Verification
+1. `nix-shell -p nodejs --run "npm run build"` compiles clean
+2. Upload the sample PDF → preview shows 17 parsed entries across OE1/OE3/OE4
+3. Confirm import → reports appear in BundMode
+4. Repeater "HERMANNSKOGEL" correctly matched to exercise repeater
+5. Rapport values parsed correctly (5/8, 5/9, 5/9+10, 5/9+60)
+6. Operators created with correct name, QTH, bezirk_code
+7. **No deploy** — exercise currently running
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+
+---
+
+do we have an upload log. do we have a mechanism that ensures that we do not have duplicates
+
+---
+
+yes, implement both
+
+---
+
+commit this

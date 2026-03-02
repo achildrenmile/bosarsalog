@@ -3,20 +3,24 @@
   "checkpoint_id": "e1eabbf046fc",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 0,
+  "checkpoints_count": 2,
   "files_touched": [
     "README.md",
     "client/src/App.tsx",
     "client/src/components/BundMode.tsx",
+    "client/src/components/EmHamImport.tsx",
     "client/src/components/LandMode.tsx",
     "client/src/components/Layout.tsx",
     "client/src/pages/AggregatedReportsPage.tsx",
+    "client/src/pages/ExercisePage.tsx",
     "client/src/pages/LoginPage.tsx",
     "client/src/pages/ReportsPage.tsx",
     "client/src/services/api.ts",
     "package.json",
     "server/src/db/schema.ts",
+    "server/src/index.ts",
     "server/src/routes/exercises.ts",
+    "server/src/routes/import.ts",
     "server/src/routes/pdf.ts",
     "server/src/routes/reports.ts"
   ],
@@ -27,13 +31,20 @@
       "context": "/e1/eabbf046fc/0/context.md",
       "content_hash": "/e1/eabbf046fc/0/content_hash.txt",
       "prompt": "/e1/eabbf046fc/0/prompt.txt"
+    },
+    {
+      "metadata": "/e1/eabbf046fc/1/metadata.json",
+      "transcript": "/e1/eabbf046fc/1/full.jsonl",
+      "context": "/e1/eabbf046fc/1/context.md",
+      "content_hash": "/e1/eabbf046fc/1/content_hash.txt",
+      "prompt": "/e1/eabbf046fc/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 151,
-    "cache_creation_tokens": 391081,
-    "cache_read_tokens": 11746789,
-    "output_tokens": 7525,
-    "api_call_count": 112
+    "input_tokens": 254,
+    "cache_creation_tokens": 608614,
+    "cache_read_tokens": 17640552,
+    "output_tokens": 10222,
+    "api_call_count": 207
   }
 }
