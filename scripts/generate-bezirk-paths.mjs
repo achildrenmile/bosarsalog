@@ -13,8 +13,9 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// GeoJSON URL — 99.5% simplified bezirke
-const GEOJSON_URL = 'https://raw.githubusercontent.com/ginseng666/GeoJSON-TopoJSON-Austria/master/2021/simplified-99.5/bezirke_995_geo.json';
+// GeoJSON URLs — 99.5% simplified
+const BEZIRKE_URL = 'https://raw.githubusercontent.com/ginseng666/GeoJSON-TopoJSON-Austria/master/2021/simplified-99.5/bezirke_995_geo.json';
+const LAENDER_URL = 'https://raw.githubusercontent.com/ginseng666/GeoJSON-TopoJSON-Austria/master/2021/simplified-99.5/laender_995_geo.json';
 
 // Mapping from Gemeindekennzahl (iso field) to KFZ Bezirk code
 // The GeoJSON uses 3-digit district codes (iso field or similar)
@@ -272,12 +273,31 @@ function getCentroid(rings) {
   return { x: Math.round(cx / ring.length * 100) / 100, y: Math.round(cy / ring.length * 100) / 100 };
 }
 
+// Bundesland iso code → DB code
+const BL_ISO_TO_DB = {
+  '1': '04', // Burgenland
+  '2': '08', // Kärnten
+  '3': '03', // Niederösterreich
+  '4': '05', // Oberösterreich
+  '5': '02', // Salzburg
+  '6': '06', // Steiermark
+  '7': '07', // Tirol
+  '8': '09', // Vorarlberg
+  '9': '01', // Wien
+};
+
 async function main() {
-  console.log('Fetching GeoJSON...');
-  const response = await fetch(GEOJSON_URL);
+  console.log('Fetching Bezirke GeoJSON...');
+  const response = await fetch(BEZIRKE_URL);
   if (!response.ok) throw new Error(`HTTP ${response.status}`);
   const geojson = await response.json();
-  console.log(`Got ${geojson.features.length} features`);
+  console.log(`Got ${geojson.features.length} bezirk features`);
+
+  console.log('Fetching Bundesländer GeoJSON...');
+  const blResponse = await fetch(LAENDER_URL);
+  if (!blResponse.ok) throw new Error(`HTTP ${blResponse.status}`);
+  const blGeojson = await blResponse.json();
+  console.log(`Got ${blGeojson.features.length} bundesland features`);
 
   // Group features by KFZ code (Wien 23 sub-districts → merge)
   const byKfz = {};
@@ -378,9 +398,38 @@ async function main() {
   lines.push('};');
   lines.push('');
 
+  // ─── Bundesländer borders (same projection) ───
+  const blEntries = {};
+  for (const feature of blGeojson.features) {
+    const props = feature.properties;
+    const iso = String(props.iso || props.id || '');
+    const dbCode = BL_ISO_TO_DB[iso];
+    if (!dbCode) {
+      console.warn(`  Unknown BL iso: ${iso} (${props.name})`);
+      continue;
+    }
+    const geom = feature.geometry;
+    const allRings = [];
+    if (geom.type === 'Polygon') {
+      for (const ring of geom.coordinates) allRings.push(ring);
+    } else if (geom.type === 'MultiPolygon') {
+      for (const polygon of geom.coordinates) {
+        for (const ring of polygon) allRings.push(ring);
+      }
+    }
+    blEntries[dbCode] = coordsToSvgPath(allRings);
+  }
+
+  lines.push('export const BL_BORDER_PATHS: Record<string, string> = {');
+  for (const code of Object.keys(blEntries).sort()) {
+    lines.push(`  '${code}': '${blEntries[code]}',`);
+  }
+  lines.push('};');
+  lines.push('');
+
   const outPath = resolve(__dirname, '../client/src/data/bezirkPaths.ts');
   writeFileSync(outPath, lines.join('\n'));
-  console.log(`Written ${sortedKeys.length} Bezirke to ${outPath}`);
+  console.log(`Written ${sortedKeys.length} Bezirke + ${Object.keys(blEntries).length} BL borders to ${outPath}`);
   console.log(`File size: ${(lines.join('\n').length / 1024).toFixed(1)} KB`);
 }
 
