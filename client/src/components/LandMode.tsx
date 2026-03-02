@@ -248,7 +248,7 @@ export default function LandMode({ exerciseId, repeaters, reports, simplexBezirk
             className="flex items-center gap-1.5 sm:gap-2 cursor-pointer hover:bg-gray-100 rounded px-1 -mx-1 min-w-0"
           >
             <span className="text-xs text-gray-400">{isCollapsed ? '▶' : '▼'}</span>
-            <span className="font-medium text-xs sm:text-sm truncate">{rep.short_name}{rep.repeater_callsign ? ` (${rep.repeater_callsign})` : ''}</span>
+            <span className="font-medium text-sm truncate">{rep.short_name}{rep.repeater_callsign ? ` (${rep.repeater_callsign})` : ''}</span>
             <span className="bg-[#0d6efd] text-white text-xs px-1.5 py-0.5 rounded-full flex-shrink-0">{reportCount}</span>
             {rep.frequency_mhz && (
               <span className="text-xs text-gray-400 hidden sm:inline">{rep.frequency_mhz} MHz</span>
@@ -419,7 +419,7 @@ export default function LandMode({ exerciseId, repeaters, reports, simplexBezirk
   };
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {sortedBlCodes.map(blCode => {
         const blReps = repeatersByBl[blCode];
         const label = BUNDESLAND_NAMES[blCode] || 'Sonstige';
@@ -428,7 +428,7 @@ export default function LandMode({ exerciseId, repeaters, reports, simplexBezirk
             <div className="px-1 mb-1 mt-2">
               <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">{label}</span>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {blReps.map(rep => renderRepeaterCard(rep))}
             </div>
           </div>
@@ -440,7 +440,7 @@ export default function LandMode({ exerciseId, repeaters, reports, simplexBezirk
           <div className="px-1 mb-1 mt-2">
             <span className="text-xs font-semibold text-gray-500 uppercase tracking-wide">Simplex</span>
           </div>
-          <div className="space-y-2">
+          <div className="space-y-3">
             {simplexRepeaters.map(rep => renderRepeaterCard(rep))}
           </div>
         </div>

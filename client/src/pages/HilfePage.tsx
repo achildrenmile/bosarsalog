@@ -5,7 +5,7 @@ export default function HilfePage() {
     <div className="max-w-3xl mx-auto space-y-8">
       <div className="flex items-center gap-4">
         <Link to="/" className="text-sm text-gray-500 hover:text-gray-700">&larr; Zurück</Link>
-        <h1 className="text-xl font-bold text-[#1e3a5f]">Hilfe</h1>
+        <h1 className="text-xl sm:text-2xl font-bold text-[#1e3a5f]">Hilfe</h1>
       </div>
 
       <p className="text-sm text-gray-600">
@@ -452,7 +452,7 @@ export default function HilfePage() {
 function Section({ title, children }: { title: string; children: React.ReactNode }) {
   return (
     <section className="space-y-2">
-      <h2 className="text-base font-bold text-[#1e3a5f] border-b border-gray-200 pb-1">{title}</h2>
+      <h2 className="text-base sm:text-lg font-bold text-[#1e3a5f] border-b border-gray-200 pb-1">{title}</h2>
       <div className="text-sm text-gray-700 space-y-2">{children}</div>
     </section>
   );

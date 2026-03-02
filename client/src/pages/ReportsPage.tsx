@@ -144,18 +144,18 @@ export default function ReportsPage() {
     <div ref={pageRef} className="space-y-6">
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <h1 className="text-base sm:text-xl font-bold text-[#1e3a5f]">Auswertung</h1>
-          <p className="text-xs sm:text-sm text-gray-500 truncate">{exercise.name} — {formatDate(exercise.date)}</p>
+          <h1 className="text-xl sm:text-2xl font-bold text-[#1e3a5f]">Auswertung</h1>
+          <p className="text-sm text-gray-500 truncate">{exercise.name} — {formatDate(exercise.date)}</p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0" data-no-export="true">
           <button
             onClick={downloadFullPage}
             disabled={exporting}
-            className="bg-[#1e3a5f] hover:bg-[#2a4a7f] text-white px-2 sm:px-3 py-1.5 rounded text-xs sm:text-sm disabled:opacity-50"
+            className="bg-[#1e3a5f] hover:bg-[#2a4a7f] text-white px-2 sm:px-3 py-1.5 rounded text-sm disabled:opacity-50"
           >
             {exporting ? 'Exportieren...' : 'Download Auswertung'}
           </button>
-          <Link to={`/exercises/${id}`} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 sm:px-3 py-1.5 rounded text-xs sm:text-sm">
+          <Link to={`/exercises/${id}`} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 sm:px-3 py-1.5 rounded text-sm">
             Zurück
           </Link>
         </div>
@@ -165,27 +165,27 @@ export default function ReportsPage() {
         <>
           {/* Summary cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
-            <div className="bg-white rounded-lg shadow-sm p-2 sm:p-4 text-center">
+            <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 text-center">
               <div className="text-2xl sm:text-3xl font-bold text-[#1e3a5f]">{stats.totalParticipants}</div>
-              <div className="text-xs sm:text-sm text-gray-500">Teilnehmer</div>
+              <div className="text-sm text-gray-500">Teilnehmer</div>
             </div>
-            <div className="bg-white rounded-lg shadow-sm p-2 sm:p-4 text-center">
+            <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 text-center">
               <div className="text-2xl sm:text-3xl font-bold text-[#1e3a5f]">{stats.totalReports}</div>
-              <div className="text-xs sm:text-sm text-gray-500">Rapporte</div>
+              <div className="text-sm text-gray-500">Rapporte</div>
             </div>
             {stats.perRepeater.map((r) => (
-              <div key={r.short_name} className="bg-white rounded-lg shadow-sm p-2 sm:p-4 text-center">
+              <div key={r.short_name} className="bg-white rounded-lg shadow-sm p-3 sm:p-4 text-center">
                 <div className="text-xl sm:text-2xl font-bold text-gray-700">{r.count}</div>
-                <div className="text-xs text-gray-500 truncate">{r.short_name}</div>
+                <div className="text-sm text-gray-500 truncate">{r.short_name}</div>
               </div>
             ))}
           </div>
 
           {/* Austria Map */}
           {stats.blStats.length > 0 && (
-            <div ref={mapCardRef} className="bg-white rounded-xl shadow p-3 sm:p-4">
+            <div ref={mapCardRef} className="bg-white rounded-xl shadow p-4 sm:p-5">
               <div className="flex items-center justify-between mb-2 sm:mb-3">
-                <h2 className="text-xs sm:text-sm font-semibold text-[#1e3a5f]">
+                <h2 className="text-sm sm:text-base font-semibold text-[#1e3a5f]">
                   Teilnehmer nach Bundesland / Land
                 </h2>
                 <button
@@ -209,9 +209,9 @@ export default function ReportsPage() {
 
           {/* Bezirk Heatmap */}
           {stats.bezirkStats.length > 0 && (
-            <div ref={bezirkMapCardRef} className="bg-white rounded-xl shadow p-3 sm:p-4">
+            <div ref={bezirkMapCardRef} className="bg-white rounded-xl shadow p-4 sm:p-5">
               <div className="flex items-center justify-between mb-2 sm:mb-3">
-                <h2 className="text-xs sm:text-sm font-semibold text-[#1e3a5f]">
+                <h2 className="text-sm sm:text-base font-semibold text-[#1e3a5f]">
                   Teilnehmer nach Bezirk (Heatmap)
                 </h2>
                 <button
@@ -244,9 +244,9 @@ export default function ReportsPage() {
             return chartData.length > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Bar chart: Stationen + Rapporte */}
-              <div ref={barCardRef} className="bg-white rounded-xl shadow p-3 sm:p-4">
+              <div ref={barCardRef} className="bg-white rounded-xl shadow p-4 sm:p-5">
                 <div className="flex items-center justify-between mb-2 sm:mb-3">
-                  <h2 className="text-xs sm:text-sm font-semibold text-[#1e3a5f]">
+                  <h2 className="text-sm sm:text-base font-semibold text-[#1e3a5f]">
                     BOS-ARSA Übung am {new Date(exercise.date + 'T00:00:00').toLocaleDateString('de-AT')}
                   </h2>
                   <button
@@ -290,9 +290,9 @@ export default function ReportsPage() {
               </div>
 
               {/* Pie chart: Rapporte distribution */}
-              <div ref={pieCardRef} className="bg-white rounded-xl shadow p-3 sm:p-4">
+              <div ref={pieCardRef} className="bg-white rounded-xl shadow p-4 sm:p-5">
                 <div className="flex items-center justify-between mb-2 sm:mb-3">
-                  <h2 className="text-xs sm:text-sm font-semibold text-[#1e3a5f]">
+                  <h2 className="text-sm sm:text-base font-semibold text-[#1e3a5f]">
                     Rapporte Verteilung nach Bundesland / Land
                   </h2>
                   <button
@@ -368,11 +368,11 @@ export default function ReportsPage() {
           {/* Bezirk/Bundesland table */}
           {stats.bezirkStats.length > 0 && (
             <div className="bg-white rounded-xl shadow overflow-hidden">
-              <div className="bg-[#1e3a5f] text-white px-2 sm:px-4 py-2 text-xs sm:text-sm font-semibold">
+              <div className="bg-[#1e3a5f] text-white px-2 sm:px-4 py-2 text-sm font-semibold">
                 Nebenstationen nach Bezirk
               </div>
               <div className="overflow-x-auto">
-              <table className="w-full text-xs sm:text-sm min-w-[360px]">
+              <table className="w-full text-sm min-w-[360px]">
                 <thead>
                   <tr className="bg-gray-50 border-b text-left text-xs text-gray-500 uppercase">
                     <th className="px-2 sm:px-4 py-2">Bundesland / Bezirk</th>
@@ -427,7 +427,7 @@ export default function ReportsPage() {
             </div>
             {showParticipants && (
               <div className="overflow-x-auto">
-              <table className="w-full text-xs sm:text-sm min-w-[360px]">
+              <table className="w-full text-sm min-w-[360px]">
                 <thead>
                   <tr className="bg-gray-50 border-b text-left text-xs text-gray-500 uppercase">
                     <th className="px-2 sm:px-4 py-2 w-8">#</th>

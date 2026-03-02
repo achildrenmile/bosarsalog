@@ -116,16 +116,16 @@ export default function ExercisePage() {
   if (!exercise) return <p className="text-red-500 p-4">Übung nicht gefunden</p>;
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex items-center justify-between flex-wrap gap-2">
-        <h1 className="text-base sm:text-xl font-bold text-[#1e3a5f] min-w-0">
+        <h1 className="text-xl sm:text-2xl font-bold text-[#1e3a5f] min-w-0">
           <span className="block sm:inline">{exercise.name || 'Übung'}</span>
           <span className="hidden sm:inline"> — </span>
-          <span className="block sm:inline text-sm sm:text-xl">{new Date(exercise.date + 'T00:00:00').toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
+          <span className="block sm:inline text-base sm:text-2xl">{new Date(exercise.date + 'T00:00:00').toLocaleDateString('de-AT', { day: '2-digit', month: '2-digit', year: 'numeric' })}</span>
         </h1>
         <div className="flex items-center gap-2 flex-wrap">
           <div className="flex items-center gap-1.5">
-            <label className={`text-xs ${organisator ? 'text-gray-500' : 'text-[#c8102e] font-semibold'}`}>Organisator:</label>
+            <label className={`text-sm ${organisator ? 'text-gray-500' : 'text-[#c8102e] font-semibold'}`}>Organisator:</label>
             <input
               type="text"
               value={organisator}
@@ -140,15 +140,15 @@ export default function ExercisePage() {
           {isAdmin && (
             <button
               onClick={() => setShowImport(true)}
-              className="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 px-2 sm:px-3 py-1 rounded text-xs sm:text-sm"
+              className="bg-emerald-100 hover:bg-emerald-200 text-emerald-800 px-2 sm:px-3 py-1 rounded text-sm"
             >
               EmHam Import
             </button>
           )}
-          <Link to={`/exercises/${id}/setup`} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 sm:px-3 py-1 rounded text-xs sm:text-sm">
+          <Link to={`/exercises/${id}/setup`} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 sm:px-3 py-1 rounded text-sm">
             Einrichten
           </Link>
-          <Link to={`/exercises/${id}/reports`} className="bg-red-100 hover:bg-red-200 text-red-800 px-2 sm:px-3 py-1 rounded text-xs sm:text-sm">
+          <Link to={`/exercises/${id}/reports`} className="bg-red-100 hover:bg-red-200 text-red-800 px-2 sm:px-3 py-1 rounded text-sm">
             Auswertung
           </Link>
         </div>
@@ -160,13 +160,13 @@ export default function ExercisePage() {
         <div className="flex gap-1 bg-white rounded-lg p-1 shadow-sm w-full sm:w-fit">
           <button
             onClick={() => setMode('land')}
-            className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 rounded text-xs sm:text-sm font-medium ${mode === 'land' ? 'bg-[#1e3a5f] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+            className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 rounded text-sm font-medium ${mode === 'land' ? 'bg-[#1e3a5f] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
           >
             Frequenzen
           </button>
           <button
             onClick={() => setMode('bund')}
-            className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 rounded text-xs sm:text-sm font-medium ${mode === 'bund' ? 'bg-[#1e3a5f] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
+            className={`flex-1 sm:flex-none px-3 sm:px-4 py-1.5 rounded text-sm font-medium ${mode === 'bund' ? 'bg-[#1e3a5f] text-white' : 'text-gray-600 hover:bg-gray-100'}`}
           >
             OE-Link
           </button>

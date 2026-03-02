@@ -216,9 +216,9 @@ export default function AggregatedReportsPage() {
       {/* Header */}
       <div className="flex items-center justify-between gap-2">
         <div className="min-w-0">
-          <h1 className="text-base sm:text-xl font-bold text-[#1e3a5f]">Auswertung</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-[#1e3a5f]">Auswertung</h1>
           {exercises.length > 0 && (
-            <p className="text-xs sm:text-sm text-gray-500">
+            <p className="text-sm text-gray-500">
               {formatDateDE(from)} – {formatDateDE(to)} · {exercises.length} Übung{exercises.length !== 1 ? 'en' : ''}
             </p>
           )}
@@ -243,7 +243,7 @@ export default function AggregatedReportsPage() {
                     URL.revokeObjectURL(url);
                   } catch {}
                 }}
-                className="bg-red-700 hover:bg-red-800 text-white px-2 sm:px-3 py-1.5 rounded text-xs sm:text-sm"
+                className="bg-red-700 hover:bg-red-800 text-white px-2 sm:px-3 py-1.5 rounded text-sm"
                 title="ADIF-Datei für QRZ.com, LOTW etc."
               >
                 Download ADIF
@@ -251,7 +251,7 @@ export default function AggregatedReportsPage() {
               <button
                 onClick={downloadFullPage}
                 disabled={exporting}
-                className="bg-[#1e3a5f] hover:bg-[#2a4a7f] text-white px-2 sm:px-3 py-1.5 rounded text-xs sm:text-sm disabled:opacity-50"
+                className="bg-[#1e3a5f] hover:bg-[#2a4a7f] text-white px-2 sm:px-3 py-1.5 rounded text-sm disabled:opacity-50"
               >
                 {exporting ? '...' : 'Download Auswertung'}
               </button>
@@ -261,7 +261,7 @@ export default function AggregatedReportsPage() {
       </div>
 
       {/* Date range selector */}
-      <div className="bg-white rounded-xl shadow p-3 sm:p-4" data-no-export="true">
+      <div className="bg-white rounded-xl shadow p-4 sm:p-5" data-no-export="true">
         <div className="flex flex-wrap gap-2 mb-3">
           {[1, 2, 3, 4].map((q) => (
             <button
@@ -280,14 +280,14 @@ export default function AggregatedReportsPage() {
           </button>
         </div>
         <div className="flex flex-wrap items-center gap-2 text-sm">
-          <label className="text-gray-500 text-xs">Von</label>
+          <label className="text-gray-500 text-sm">Von</label>
           <input
             type="date"
             value={from}
             onChange={(e) => handleFromChange(e.target.value)}
             className="border rounded px-2 py-1 text-sm"
           />
-          <label className="text-gray-500 text-xs">Bis</label>
+          <label className="text-gray-500 text-sm">Bis</label>
           <input
             type="date"
             value={to}
@@ -331,21 +331,21 @@ export default function AggregatedReportsPage() {
         <>
           {/* Summary cards */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
-            <div className="bg-white rounded-lg shadow-sm p-2 sm:p-4 text-center">
+            <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 text-center">
               <div className="text-2xl sm:text-3xl font-bold text-[#1e3a5f]">{stats.totalParticipants}</div>
-              <div className="text-xs sm:text-sm text-gray-500">Teilnehmer (gesamt)</div>
+              <div className="text-sm text-gray-500">Teilnehmer (gesamt)</div>
             </div>
-            <div className="bg-white rounded-lg shadow-sm p-2 sm:p-4 text-center">
+            <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 text-center">
               <div className="text-2xl sm:text-3xl font-bold text-[#1e3a5f]">{stats.totalReports}</div>
-              <div className="text-xs sm:text-sm text-gray-500">Rapporte</div>
+              <div className="text-sm text-gray-500">Rapporte</div>
             </div>
-            <div className="bg-white rounded-lg shadow-sm p-2 sm:p-4 text-center">
+            <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 text-center">
               <div className="text-2xl sm:text-3xl font-bold text-[#1e3a5f]">{exercises.length}</div>
-              <div className="text-xs sm:text-sm text-gray-500">Übungen</div>
+              <div className="text-sm text-gray-500">Übungen</div>
             </div>
-            <div className="bg-white rounded-lg shadow-sm p-2 sm:p-4 text-center">
+            <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 text-center">
               <div className="text-2xl sm:text-3xl font-bold text-gray-700">{avgParticipants}</div>
-              <div className="text-xs sm:text-sm text-gray-500">Ø Teilnehmer/Übung</div>
+              <div className="text-sm text-gray-500">Ø Teilnehmer/Übung</div>
             </div>
           </div>
 
@@ -372,7 +372,7 @@ export default function AggregatedReportsPage() {
             </div>
             {showExercises && (
               <div className="overflow-x-auto">
-                <table className="w-full text-xs sm:text-sm min-w-[360px]">
+                <table className="w-full text-sm min-w-[360px]">
                   <thead>
                     <tr className="bg-gray-50 border-b text-left text-xs text-gray-500 uppercase">
                       <th className="px-2 sm:px-4 py-2">Datum</th>
@@ -400,9 +400,9 @@ export default function AggregatedReportsPage() {
 
           {/* Austria Map */}
           {stats.blStats.length > 0 && (
-            <div ref={mapCardRef} className="bg-white rounded-xl shadow p-3 sm:p-4">
+            <div ref={mapCardRef} className="bg-white rounded-xl shadow p-4 sm:p-5">
               <div className="flex items-center justify-between mb-2 sm:mb-3">
-                <h2 className="text-xs sm:text-sm font-semibold text-[#1e3a5f]">
+                <h2 className="text-sm sm:text-base font-semibold text-[#1e3a5f]">
                   Teilnehmer nach Bundesland / Land
                 </h2>
                 <button
@@ -426,9 +426,9 @@ export default function AggregatedReportsPage() {
 
           {/* Bezirk Heatmap */}
           {stats.bezirkStats.length > 0 && (
-            <div ref={bezirkMapCardRef} className="bg-white rounded-xl shadow p-3 sm:p-4">
+            <div ref={bezirkMapCardRef} className="bg-white rounded-xl shadow p-4 sm:p-5">
               <div className="flex items-center justify-between mb-2 sm:mb-3">
-                <h2 className="text-xs sm:text-sm font-semibold text-[#1e3a5f]">
+                <h2 className="text-sm sm:text-base font-semibold text-[#1e3a5f]">
                   Teilnehmer nach Bezirk (Heatmap)
                 </h2>
                 <button
@@ -459,9 +459,9 @@ export default function AggregatedReportsPage() {
             return chartData.length > 0 ? (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Bar chart */}
-                <div ref={barCardRef} className="bg-white rounded-xl shadow p-3 sm:p-4">
+                <div ref={barCardRef} className="bg-white rounded-xl shadow p-4 sm:p-5">
                   <div className="flex items-center justify-between mb-2 sm:mb-3">
-                    <h2 className="text-xs sm:text-sm font-semibold text-[#1e3a5f]">
+                    <h2 className="text-sm sm:text-base font-semibold text-[#1e3a5f]">
                       Auswertung {formatDateDE(from)} – {formatDateDE(to)}
                     </h2>
                     <button
@@ -505,9 +505,9 @@ export default function AggregatedReportsPage() {
                 </div>
 
                 {/* Pie chart */}
-                <div ref={pieCardRef} className="bg-white rounded-xl shadow p-3 sm:p-4">
+                <div ref={pieCardRef} className="bg-white rounded-xl shadow p-4 sm:p-5">
                   <div className="flex items-center justify-between mb-2 sm:mb-3">
-                    <h2 className="text-xs sm:text-sm font-semibold text-[#1e3a5f]">
+                    <h2 className="text-sm sm:text-base font-semibold text-[#1e3a5f]">
                       Rapporte Verteilung nach Bundesland / Land
                     </h2>
                     <button
@@ -578,11 +578,11 @@ export default function AggregatedReportsPage() {
           {/* Bezirk/Bundesland table */}
           {stats.bezirkStats.length > 0 && (
             <div className="bg-white rounded-xl shadow overflow-hidden">
-              <div className="bg-[#1e3a5f] text-white px-2 sm:px-4 py-2 text-xs sm:text-sm font-semibold">
+              <div className="bg-[#1e3a5f] text-white px-2 sm:px-4 py-2 text-sm font-semibold">
                 Nebenstationen nach Bezirk
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-xs sm:text-sm min-w-[360px]">
+                <table className="w-full text-sm min-w-[360px]">
                   <thead>
                     <tr className="bg-gray-50 border-b text-left text-xs text-gray-500 uppercase">
                       <th className="px-2 sm:px-4 py-2">Bundesland / Bezirk</th>
@@ -634,7 +634,7 @@ export default function AggregatedReportsPage() {
             </div>
             {showParticipants && (
               <div className="overflow-x-auto">
-                <table className="w-full text-xs sm:text-sm min-w-[360px]">
+                <table className="w-full text-sm min-w-[360px]">
                   <thead>
                     <tr className="bg-gray-50 border-b text-left text-xs text-gray-500 uppercase">
                       <th className="px-2 sm:px-4 py-2 w-8">#</th>

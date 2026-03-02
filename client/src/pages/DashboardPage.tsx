@@ -119,7 +119,7 @@ export default function DashboardPage() {
       <div className="flex items-center justify-between mb-4 sm:mb-6 gap-2">
         <div className="min-w-0">
           <h1 className="text-xl sm:text-2xl font-bold text-[#1e3a5f]">Gesamtübersicht</h1>
-          <p className="text-xs sm:text-sm text-gray-500">Willkommen, {admin?.username}</p>
+          <p className="text-sm text-gray-500">Willkommen, {admin?.username}</p>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           {admin?.role === 'admin' && (
@@ -181,10 +181,10 @@ export default function DashboardPage() {
 
       {showCreate && (
         <div className="bg-white rounded-xl shadow p-4 mb-6">
-          <h2 className="text-sm font-semibold text-[#1e3a5f] mb-3">Neue Übung anlegen</h2>
+          <h2 className="text-sm sm:text-base font-semibold text-[#1e3a5f] mb-3">Neue Übung anlegen</h2>
           <div className="flex items-end gap-3 flex-wrap">
             <div className="w-full sm:w-auto">
-              <label className="block text-xs text-gray-500 mb-1">Datum</label>
+              <label className="block text-sm text-gray-500 mb-1">Datum</label>
               <input
                 type="date"
                 value={newDate}
@@ -193,7 +193,7 @@ export default function DashboardPage() {
               />
             </div>
             <div className="w-full sm:w-auto">
-              <label className="block text-xs text-gray-500 mb-1">Typ</label>
+              <label className="block text-sm text-gray-500 mb-1">Typ</label>
               <div className="flex gap-2">
                 <select
                   value={EXERCISE_TYPES.some(t => t.value === newType) ? newType : '__custom__'}
@@ -221,7 +221,7 @@ export default function DashboardPage() {
               </div>
             </div>
             <div className="flex-1 min-w-0 w-full sm:w-auto">
-              <label className="block text-xs text-gray-500 mb-1">Name (optional)</label>
+              <label className="block text-sm text-gray-500 mb-1">Name (optional)</label>
               <input
                 type="text"
                 value={newName}
@@ -262,19 +262,19 @@ export default function DashboardPage() {
       {/* Summary cards */}
       {!loading && exercises.length > 0 && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3 mb-4 sm:mb-6">
-          <div className="bg-white rounded-lg shadow-sm p-2 sm:p-4 text-center">
+          <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 text-center">
             <div className="text-2xl sm:text-3xl font-bold text-[#1e3a5f]">{exercises.length}</div>
             <div className="text-sm text-gray-500">Übungen</div>
           </div>
-          <div className="bg-white rounded-lg shadow-sm p-2 sm:p-4 text-center">
+          <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 text-center">
             <div className="text-2xl sm:text-3xl font-bold text-[#1e3a5f]">{yearParticipants}</div>
             <div className="text-sm text-gray-500">Teilnehmer gesamt</div>
           </div>
-          <div className="bg-white rounded-lg shadow-sm p-2 sm:p-4 text-center">
+          <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 text-center">
             <div className="text-2xl sm:text-3xl font-bold text-[#1e3a5f]">{yearReports}</div>
             <div className="text-sm text-gray-500">Rapporte gesamt</div>
           </div>
-          <div className="bg-white rounded-lg shadow-sm p-2 sm:p-4 text-center">
+          <div className="bg-white rounded-lg shadow-sm p-3 sm:p-4 text-center">
             <div className="text-2xl sm:text-3xl font-bold text-gray-600">
               {exercises.length > 0 ? Math.round(yearParticipants / exercises.filter(e => e.participant_count > 0).length || 1) : 0}
             </div>
@@ -286,7 +286,7 @@ export default function DashboardPage() {
       {/* Trend chart */}
       {!loading && exercises.length > 0 && (
         <div className="bg-white rounded-xl shadow p-4 mb-6">
-          <h2 className="text-sm font-semibold text-[#1e3a5f] mb-3">BOS-ARSA Übungen {selectedYear}</h2>
+          <h2 className="text-sm sm:text-base font-semibold text-[#1e3a5f] mb-3">BOS-ARSA Übungen {selectedYear}</h2>
           <div className="h-48 sm:h-[300px]">
             <Bar
               data={{
@@ -328,7 +328,7 @@ export default function DashboardPage() {
         <p className="text-gray-500">Keine Übungen in {selectedYear}.</p>
       ) : (
         <div className="bg-white rounded-xl shadow overflow-x-auto">
-          <table className="w-full text-xs sm:text-sm min-w-[480px]">
+          <table className="w-full text-sm min-w-[480px]">
             <thead className="bg-[#1e3a5f] text-white">
               <tr>
                 <th className="px-2 sm:px-4 py-2 text-left">Datum</th>
@@ -346,7 +346,7 @@ export default function DashboardPage() {
                   const isNearest = ex.id === nearestId;
                   return (
                     <tr key={ex.id} className={`border-t ${isNearest ? 'bg-blue-100 font-medium' : 'hover:bg-blue-50'}`}>
-                      <td className="px-2 sm:px-4 py-2 font-mono text-xs sm:text-sm">
+                      <td className="px-2 sm:px-4 py-2 font-mono text-sm">
                         {formatDate(ex.date)}
                         {isNearest && <span className="ml-1 sm:ml-2 text-[10px] sm:text-xs bg-[#c8102e] text-white px-1 sm:px-1.5 py-0.5 rounded">Aktuell</span>}
                       </td>

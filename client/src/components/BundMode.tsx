@@ -277,7 +277,7 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
   const domesticBlCodes = new Set(bundeslaender.filter(b => !b.is_international).map(b => b.code));
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-3">
       {bundeslaender.filter(bl => !bl.is_international).map(bl => {
         const blBezirke = bezirke.filter(b => b.bundesland_code === bl.code);
         const defaultRepId = blRepSelection[bl.code] || 0;
@@ -305,7 +305,7 @@ export default function BundMode({ exerciseId, reports, onReportCreated, onRepor
                 className="flex items-center gap-1.5 sm:gap-2 cursor-pointer hover:bg-gray-100 rounded px-1 -mx-1 min-w-0"
               >
                 <span className="text-xs text-gray-400">{isCollapsed ? '▶' : '▼'}</span>
-                <span className="font-medium text-xs sm:text-sm truncate">OE{parseInt(bl.code)} {bl.name}</span>
+                <span className="font-medium text-sm truncate">OE{parseInt(bl.code)} {bl.name}</span>
                 <span className="bg-[#0d6efd] text-white text-xs px-1.5 py-0.5 rounded-full flex-shrink-0">{reportCount}</span>
               </div>
               <div className="flex items-center gap-1.5 sm:gap-2" onClick={e => e.stopPropagation()}>

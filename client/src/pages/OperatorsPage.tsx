@@ -78,10 +78,10 @@ export default function OperatorsPage() {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div className="flex items-center justify-between gap-2">
-        <h1 className="text-lg sm:text-xl font-bold text-[#1e3a5f]">Rufzeichen-Register</h1>
-        <button onClick={() => setShowAdd(true)} className="bg-[#c8102e] hover:bg-[#a00d24] text-white px-2 sm:px-3 py-1.5 rounded text-xs sm:text-sm flex-shrink-0">
+        <h1 className="text-xl sm:text-2xl font-bold text-[#1e3a5f]">Rufzeichen-Register</h1>
+        <button onClick={() => setShowAdd(true)} className="bg-[#c8102e] hover:bg-[#a00d24] text-white px-2 sm:px-3 py-1.5 rounded text-sm flex-shrink-0">
           + Neu
         </button>
       </div>
@@ -114,7 +114,7 @@ export default function OperatorsPage() {
       )}
 
       <div className="bg-white rounded-xl shadow overflow-x-auto">
-        <table className="w-full text-xs sm:text-sm min-w-[400px]">
+        <table className="w-full text-sm min-w-[400px]">
           <thead className="bg-[#1e3a5f] text-white">
             <tr>
               <th className="px-2 sm:px-3 py-2 text-left">Rufzeichen</th>

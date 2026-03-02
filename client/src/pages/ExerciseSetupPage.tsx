@@ -179,10 +179,10 @@ export default function ExerciseSetupPage() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between gap-2">
-        <h1 className="text-base sm:text-xl font-bold text-[#1e3a5f] min-w-0">
+        <h1 className="text-xl sm:text-2xl font-bold text-[#1e3a5f] min-w-0">
           <span className="block sm:inline">Übung einrichten</span>
           <span className="hidden sm:inline"> — </span>
-          <span className="block sm:inline text-sm sm:text-xl">{new Date(exercise.date + 'T00:00:00').toLocaleDateString('de-AT')}</span>
+          <span className="block sm:inline text-base sm:text-2xl">{new Date(exercise.date + 'T00:00:00').toLocaleDateString('de-AT')}</span>
         </h1>
         <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
           {saveStatus === 'saving' && (
@@ -197,12 +197,12 @@ export default function ExerciseSetupPage() {
           {isAdmin && (
             <button
               onClick={() => setShowDeleteConfirm(true)}
-              className="bg-red-100 hover:bg-red-200 text-red-700 px-2 sm:px-3 py-1.5 rounded text-xs sm:text-sm"
+              className="bg-red-100 hover:bg-red-200 text-red-700 px-2 sm:px-3 py-1.5 rounded text-sm"
             >
               Löschen
             </button>
           )}
-          <Link to={`/exercises/${id}`} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 sm:px-3 py-1.5 rounded text-xs sm:text-sm">
+          <Link to={`/exercises/${id}`} className="bg-gray-200 hover:bg-gray-300 text-gray-700 px-2 sm:px-3 py-1.5 rounded text-sm">
             Zurück
           </Link>
         </div>
@@ -210,11 +210,11 @@ export default function ExerciseSetupPage() {
 
       {/* Exercise type + name (admin only) */}
       {isAdmin && (
-        <div className="bg-white rounded-xl shadow p-3 sm:p-4">
+        <div className="bg-white rounded-xl shadow p-4 sm:p-5">
           <h2 className="text-base sm:text-lg font-semibold text-[#1e3a5f] mb-2 sm:mb-3">Typ & Name der Übung</h2>
           <div className="flex flex-col sm:flex-row gap-3">
             <div>
-              <label className="block text-xs text-gray-500 mb-1">Übungstyp</label>
+              <label className="block text-sm text-gray-500 mb-1">Übungstyp</label>
               <div className="flex gap-2">
                 <select
                   value={EXERCISE_TYPES.some(t => t.value === (exercise.exercise_type || '')) ? exercise.exercise_type : '__custom__'}
@@ -258,7 +258,7 @@ export default function ExerciseSetupPage() {
               </div>
             </div>
             <div className="flex-1">
-              <label className="block text-xs text-gray-500 mb-1">Name (optional)</label>
+              <label className="block text-sm text-gray-500 mb-1">Name (optional)</label>
               <input
                 type="text"
                 value={exerciseName}
@@ -291,7 +291,7 @@ export default function ExerciseSetupPage() {
 
       {/* OE-Link toggle (admin only) */}
       {isAdmin && (
-        <div className="bg-white rounded-xl shadow p-3 sm:p-4">
+        <div className="bg-white rounded-xl shadow p-4 sm:p-5">
           <label className="flex items-center gap-3 cursor-pointer">
             <input
               type="checkbox"
@@ -331,7 +331,7 @@ export default function ExerciseSetupPage() {
 
       {/* Simplex Bezirke toggle (admin only) */}
       {isAdmin && (
-        <div className="bg-white rounded-xl shadow p-3 sm:p-4">
+        <div className="bg-white rounded-xl shadow p-4 sm:p-5">
           <label className="flex items-center gap-3 cursor-pointer">
             <input
               type="checkbox"
@@ -394,7 +394,7 @@ export default function ExerciseSetupPage() {
       )}
 
       {/* Bundesländer selection */}
-      <div className="bg-white rounded-xl shadow p-3 sm:p-4">
+      <div className="bg-white rounded-xl shadow p-4 sm:p-5">
         <h2 className="text-base sm:text-lg font-semibold text-[#1e3a5f] mb-2 sm:mb-3">Bundesländer auswählen</h2>
         <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-2">
           {BUNDESLAENDER.map(bl => {
@@ -463,7 +463,7 @@ export default function ExerciseSetupPage() {
                             onChange={() => toggleRepeater(rep.id)}
                             className="w-4 h-4 accent-red-600 flex-shrink-0"
                           />
-                          <span className="font-medium text-xs sm:text-sm">{rep.short_name}{rep.callsign ? ` (${rep.callsign})` : ''}</span>
+                          <span className="font-medium text-sm">{rep.short_name}{rep.callsign ? ` (${rep.callsign})` : ''}</span>
                           <span className="text-xs text-gray-500 hidden sm:inline">
                             {rep.frequency_mhz && `${rep.frequency_mhz} MHz`}
                           </span>
