@@ -3,14 +3,22 @@
   "checkpoint_id": "f46dceeaec5b",
   "strategy": "manual-commit",
   "branch": "main",
-  "checkpoints_count": 0,
+  "checkpoints_count": 1,
   "files_touched": [
     ".gitignore",
     "client/src/App.tsx",
     "client/src/components/AustriaBezirkMap.tsx",
+    "client/src/components/BundMode.tsx",
+    "client/src/components/LandMode.tsx",
     "client/src/components/Layout.tsx",
+    "client/src/components/RunningTotals.tsx",
     "client/src/pages/AggregatedReportsPage.tsx",
+    "client/src/pages/DashboardPage.tsx",
+    "client/src/pages/ExercisePage.tsx",
+    "client/src/pages/ExerciseSetupPage.tsx",
+    "client/src/pages/HilfePage.tsx",
     "client/src/pages/LoginPage.tsx",
+    "client/src/pages/OperatorsPage.tsx",
     "client/src/pages/ReportsPage.tsx",
     "package.json",
     "scripts/generate-bezirk-paths.mjs"
@@ -22,13 +30,20 @@
       "context": "/f4/6dceeaec5b/0/context.md",
       "content_hash": "/f4/6dceeaec5b/0/content_hash.txt",
       "prompt": "/f4/6dceeaec5b/0/prompt.txt"
+    },
+    {
+      "metadata": "/f4/6dceeaec5b/1/metadata.json",
+      "transcript": "/f4/6dceeaec5b/1/full.jsonl",
+      "context": "/f4/6dceeaec5b/1/context.md",
+      "content_hash": "/f4/6dceeaec5b/1/content_hash.txt",
+      "prompt": "/f4/6dceeaec5b/1/prompt.txt"
     }
   ],
   "token_usage": {
-    "input_tokens": 12,
-    "cache_creation_tokens": 11738,
-    "cache_read_tokens": 689020,
-    "output_tokens": 147,
-    "api_call_count": 8
+    "input_tokens": 69,
+    "cache_creation_tokens": 262156,
+    "cache_read_tokens": 6670017,
+    "output_tokens": 587,
+    "api_call_count": 57
   }
 }
