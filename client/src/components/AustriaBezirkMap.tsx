@@ -76,7 +76,7 @@ export default function AustriaBezirkMap({ data }: Props) {
   return (
     <div className="relative">
       <svg
-        viewBox="-148 -50 920 460"
+        viewBox="0 -50 625 460"
         className="w-full h-auto"
         preserveAspectRatio="xMidYMid meet"
         role="img"
