@@ -1,0 +1,95 @@
+Implement the following plan:
+
+# Plan: Bezirks-Heatmap zur Auswertung hinzufügen (Issue #13)
+
+## Context
+GitHub issue #13 requests a Bezirk heatmap on the Auswertung page: "Österreich Karte mit allen Bezirken und dann auf einer Skala von grün bis rot Heatmap". The pie chart stays (user override). The existing Bundesland map also stays — the Bezirk heatmap is an **addition**.
+
+## Approach: Static SVG paths (matching existing AustriaMap pattern)
+
+The existing `AustriaMap.tsx` uses inline SVG paths from MapSVG for 9 Bundesländer. We follow the same pattern for ~94 Bezirke:
+
+1. **Source**: Download Bezirke GeoJSON from `github.com/ginseng666/GeoJSON-TopoJSON-Austria` (99.5% simplified, CC BY-SA 3.0)
+2. **Convert**: One-time Node script projects GeoJSON coordinates to SVG paths matching the existing map's coordinate system
+3. **Embed**: Store as `client/src/data/bezirkPaths.ts` — a static TypeScript file (~200-300KB source, ~50-80KB gzipped)
+4. **Render**: New `AustriaBezirkMap.tsx` component using same SVG pattern as `AustriaMap.tsx`
+
+No new runtime dependencies. Zero D3. Consistent with existing codebase.
+
+## Steps
+
+### 1. Generate Bezirk SVG path data
+- Create `scripts/generate-bezirk-paths.mjs` — one-time script
+- Download GeoJSON, project WGS84 → SVG coordinates (calibrated to existing map viewBox)
+- Map 3-digit ISO Gemeindekennzahl codes → 2-letter KFZ Bezirk codes (hardcoded mapping table, ~94 entries from `seed.ts`)
+- Output: `client/src/data/bezirkPaths.ts`
+  ```ts
+  export const BEZIRK_PATHS: Record<string, {
+    d: string; labelX: number; labelY: number;
+    name: string; bundesland_code: string;
+  }> = { ... };
+  ```
+- Calibrate projection using reference points from existing BL_PATHS (Wien center ~550,97 = 16.37°E,48.21°N)
+- Wien = single polygon (merge 23 sub-districts if needed)
+
+### 2. Create `client/src/components/AustriaBezirkMap.tsx`
+- Props: `{ data: { bezirk_code: string; participants: number; reports: number }[] }`
+- Color: green→yellow→red HSL gradient (H: 120→0) — distinct from the blue Bundesland map
+- Gray (#f3f4f6) for Bezirke with 0 participants
+- Bezirk borders: white, 0.5px stroke
+- Bundesland borders overlaid: #1e3a5f, 1.5px stroke (reuse BL_PATHS from AustriaMap)
+- Tooltip on hover: Bezirk name, code, Bundesland, participants, reports
+- Legend at bottom (green→red gradient bar)
+- Labels: show Bezirk code only for Bezirke with data (avoid clutter)
+- ViewBox: tight to Austria only (no neighbor countries)
+
+### 3. Integrate into `AggregatedReportsPage.tsx`
+- Import `AustriaBezirkMap`
+- Add `bezirkMapCardRef` for PNG export
+- Place **after** the existing Austria Map section (~line 423), before the charts
+- Only show when `stats.bezirkStats.length > 0`
+- Wire up download button with existing `downloadChart()` function
+- Feed data: `stats.bezirkStats.map(bz => ({ bezirk_code: bz.bezirk_code, participants: bz.participants, reports: bz.reports }))`
+
+## Files
+
+| File | Action | Notes |
+|------|--------|-------|
+| `scripts/generate-bezirk-paths.mjs` | CREATE | One-time GeoJSON→SVG conversion script |
+| `client/src/data/bezirkPaths.ts` | CREATE | Generated static SVG path data for ~94 Bezirke |
+| `client/src/components/AustriaBezirkMap.tsx` | CREATE | New heatmap component |
+| `client/src/pages/AggregatedReportsPage.tsx` | MODIFY | Add bezirk heatmap section |
+
+## Key References
+- `client/src/components/AustriaMap.tsx` — existing pattern to follow (SVG paths, tooltip, legend, color gradient)
+- `client/src/types/stats.ts` — `BezirkStat` interface (data shape)
+- `server/src/db/seed.ts` — complete list of 94 Bezirke with KFZ codes
+- Existing map viewBox: `"-300 -120 1100 560"`
+
+## Verification
+1. `nix-shell -p nodejs --run "npm run build"` compiles clean
+2. Auswertung page shows Bezirk heatmap below Bundesland map
+3. Bezirke with participants colored green→red, empty ones gray
+4. Hover tooltip shows correct Bezirk name + stats
+5. PNG download works via existing mechanism
+6. Pie chart still visible (not removed)
+7. Deploy via `./deploy-production.sh`
+
+
+If you need specific details from before exiting plan mode (like exact code snippets, error messages, or content you generated), read the full transcript at: /home/achildrenmile/.REDACTED.jsonl
+
+---
+
+deploy it
+
+---
+
+not visible
+
+---
+
+not visible https://bosarsalog.oeradio.at/exercises/d3a46728-abf4-42a1-aece-9e7c3ef497a3/reports
+
+---
+
+bezirksheadmap is off. the card does not fit to the bezirke. fix this
