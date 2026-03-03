@@ -132,8 +132,8 @@ export default function AustriaBezirkMap({ data }: Props) {
               fontWeight={hasData ? 'bold' : 'normal'}
               fill={hasData ? (isDark ? '#ffffff' : '#1e3a5f') : '#9ca3af'}
               pointerEvents="none"
-              stroke="#ffffff"
-              strokeWidth={hasData ? '1.5' : '1'}
+              stroke={isDark ? '#1e3a5f' : '#ffffff'}
+              strokeWidth={isDark ? '0.5' : hasData ? '1.5' : '1'}
               paintOrder="stroke"
             >
               {code}
