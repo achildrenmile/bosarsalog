@@ -1,0 +1,40 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "bfd9f756eaa0",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "client/src/App.tsx",
+    "client/src/components/AustriaBezirkMap.tsx",
+    "client/src/components/BundMode.tsx",
+    "client/src/components/LandMode.tsx",
+    "client/src/components/Layout.tsx",
+    "client/src/components/RunningTotals.tsx",
+    "client/src/pages/AggregatedReportsPage.tsx",
+    "client/src/pages/DashboardPage.tsx",
+    "client/src/pages/ExercisePage.tsx",
+    "client/src/pages/ExerciseSetupPage.tsx",
+    "client/src/pages/HilfePage.tsx",
+    "client/src/pages/LoginPage.tsx",
+    "client/src/pages/OperatorsPage.tsx",
+    "client/src/pages/ReportsPage.tsx",
+    "package.json"
+  ],
+  "sessions": [
+    {
+      "metadata": "/bf/d9f756eaa0/0/metadata.json",
+      "transcript": "/bf/d9f756eaa0/0/full.jsonl",
+      "context": "/bf/d9f756eaa0/0/context.md",
+      "content_hash": "/bf/d9f756eaa0/0/content_hash.txt",
+      "prompt": "/bf/d9f756eaa0/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 892,
+    "cache_creation_tokens": 172528,
+    "cache_read_tokens": 3065854,
+    "output_tokens": 1241,
+    "api_call_count": 27
+  }
+}
