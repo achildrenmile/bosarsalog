@@ -22,11 +22,11 @@ const BL_NAMES: Record<string, string> = {
 function getHeatColor(value: number, max: number): string {
   if (max === 0 || value === 0) return '#f3f4f6';
   const t = Math.min(value / max, 1);
-  // Green (120) → Yellow (60) → Red (0) via HSL
-  const h = 120 * (1 - t);
-  const s = 70 + 15 * t; // 70-85%
-  const l = 45 + 10 * (1 - t); // 45-55%
-  return `hsl(${h}, ${s}%, ${l}%)`;
+  // Light blue (#c2d5ec) → Dark navy (#1e3a5f)
+  const r = Math.round(194 + (30 - 194) * t);
+  const g = Math.round(213 + (58 - 213) * t);
+  const b = Math.round(236 + (95 - 236) * t);
+  return `rgb(${r},${g},${b})`;
 }
 
 export default function AustriaBezirkMap({ data }: Props) {
@@ -120,6 +120,7 @@ export default function AustriaBezirkMap({ data }: Props) {
         {Object.entries(BEZIRK_PATHS).map(([code, { labelX, labelY }]) => {
           const bz = dataMap.get(code);
           const hasData = bz && bz.participants > 0;
+          const isDark = hasData && bz.participants / maxParticipants > 0.5;
           return (
             <text
               key={`label-${code}`}
@@ -129,7 +130,7 @@ export default function AustriaBezirkMap({ data }: Props) {
               dominantBaseline="central"
               fontSize={hasData ? '6' : '5'}
               fontWeight={hasData ? 'bold' : 'normal'}
-              fill={hasData ? '#1e3a5f' : '#9ca3af'}
+              fill={hasData ? (isDark ? '#ffffff' : '#1e3a5f') : '#9ca3af'}
               pointerEvents="none"
               stroke="#ffffff"
               strokeWidth={hasData ? '2' : '1.5'}
@@ -164,7 +165,7 @@ export default function AustriaBezirkMap({ data }: Props) {
         <div
           className="h-3 w-32 rounded"
           style={{
-            background: 'linear-gradient(to right, hsl(120,70%,55%), hsl(60,78%,50%), hsl(0,85%,45%))',
+            background: 'linear-gradient(to right, #c2d5ec, #1e3a5f)',
           }}
         />
         <span>{maxParticipants}</span>
