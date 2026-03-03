@@ -128,12 +128,12 @@ export default function AustriaBezirkMap({ data }: Props) {
               y={labelY}
               textAnchor="middle"
               dominantBaseline="central"
-              fontSize={hasData ? '6' : '5'}
+              fontSize={hasData ? '7' : '6'}
               fontWeight={hasData ? 'bold' : 'normal'}
               fill={hasData ? (isDark ? '#ffffff' : '#1e3a5f') : '#9ca3af'}
               pointerEvents="none"
               stroke="#ffffff"
-              strokeWidth={hasData ? '2' : '1.5'}
+              strokeWidth={hasData ? '1.5' : '1'}
               paintOrder="stroke"
             >
               {code}
