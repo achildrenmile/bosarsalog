@@ -1,0 +1,29 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "0328805dbc4a",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "client/src/App.tsx",
+    "client/src/components/Layout.tsx",
+    "client/src/pages/LoginPage.tsx",
+    "package.json"
+  ],
+  "sessions": [
+    {
+      "metadata": "/03/28805dbc4a/0/metadata.json",
+      "transcript": "/03/28805dbc4a/0/full.jsonl",
+      "context": "/03/28805dbc4a/0/context.md",
+      "content_hash": "/03/28805dbc4a/0/content_hash.txt",
+      "prompt": "/03/28805dbc4a/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 13,
+    "cache_creation_tokens": 10394,
+    "cache_read_tokens": 1126768,
+    "output_tokens": 1325,
+    "api_call_count": 11
+  }
+}
