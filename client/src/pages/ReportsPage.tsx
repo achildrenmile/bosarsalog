@@ -235,13 +235,28 @@ export default function ReportsPage() {
 
           {/* Charts */}
           {(() => {
-            // Use bezirkStats if available, otherwise fall back to blStats (Bundesland level)
-            const chartData = stats.bezirkStats.length > 0
+            const BL_NAMES: Record<string, string> = {
+              '01': 'Wien', '02': 'Salzburg', '03': 'Niederösterreich', '04': 'Burgenland',
+              '05': 'Oberösterreich', '06': 'Steiermark', '07': 'Tirol', '08': 'Kärnten', '09': 'Vorarlberg',
+            };
+            const BL_COLORS: Record<string, string> = {
+              '01': '#c8102e', '02': '#d97706', '03': '#0d6efd', '04': '#198754',
+              '05': '#6f42c1', '06': '#1e3a5f', '07': '#e67e22', '08': '#0dcaf0', '09': '#dc3545',
+            };
+            // Bar chart uses bezirk or BL data
+            const barData = stats.bezirkStats.length > 0
               ? stats.bezirkStats.map(bz => ({ label: `OE${parseInt(bz.bundesland_code, 10)} ${bz.bezirk_code}`, participants: bz.participants, reports: bz.reports }))
-              : stats.blStats.map(bl => ({ label: `OE${parseInt(bl.bundesland_code, 10)}`, participants: bl.participants, reports: bl.reports }));
-            const chartLevel = stats.bezirkStats.length > 0 ? 'Bezirk' : 'Bundesland';
+              : stats.blStats.map(bl => ({ label: `OE${parseInt(bl.bundesland_code, 10)} ${BL_NAMES[bl.bundesland_code] || ''}`, participants: bl.participants, reports: bl.reports }));
+            // Pie chart always uses Bundesland level
+            const pieData = stats.blStats
+              .filter(bl => bl.reports > 0)
+              .map(bl => ({
+                label: `OE${parseInt(bl.bundesland_code, 10)} ${BL_NAMES[bl.bundesland_code] || ''}`,
+                reports: bl.reports,
+                color: BL_COLORS[bl.bundesland_code] || '#6c757d',
+              }));
 
-            return chartData.length > 0 ? (
+            return barData.length > 0 ? (
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
               {/* Bar chart: Stationen + Rapporte */}
               <div ref={barCardRef} className="bg-white rounded-xl shadow p-4 sm:p-5">
@@ -262,16 +277,16 @@ export default function ReportsPage() {
                   <Bar
                     ref={barChartRef}
                     data={{
-                      labels: chartData.map(d => d.label),
+                      labels: barData.map(d => d.label),
                       datasets: [
                         {
                           label: 'Stationen',
-                          data: chartData.map(d => d.participants),
+                          data: barData.map(d => d.participants),
                           backgroundColor: '#1e3a5f',
                         },
                         {
                           label: 'Rapporte',
-                          data: chartData.map(d => d.reports),
+                          data: barData.map(d => d.reports),
                           backgroundColor: '#c8102e',
                         },
                       ],
@@ -289,11 +304,12 @@ export default function ReportsPage() {
                 </div>
               </div>
 
-              {/* Pie chart: Rapporte distribution */}
+              {/* Pie chart: Rapporte distribution by Bundesland */}
+              {pieData.length > 0 && (
               <div ref={pieCardRef} className="bg-white rounded-xl shadow p-4 sm:p-5">
                 <div className="flex items-center justify-between mb-2 sm:mb-3">
                   <h2 className="text-sm sm:text-base font-semibold text-[#1e3a5f]">
-                    Rapporte Verteilung nach Bundesland / Land
+                    Rapporte Verteilung nach Bundesland
                   </h2>
                   <button
                     onClick={() => downloadChart(pieCardRef, `BOS-ARSA_Verteilung_${exercise.date}.png`)}
@@ -308,15 +324,10 @@ export default function ReportsPage() {
                   <Pie
                     ref={pieChartRef}
                     data={{
-                      labels: chartData.filter(d => d.reports > 0).map(d => d.label),
+                      labels: pieData.map(d => d.label),
                       datasets: [{
-                        data: chartData.filter(d => d.reports > 0).map(d => d.reports),
-                        backgroundColor: [
-                          '#1e3a5f', '#c8102e', '#d97706', '#0d6efd', '#198754',
-                          '#6f42c1', '#fd7e14', '#20c997', '#0dcaf0', '#6c757d',
-                          '#2c5282', '#e8a317', '#c70039', '#4361ee', '#2d6a4f',
-                          '#9b59b6', '#e67e22', '#1abc9c', '#3498db', '#95a5a6',
-                        ],
+                        data: pieData.map(d => d.reports),
+                        backgroundColor: pieData.map(d => d.color),
                       }],
                     }}
                     options={{
@@ -329,6 +340,7 @@ export default function ReportsPage() {
                   />
                 </div>
               </div>
+              )}
             </div>
           ) : null;
           })()}
