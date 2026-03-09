@@ -240,8 +240,8 @@ export default function ReportsPage() {
               '05': 'Oberösterreich', '06': 'Steiermark', '07': 'Tirol', '08': 'Kärnten', '09': 'Vorarlberg',
             };
             const BL_COLORS: Record<string, string> = {
-              '01': '#c8102e', '02': '#d97706', '03': '#0d6efd', '04': '#198754',
-              '05': '#6f42c1', '06': '#1e3a5f', '07': '#e67e22', '08': '#0dcaf0', '09': '#dc3545',
+              '01': '#dc2626', '02': '#2563eb', '03': '#16a34a', '04': '#f59e0b',
+              '05': '#7c3aed', '06': '#06b6d4', '07': '#ea580c', '08': '#ec4899', '09': '#6b7280',
             };
             // Bar chart uses bezirk or BL data
             const barData = stats.bezirkStats.length > 0
