@@ -1,0 +1,28 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "73a68a0e8daf",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "client/src/data/bezirkPaths.ts",
+    "client/src/index.css",
+    "scripts/generate-bezirk-paths.mjs"
+  ],
+  "sessions": [
+    {
+      "metadata": "/73/a68a0e8daf/0/metadata.json",
+      "transcript": "/73/a68a0e8daf/0/full.jsonl",
+      "context": "/73/a68a0e8daf/0/context.md",
+      "content_hash": "/73/a68a0e8daf/0/content_hash.txt",
+      "prompt": "/73/a68a0e8daf/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 33,
+    "cache_creation_tokens": 81542,
+    "cache_read_tokens": 1841930,
+    "output_tokens": 318,
+    "api_call_count": 25
+  }
+}

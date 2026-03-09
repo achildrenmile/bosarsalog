@@ -1,0 +1,32 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "73a68a0e8daf",
+  "session_id": "1f303b0c-b261-4c38-b120-381193d1d1dd",
+  "strategy": "manual-commit",
+  "created_at": "2026-03-09T06:46:35.266436204Z",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "client/src/data/bezirkPaths.ts",
+    "client/src/index.css",
+    "scripts/generate-bezirk-paths.mjs"
+  ],
+  "agent": "Claude Code",
+  "transcript_identifier_at_start": "7a1b0472-fd59-4d6a-afda-d38e5081e7e2",
+  "token_usage": {
+    "input_tokens": 33,
+    "cache_creation_tokens": 81542,
+    "cache_read_tokens": 1841930,
+    "output_tokens": 318,
+    "api_call_count": 25
+  },
+  "initial_attribution": {
+    "calculated_at": "2026-03-09T06:46:34.839757151Z",
+    "agent_lines": 41,
+    "human_added": 0,
+    "human_modified": 0,
+    "human_removed": 0,
+    "total_committed": 41,
+    "agent_percentage": 100
+  }
+}
