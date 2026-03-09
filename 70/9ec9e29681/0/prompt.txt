@@ -1,0 +1,126 @@
+check the bundesland bezirksauswertungskarte. wien has in it white lines. remove that. https://github.com/achildrenmile/bosarsalog/issues/15
+
+---
+
+deploy
+
+---
+
+see latest screenshot. wien has stil the lines
+
+---
+
+add a new release. add this to the footer. after that write a summary in german that i can post to whatsapp. humanized, without emojis
+
+---
+
+kürzer zusammengfasst, nur die punkte, nicht wir haben ausgerollt etc
+
+---
+
+danke an oe8cxc (Jupiter79) für das issue
+
+---
+
+Rapporte Verteilung nach Bundesland / Land ändere das diagram. mach es wirklich nur nach bundesland. schaue das die farbverteilung eindeutig ist.
+
+---
+
+erstelle da ein in issue zu dem fix. schreib rein was wir gemacht haben. feedback von oe5fil. Abgesehen davon, dass mir die Aussagekraft der Tortengrafik fehlt, gehört wohl zu Bundesland,
+Land auch der BEZIRK
+
+---
+
+dann erstelle ein sub release. add to footer. close the issue. und schreibe whatsapp
+
+---
+
+On Sun, 8 Mar 2026 at 20:45, Michael Linder <oe8yml@rednil.at> wrote:
+Servus Markus,
+
+danke für die ausführlichen Vorschläge – genau solches Feedback bringt das Tool weiter!
+
+Ein kurzer Abgleich mit dem aktuellen Stand:
+
+Die Eingabe ist bereits voll auf Tastatur optimiert. Nach Eingabe des Rufzeichens und Enter springt der Fokus automatisch in die Suffix-Auswahl, dann weiter zum Rapport. Dort kann man den Wert anpassen oder direkt mit Enter bestätigen – das Ganze speichert sofort. Maus braucht man im Eingabe-Flow also nicht. Die QTH-Daten werden automatisch aus der importierten Rufzeichenliste gezogen.
+
+Die Bezirkszuordnung funktioniert bewusst so, dass der Operator frei durch die Bezirke gehen kann – unabhängig vom eigenen Standort. Das vermeidet genau die Leerabfragen, die Du ansprichst, wenn Bezirke in starrer Reihenfolge abgefragt werden.
+
+Zum Tortendiagramm: Da gibt es inzwischen eine Heatmap der Bundesländer, die deutlich mehr Aussagekraft hat. Die Farben sind anpassbar. Die Tortengrafik selbst steht noch auf der Liste, hat aber aktuell niedrigere Priorität.
+
+73 aus OE8,
+Michael
+
+On Sun, 8 Mar 2026 at 20:15, "Dipl.-Ing. (FH) Markus Köster, OE5FIL" <markus.oe5fil@notfunk-innviertel.at> wrote:
+Hallo,
+
+danke.
+
+Ergänzende Vorschläge:
+
+
+Danke für eure Arbeit!
+
+
+
+73!
+
+Markus, OE5FIL
+
+
+markus.oe5fil@notfunk-innviertel.at
+6EF2 07AB 0355 DE6C 3E1E  FB4A AF70 726F 3093 3EFF
+
+www.Notfunk-Innviertel.at
+Zentralruf: +43 660 90.1000 - 0 
+
+
+
+
+
+
+
+
+
+
+Am 08.03.2026 um 19:52 schrieb Michael Linder <oe8yml@rednil.at>:
+
+Servus Markus,
+
+danke für Dein Interesse am BOS-ARSA Log!
+
+Am einfachsten ist es, wenn Du Dein Feedback direkt schriftlich schickst – per Mail an mich oder gerne auch als Issue auf GitHub - https://github.com/achildrenmile/bosarsalog/issues. So geht nichts verloren und andere können auch davon profitieren.
+
+73 de Michael, OE8YML
+
+On Mon, 2 Mar 2026 at 07:42, "Dipl.-Ing. (FH) Markus Köster, OE5FIL" <markus.oe5fil@notfunk-innviertel.at> wrote:
+Servus Michael,
+
+danke für Dein Engagement in der BOS-ARSA.
+
+Meine ersten Erfahrungen mit deinem Programm würde ich Dir gerne mitteilen. Im Sinne einer gemeinsamen Weiterentwicklung hinterlasse mir bitte deine Telefonnummer. Falls Du dies per Telefonat tun möchtest, nutze bitte den Anrufbeantworter. Ich melde mich verlässlich bei Dir!
+73!
+
+Markus, OE5FIL
+
+
+markus.oe5fil@notfunk-innviertel.at
+6EF2 07AB 0355 DE6C 3E1E  FB4A AF70 726F 3093 3EFF
+
+www.Notfunk-Innviertel.at
+Zentralruf: +43 660 90.1000 - 0 
+
+
+
+
+
+
+ reply freundlich humanized und adde das feature
+
+---
+
+heute abend stimmt nicht. schreib die details von der whatsapp message an stelle des satzes
+
+---
+
+die farben im diagram schauen zu ähnlich aus. stelle sicher, dass man sie auch in der druckansicht unterscheiden kann
