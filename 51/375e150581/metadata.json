@@ -1,0 +1,34 @@
+{
+  "cli_version": "0.4.2",
+  "checkpoint_id": "51375e150581",
+  "strategy": "manual-commit",
+  "branch": "main",
+  "checkpoints_count": 1,
+  "files_touched": [
+    "client/src/App.tsx",
+    "client/src/components/Layout.tsx",
+    "client/src/data/bezirkPaths.ts",
+    "client/src/index.css",
+    "client/src/pages/AggregatedReportsPage.tsx",
+    "client/src/pages/LoginPage.tsx",
+    "client/src/pages/ReportsPage.tsx",
+    "package.json",
+    "scripts/generate-bezirk-paths.mjs"
+  ],
+  "sessions": [
+    {
+      "metadata": "/51/375e150581/0/metadata.json",
+      "transcript": "/51/375e150581/0/full.jsonl",
+      "context": "/51/375e150581/0/context.md",
+      "content_hash": "/51/375e150581/0/content_hash.txt",
+      "prompt": "/51/375e150581/0/prompt.txt"
+    }
+  ],
+  "token_usage": {
+    "input_tokens": 22,
+    "cache_creation_tokens": 17702,
+    "cache_read_tokens": 1636741,
+    "output_tokens": 1004,
+    "api_call_count": 14
+  }
+}
