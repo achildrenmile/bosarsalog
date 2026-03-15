@@ -82,7 +82,7 @@ reportsRouter.get('/stats', (req, res) => {
   const blStats = db.prepare(
     `SELECT
       COALESCE(bl.name, 'Sonstige') as bundesland,
-      o.bundesland_code,
+      COALESCE(o.bundesland_code, '99') as bundesland_code,
       COUNT(DISTINCT sr.operator_id) as participants,
       COUNT(CASE WHEN sr.readability IS NOT NULL THEN 1 END) as reports
     FROM signal_reports sr

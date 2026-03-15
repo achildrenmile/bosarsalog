@@ -35,7 +35,7 @@ const BL_NAMES: Record<string, string> = {
 };
 const BL_COLORS: Record<string, string> = {
   '01': '#dc2626', '02': '#2563eb', '03': '#16a34a', '04': '#f59e0b',
-  '05': '#7c3aed', '06': '#06b6d4', '07': '#ea580c', '08': '#ec4899', '09': '#6b7280',
+  '05': '#7c3aed', '06': '#06b6d4', '07': '#ea580c', '08': '#92400e', '09': '#6b7280',
 };
 
 function formatDateDE(d: string) {
