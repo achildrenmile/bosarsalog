@@ -458,7 +458,7 @@ export default function AggregatedReportsPage() {
               ? stats.bezirkStats.map(bz => ({ label: `OE${parseInt(bz.bundesland_code, 10)} ${bz.bezirk_code}`, participants: bz.participants, reports: bz.reports }))
               : stats.blStats.map(bl => ({ label: `OE${parseInt(bl.bundesland_code, 10)} ${BL_NAMES[bl.bundesland_code] || ''}`, participants: bl.participants, reports: bl.reports }));
             const pieData = stats.blStats
-              .filter(bl => bl.reports > 0)
+              .filter(bl => bl.reports > 0 && BL_NAMES[bl.bundesland_code] !== undefined)
               .map(bl => ({
                 label: `OE${parseInt(bl.bundesland_code, 10)} ${BL_NAMES[bl.bundesland_code] || ''}`,
                 reports: bl.reports,
