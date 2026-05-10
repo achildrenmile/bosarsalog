@@ -182,8 +182,8 @@ const repeaters: any[][] = [
   ['Gaisberg 70cm', 'Gaisberg', '70cm', 'OE2XZR', 438.950, -7.6, 88.5, null, 'repeater', 1, ++sortIdx, '02'],
 
   // ─── OE3 Niederösterreich ───
-  ['Nebelstein 2m', 'Nebelstein', '2m', 'OE3XNR', 145.6375, -0.6, 88.5, null, 'repeater', 0, ++sortIdx, '03'],
-  ['Nebelstein 70cm', 'Nebelstein', '70cm', 'OE3XNR', 438.6125, -7.6, 88.5, null, 'repeater', 1, ++sortIdx, '03'],
+  ['Nebelstein 2m', 'Nebelstein', '2m', 'OE3XNR', 145.6375, -0.6, 88.5, null, 'repeater', 1, ++sortIdx, '03'],
+  ['Nebelstein 70cm', 'Nebelstein', '70cm', 'OE3XNR', 438.6125, -7.6, 88.5, null, 'repeater', 0, ++sortIdx, '03'],
   ['Hohe Wand 70cm', 'Hohe Wand', '70cm', 'OE3XHW', 438.750, -7.6, null, null, 'repeater', 0, ++sortIdx, '03'],
   ['Kaiserkogel 70cm', 'Kaiserkogel', '70cm', 'OE3XPA', 438.450, -7.6, null, null, 'repeater', 0, ++sortIdx, '03'],
   ['Sandl 2m', 'Sandl', '2m', 'OE3XSA', 145.700, -0.6, null, null, 'repeater', 0, ++sortIdx, '03'],
