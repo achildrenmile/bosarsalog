@@ -266,7 +266,7 @@ const repeaters: any[][] = [
 
   // ─── International ───
   ['Struška 70cm', 'Struška', '70cm', 'S55UJE', 439.325, -7.6, 123.0, null, 'repeater', 0, ++sortIdx, '10'],
-  ['Hochstuhl 70cm', 'Hochstuhl', '70cm', null, 439.3625, -7.6, 123.0, null, 'repeater', 0, ++sortIdx, '10'],
+  ['Hochstuhl 70cm', 'Hochstuhl', '70cm', 'S55YAR', 439.3625, -7.6, 123.0, null, 'repeater', 0, ++sortIdx, '10'],
 
   // ─── Simplex frequencies (no Bundesland) ───
   ['Direkte 145.500', null, '2m', null, 145.500, null, null, null, 'simplex', 0, ++sortIdx, null],
