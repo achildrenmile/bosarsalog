@@ -327,7 +327,7 @@ export function runMigrations(db: Database.Database): void {
   `);
 
   // Migration: set callsign for Hochstuhl repeater
-  db.prepare("UPDATE repeaters SET callsign = 'S55YAR' WHERE short_name = 'Hochstuhl' AND frequency_mhz = 439.3625 AND callsign IS NULL").run();
+  db.prepare("UPDATE repeaters SET callsign = 'S55YAR' WHERE frequency_mhz = 439.3625 AND callsign IS NULL").run();
 
   // Migration: backfill operators with null bundesland_code using callsign prefix
   const nullBlOps = db.prepare("SELECT id, callsign FROM operators WHERE bundesland_code IS NULL").all() as { id: number; callsign: string }[];
