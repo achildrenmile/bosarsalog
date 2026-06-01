@@ -16,6 +16,18 @@ const BUNDESLAENDER = [
   { code: '09', name: 'Vorarlberg', label: 'OE9' },
 ];
 
+const NACHBARLAENDER = [
+  { code: '10', name: 'Slowenien', label: 'S5' },
+  { code: '11', name: 'Tschechien', label: 'OK' },
+  { code: '12', name: 'Deutschland', label: 'DL' },
+  { code: '13', name: 'Italien', label: 'I' },
+  { code: '14', name: 'Slowakei', label: 'OM' },
+  { code: '15', name: 'Kroatien', label: '9A' },
+  { code: '16', name: 'Liechtenstein', label: 'HB0' },
+  { code: '17', name: 'Schweiz', label: 'HB9' },
+  { code: '18', name: 'Ungarn', label: 'HA' },
+];
+
 export default function ExerciseSetupPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -424,8 +436,41 @@ export default function ExerciseSetupPage() {
         </div>
       </div>
 
+      {/* Nachbarländer selection */}
+      <div className="bg-white rounded-xl shadow p-4 sm:p-5">
+        <h2 className="text-base sm:text-lg font-semibold text-[#1e3a5f] mb-2 sm:mb-3">Nachbarländer auswählen</h2>
+        <div className="grid grid-cols-3 sm:grid-cols-5 lg:grid-cols-9 gap-2">
+          {NACHBARLAENDER.map(nl => {
+            const isActive = activeBundeslaender.has(nl.code);
+            const repCount = repeatersForBl(nl.code).length;
+            const activeCount = activeRepeaters.filter(ar => {
+              const rep = allRepeaters.find(r => r.id === ar.repeater_id);
+              return rep?.bundesland_code === nl.code && !rep?.is_linked;
+            }).length;
+            return (
+              <button
+                key={nl.code}
+                onClick={() => isAdmin && toggleBundesland(nl.code)}
+                disabled={!isAdmin || repCount === 0}
+                className={`flex flex-col items-center py-2 px-1 rounded-lg border-2 transition-colors text-sm ${
+                  isActive
+                    ? 'border-red-500 bg-red-50 text-[#1e3a5f]'
+                    : repCount === 0
+                      ? 'border-gray-100 bg-gray-50 text-gray-300 cursor-not-allowed'
+                      : 'border-gray-200 bg-gray-50 text-gray-500 hover:border-gray-300'
+                } ${!isAdmin ? 'cursor-default' : ''}`}
+              >
+                <span className="font-bold">{nl.label}</span>
+                <span className="text-xs truncate w-full text-center">{nl.name}</span>
+                {isActive && <span className="text-xs mt-0.5">{activeCount}/{repCount}</span>}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
       {/* Per-Bundesland repeater sections */}
-      {BUNDESLAENDER.filter(bl => activeBundeslaender.has(bl.code)).map(bl => {
+      {[...BUNDESLAENDER, ...NACHBARLAENDER].filter(bl => activeBundeslaender.has(bl.code)).map(bl => {
         const blRepeaters = repeatersForBl(bl.code);
         const isExpanded = expandedBl.has(bl.code);
 

@@ -13,7 +13,15 @@ const BUNDESLAND_NAMES: Record<string, string> = {
   '07': 'OE7 Tirol',
   '08': 'OE8 Kärnten',
   '09': 'OE9 Vorarlberg',
-  '10': 'Slowenien',
+  '10': 'S5 Slowenien',
+  '11': 'OK Tschechien',
+  '12': 'DL Deutschland',
+  '13': 'I Italien',
+  '14': 'OM Slowakei',
+  '15': '9A Kroatien',
+  '16': 'HB0 Liechtenstein',
+  '17': 'HB9 Schweiz',
+  '18': 'HA Ungarn',
 };
 
 interface Props {
