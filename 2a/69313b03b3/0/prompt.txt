@@ -1,0 +1,13 @@
+es werden bei der übung in oe8 auch die s5 repeater struska 439.325 und Hochstuhl 439.362.5 abgefragt. CTCSS 123 standardablage. kann man die hinzufügen.
+
+---
+
+kann diese bei einrichten nicht hinzufügen. wie würde ich die hinzufügen im setup sind sie nicht auswählbar
+
+---
+
+2. aber dann in einer rubrik nachbarländer wählen
+
+---
+
+ja, commit und deploy
