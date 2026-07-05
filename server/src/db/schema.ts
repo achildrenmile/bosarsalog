@@ -329,6 +329,10 @@ export function runMigrations(db: Database.Database): void {
   // Migration: set callsign for Hochstuhl repeater
   db.prepare("UPDATE repeaters SET callsign = 'S55YAR' WHERE frequency_mhz = 439.3625 AND callsign IS NULL").run();
 
+  // Migration: Kärntner Bezirksnamen auf Kurzform (St. Veit / Spittal)
+  db.prepare("UPDATE bezirke SET name = 'St. Veit' WHERE code = 'SV'").run();
+  db.prepare("UPDATE bezirke SET name = 'Spittal' WHERE code = 'SP'").run();
+
   // Migration: backfill operators with null bundesland_code using callsign prefix
   const nullBlOps = db.prepare("SELECT id, callsign FROM operators WHERE bundesland_code IS NULL").all() as { id: number; callsign: string }[];
   if (nullBlOps.length > 0) {
